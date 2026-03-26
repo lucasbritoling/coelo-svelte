@@ -12,13 +12,13 @@ declare global {
 		}
 
 		interface Locals {
-            supabase: SupabaseClient;
+			supabase: SupabaseClient;
 			session: Session | null;
-            user: User | null;
-        }
+			user: User | null;
+		}
 		interface PageData {
-            session: Session | null;
-        }
+			session: Session | null;
+		}
 		// interface Error {}
 		// interface PageState {}
 	}

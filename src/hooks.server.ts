@@ -36,7 +36,16 @@ export const handle: Handle = async ({ event, resolve }) => {
 	} = await event.locals.supabase.auth.getSession();
 
 	event.locals.session = session;
-	event.locals.user = session?.user ?? null;
+
+	if (session?.user) {
+		event.locals.user = {
+			id: session.user.id,
+			email: session.user.email,
+			full_name: session.user.user_metadata?.full_name ?? 'Usuário'
+		};
+	} else {
+		event.locals.user = null;
+	}
 
 	if (!session && PRIVATE_ROUTES.has(event.url.pathname)) {
 		throw redirect(303, '/login');

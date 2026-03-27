@@ -6,6 +6,11 @@ const PUBLIC_ROUTES = new Set(['/login', '/signup']);
 const PRIVATE_ROUTES = new Set(['/agenda', '/clientes', '/servicos']);
 
 export const handle: Handle = async ({ event, resolve }) => {
+	// instanciação única (singleton) do objeto de conexão com o supabase
+	// guardado no baúzinho 'locals', que sobrevive durante todo o ciclo
+	// de vida da requisição. é capaz de ler e setar cookies e é restrito pela
+	// RLS. seus cookies são válidos para todas as rotas do app.
+
 	event.locals.supabase = createServerClient(
 		PUBLIC_SUPABASE_URL,
 		PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY,
@@ -20,6 +25,11 @@ export const handle: Handle = async ({ event, resolve }) => {
 			}
 		}
 	);
+
+	// middleware verifica se há cookies de sessão válidos no cliente, sem fazer chamada
+	// de rede ao supabase. caso hajam cookies, não faz nada a não ser redirecionar
+	// à agenda caso o cliente esteja na página de login ou cadastro. caso não
+	// existam cookies válidos expulsa o cliente para o login.
 
 	const {
 		data: { session }

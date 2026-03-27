@@ -11,20 +11,25 @@
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { cn } from '$lib/utils.js';
 	import type { HTMLAttributes } from 'svelte/elements';
+	import type { ActionData } from '../../routes/(auth)/login/$types';
+	import { enhance } from '$app/forms';
 
-	let { class: className, ...restProps }: HTMLAttributes<HTMLDivElement> = $props();
+	interface Props extends HTMLAttributes<HTMLDivElement> {
+		form?: ActionData;
+	}
 
+	let { form, class: className, ...restProps }: Props = $props();
 	const id = $props.id();
 </script>
 
 <div class={cn('flex flex-col gap-6', className)} {...restProps}>
 	<Card.Root>
 		<Card.Header class="text-center">
-			<Card.Title class="text-xl">Welcome back</Card.Title>
-			<Card.Description>Login with your Apple or Google account</Card.Description>
+			<Card.Title class="text-xl">Bem-vindo</Card.Title>
+			<Card.Description>Entre com sua conta Apple ou Google</Card.Description>
 		</Card.Header>
 		<Card.Content>
-			<form>
+			<form method="POST" use:enhance>
 				<FieldGroup>
 					<Field>
 						<Button variant="outline" type="button">
@@ -34,7 +39,7 @@
 									fill="currentColor"
 								/>
 							</svg>
-							Login with Apple
+							Entrar com Apple
 						</Button>
 						<Button variant="outline" type="button">
 							<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
@@ -43,29 +48,45 @@
 									fill="currentColor"
 								/>
 							</svg>
-							Login with Google
+							Entrar com Google
 						</Button>
 					</Field>
 					<FieldSeparator class="*:data-[slot=field-separator-content]:bg-card">
-						Or continue with
+						Ou continue com
 					</FieldSeparator>
 					<Field>
-						<FieldLabel for="email-{id}">Email</FieldLabel>
-						<Input id="email-{id}" type="email" placeholder="m@example.com" required />
+						<FieldLabel for="email-{id}">E-mail</FieldLabel>
+						<Input
+							id="email-{id}"
+							type="email"
+							name="email"
+							value={form?.email ?? ''}
+							placeholder="email@exemplo.com"
+							required
+						/>
+						{#if form?.errors?.email}
+							<p class="text-xs text-destructive">{form.errors.email[0]}</p>
+						{/if}
 					</Field>
 					<Field>
 						<div class="flex items-center">
-							<FieldLabel for="password-{id}">Password</FieldLabel>
+							<FieldLabel for="password-{id}">Senha</FieldLabel>
 							<a href="##" class="ms-auto text-sm underline-offset-4 hover:underline">
-								Forgot your password?
+								Esqueceu sua senha?
 							</a>
 						</div>
-						<Input id="password-{id}" type="password" required />
+						<Input id="password-{id}" type="password" name="password" required />
+						{#if form?.errors?.password}
+							<p class="text-xs text-destructive">{form.errors.password[0]}</p>
+						{/if}
 					</Field>
+					{#if form?.message}
+						<p class="text-center text-sm font-medium text-destructive">{form.message}</p>
+					{/if}
 					<Field>
-						<Button type="submit">Login</Button>
+						<Button type="submit">Entrar</Button>
 						<FieldDescription class="text-center">
-							Don't have an account? <a href="##">Sign up</a>
+							Não possui uma conta? <a href="##">Inscreva-se</a>
 						</FieldDescription>
 					</Field>
 				</FieldGroup>
@@ -73,7 +94,7 @@
 		</Card.Content>
 	</Card.Root>
 	<FieldDescription class="px-6 text-center">
-		By clicking continue, you agree to our <a href="##">Terms of Service</a>
-		and <a href="##">Privacy Policy</a>.
+		Ao clicar em continuar, você concorda com nossos <a href="##">Termos de Serviço</a>
+		e <a href="##">Política de Privacidade</a>.
 	</FieldDescription>
 </div>

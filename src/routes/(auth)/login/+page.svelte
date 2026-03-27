@@ -1,6 +1,8 @@
 <script lang="ts">
 	import LoginForm from '$lib/components/login-form.svelte';
 	import GalleryVerticalEndIcon from '@lucide/svelte/icons/gallery-vertical-end';
+
+	let { form } = $props();
 </script>
 
 <div class="flex min-h-svh flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10">
@@ -13,6 +15,6 @@
 			</div>
 			Acme Inc.
 		</a>
-		<LoginForm />
+		<LoginForm {form} />
 	</div>
 </div>

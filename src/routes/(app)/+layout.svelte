@@ -16,17 +16,13 @@
 			<Breadcrumb.Root>
 				<Breadcrumb.List>
 					<Breadcrumb.Item>
-						<Breadcrumb.Page>October 2024</Breadcrumb.Page>
+						<Breadcrumb.Page>Outubro 2024</Breadcrumb.Page>
 					</Breadcrumb.Item>
 				</Breadcrumb.List>
 			</Breadcrumb.Root>
 		</header>
-		<div class="flex flex-1 flex-col gap-4 p-4">
-			<div class="grid auto-rows-min gap-4 md:grid-cols-5">
-				{#each Array.from({ length: 20 }) as _, index (index)}
-					<div class="aspect-square rounded-xl bg-muted/50"></div>
-				{/each}
-			</div>
-		</div>
+		<main class="flex flex-1 flex-col gap-4 p-4">
+			{@render children()}
+		</main>
 	</Sidebar.Inset>
 </Sidebar.Provider>

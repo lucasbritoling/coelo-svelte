@@ -14,7 +14,7 @@
 		weekdayFormat = 'short',
 		buttonVariant = 'ghost',
 		captionLayout = 'label',
-		locale = 'en-US',
+		locale = 'pt-BR',
 		months: monthsProp,
 		years,
 		monthFormat: monthFormatProp,
@@ -50,7 +50,7 @@ get along, so we shut typescript up by casting `value` to `never`.
 	{weekdayFormat}
 	{disableDaysOutsideMonth}
 	class={cn(
-		'group/calendar bg-background p-2 [--cell-radius:var(--radius-md)] [--cell-size:--spacing(7)] in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent',
+		'group/calendar p-2 [--cell-radius:var(--radius-md)] [--cell-size:--spacing(7)] in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent',
 		className
 	)}
 	{locale}
@@ -66,7 +66,7 @@ get along, so we shut typescript up by casting `value` to `never`.
 			</Calendar.Nav>
 			{#each months as month, monthIndex (month)}
 				<Calendar.Month>
-					<Calendar.Header>
+					<Calendar.Header class="capitalize">
 						<Calendar.Caption
 							{captionLayout}
 							months={monthsProp}
@@ -83,8 +83,8 @@ get along, so we shut typescript up by casting `value` to `never`.
 						<Calendar.GridHead>
 							<Calendar.GridRow class="select-none">
 								{#each weekdays as weekday (weekday)}
-									<Calendar.HeadCell>
-										{weekday.slice(0, 2)}
+									<Calendar.HeadCell class="text-sm font-medium text-muted-foreground uppercase">
+										{weekday.slice(0, 1)}
 									</Calendar.HeadCell>
 								{/each}
 							</Calendar.GridRow>

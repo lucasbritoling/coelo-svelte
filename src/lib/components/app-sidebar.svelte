@@ -24,12 +24,12 @@
 </script>
 
 <script lang="ts">
-	import Calendars from './calendars.svelte';
 	import DatePicker from './date-picker.svelte';
 	import NavUser from './nav-user.svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import PlusIcon from '@lucide/svelte/icons/plus';
 	import type { ComponentProps } from 'svelte';
+	import NavMain from './nav-main.svelte';
 
 	let { ref = $bindable(null), ...restProps }: ComponentProps<typeof Sidebar.Root> = $props();
 </script>
@@ -41,17 +41,7 @@
 	<Sidebar.Content>
 		<DatePicker />
 		<Sidebar.Separator class="mx-0" />
-		<Calendars calendars={data.calendars} />
+		<NavMain />
 	</Sidebar.Content>
-	<Sidebar.Footer>
-		<Sidebar.Menu>
-			<Sidebar.MenuItem>
-				<Sidebar.MenuButton>
-					<PlusIcon />
-					<span>New Calendar</span>
-				</Sidebar.MenuButton>
-			</Sidebar.MenuItem>
-		</Sidebar.Menu>
-	</Sidebar.Footer>
 	<Sidebar.Rail />
 </Sidebar.Root>

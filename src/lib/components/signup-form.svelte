@@ -24,25 +24,25 @@
 					</Field.Field>
 					<Field.Field>
 						<Field.Label for="email">Email</Field.Label>
-						<Input id="email" type="email" placeholder="m@example.com" required />
+						<Input id="email" type="email" placeholder="email@exemplo.com" required />
 					</Field.Field>
 					<Field.Field>
 						<Field.Field class="grid grid-cols-2 gap-4">
 							<Field.Field>
-								<Field.Label for="password">Password</Field.Label>
+								<Field.Label for="password">Senha</Field.Label>
 								<Input id="password" type="password" required />
 							</Field.Field>
 							<Field.Field>
-								<Field.Label for="confirm-password">Confirm Password</Field.Label>
+								<Field.Label for="confirm-password">Confirmar Senha</Field.Label>
 								<Input id="confirm-password" type="password" required />
 							</Field.Field>
 						</Field.Field>
-						<Field.Description>Must be at least 8 characters long.</Field.Description>
+						<Field.Description>Pelo menos 6 caracteres.</Field.Description>
 					</Field.Field>
 					<Field.Field>
-						<Button type="submit">Create Account</Button>
+						<Button type="submit">Criar conta</Button>
 						<Field.Description class="text-center">
-							Already have an account? <a href="#/">Sign in</a>
+							Possui uma conta? <a href="#/">Entrar</a>
 						</Field.Description>
 					</Field.Field>
 				</Field.Group>
@@ -50,7 +50,7 @@
 		</Card.Content>
 	</Card.Root>
 	<Field.Description class="px-6 text-center">
-		By clicking continue, you agree to our <a href="#/">Terms of Service</a>
-		and <a href="#/">Privacy Policy</a>.
+		Ao continuar, você concorda com os nossos <a href="#/">Termos de Serviço</a>
+		e <a href="#/">Política de Privacidade</a>.
 	</Field.Description>
 </div>

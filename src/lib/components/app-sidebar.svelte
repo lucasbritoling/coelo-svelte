@@ -9,7 +9,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { CalendarDate, parseDate } from '@internationalized/date';
+	import { today, getLocalTimeZone, CalendarDate, parseDate } from '@internationalized/date';
 	import DatePicker from './date-picker.svelte';
 	import NavUser from './nav-user.svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
@@ -20,7 +20,9 @@
 
 	const dateParam = $derived(page.url.searchParams.get('date'));
 
-	let selectedDate = $state(dateParam ? parseDate(dateParam) : new CalendarDate(2026, 3, 27));
+	let hoje = today(getLocalTimeZone());
+
+	let selectedDate = $state(dateParam ? parseDate(dateParam) : hoje);
 
 	function handleDateChange(date: any) {
 		if (!date) return;

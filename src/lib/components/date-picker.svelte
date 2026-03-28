@@ -3,7 +3,6 @@
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import type { DateValue } from '@internationalized/date';
 
-	// Definimos as props para comunicação com o AppSidebar
 	let {
 		value = $bindable(),
 		onValueChange

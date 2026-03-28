@@ -12,18 +12,18 @@
 <div class={cn('flex flex-col gap-6', className)} {...restProps}>
 	<Card.Root>
 		<Card.Header class="text-center">
-			<Card.Title class="text-xl">Create your account</Card.Title>
-			<Card.Description>Enter your email below to create your account</Card.Description>
+			<Card.Title class="text-xl">Crie sua conta</Card.Title>
+			<Card.Description>Insira seu e-mail abaixo para criar sua conta</Card.Description>
 		</Card.Header>
 		<Card.Content>
 			<form>
 				<Field.Group>
 					<Field.Field>
-						<Field.Label for="name">Full Name</Field.Label>
-						<Input id="name" type="text" placeholder="John Doe" required />
+						<Field.Label for="name">Nome Completo</Field.Label>
+						<Input id="name" type="text" placeholder="Maria Oliveira" required />
 					</Field.Field>
 					<Field.Field>
-						<Field.Label for="email">Email</Field.Label>
+						<Field.Label for="email">E-mail</Field.Label>
 						<Input id="email" type="email" placeholder="email@exemplo.com" required />
 					</Field.Field>
 					<Field.Field>
@@ -37,7 +37,7 @@
 								<Input id="confirm-password" type="password" required />
 							</Field.Field>
 						</Field.Field>
-						<Field.Description>Pelo menos 6 caracteres.</Field.Description>
+						<Field.Description>Ao menos 6 caracteres.</Field.Description>
 					</Field.Field>
 					<Field.Field>
 						<Button type="submit">Criar conta</Button>

@@ -34,6 +34,7 @@
 		const newUrl = new URL(page.url);
 		newUrl.searchParams.set('date', date.toString());
 
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
 		goto(newUrl.toString(), { keepFocus: true, noScroll: true, replaceState: true });
 	}
 </script>

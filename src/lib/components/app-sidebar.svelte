@@ -7,9 +7,10 @@
 </script>
 
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { today, getLocalTimeZone, CalendarDate, parseDate } from '@internationalized/date';
+	import { goto } from '$app/navigation';
+	import { today, getLocalTimeZone, parseDate } from '@internationalized/date';
+
 	import DatePicker from './date-picker.svelte';
 	import NavUser from './nav-user.svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
@@ -18,17 +19,22 @@
 
 	let { ref = $bindable(null), ...restProps }: ComponentProps<typeof Sidebar.Root> = $props();
 
-	const dateParam = $derived(page.url.searchParams.get('date'));
-
-	let hoje = today(getLocalTimeZone());
-
-	let selectedDate = $state(dateParam ? parseDate(dateParam) : hoje);
+	const selectedDate = $derived.by(() => {
+		const d = page.url.searchParams.get('date');
+		try {
+			return d ? parseDate(d) : today(getLocalTimeZone());
+		} catch {
+			return today(getLocalTimeZone());
+		}
+	});
 
 	function handleDateChange(date: any) {
 		if (!date) return;
+
 		const newUrl = new URL(page.url);
 		newUrl.searchParams.set('date', date.toString());
-		goto(newUrl.toString(), { keepFocus: true, noScroll: true });
+
+		goto(newUrl.toString(), { keepFocus: true, noScroll: true, replaceState: true });
 	}
 </script>
 
@@ -37,7 +43,7 @@
 		<NavUser {user} />
 	</Sidebar.Header>
 	<Sidebar.Content>
-		<DatePicker bind:value={selectedDate} onValueChange={handleDateChange} />
+		<DatePicker value={selectedDate} onValueChange={handleDateChange} />
 		<Sidebar.Separator class="mx-0" />
 		<NavMain />
 	</Sidebar.Content>

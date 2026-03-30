@@ -10,37 +10,44 @@
 	import { toast } from 'svelte-sonner';
 	import { parseTime } from '@internationalized/date';
 
-	// Props recebidas do +page.svelte (dados do load)
-	let { customers, services, selectedDate, onSuccess } = $props<{
+	// 1. Props (Svelte 5)
+	let {
+		customers = [],
+		services = [],
+		selectedDate,
+		onSuccess
+	} = $props<{
 		customers: any[];
 		services: any[];
 		selectedDate: string;
 		onSuccess?: () => void;
 	}>();
 
-	// Estados do Formulário
+	// 2. Estados com Runas
 	let openCustomer = $state(false);
 	let openService = $state(false);
 	let isSubmitting = $state(false);
 
 	let customerId = $state('');
 	let serviceId = $state('');
-	let startTime = $state('09:00'); // Valor inicial padrão
+	let startTime = $state('09:00');
 
-	// Encontra o serviço selecionado para pegar a duração
+	// 3. Derivados
 	let selectedService = $derived(services.find((s) => s.id === serviceId));
+	let selectedCustomerName = $derived(
+		customers.find((c) => c.id === customerId)?.name ?? 'Selecionar cliente...'
+	);
+	let selectedServiceName = $derived(
+		services.find((s) => s.id === serviceId)?.name ?? 'Selecionar serviço...'
+	);
 
-	// CÁLCULO AUTOMÁTICO DO TÉRMINO USANDO @internationalized/date
 	let endTime = $derived.by(() => {
 		if (!startTime || !selectedService) return '';
-
 		try {
-			// Converte a string "HH:mm" para um objeto Time
 			const time = parseTime(startTime);
-			// Soma a duração (minutos) e extrai apenas HH:mm da string resultante
 			const end = time.add({ minutes: selectedService.duration });
 			return end.toString().slice(0, 5);
-		} catch (e) {
+		} catch {
 			return '';
 		}
 	});
@@ -58,7 +65,7 @@
 
 			if (result.type === 'success') {
 				toast.success('Agendamento criado com sucesso!');
-				if (onSuccess) onSuccess();
+				onSuccess?.();
 			} else if (result.type === 'failure') {
 				toast.error(result.data?.message ?? 'Erro ao agendar.');
 			}
@@ -70,87 +77,100 @@
 	<input type="hidden" name="date" value={selectedDate} />
 	<input type="hidden" name="end_at" value={endTime} />
 
+	<!-- Cliente -->
 	<div class="grid gap-2">
 		<Label>Cliente</Label>
 		<Popover.Root bind:open={openCustomer}>
-			<Popover.Trigger asChild let:builder>
-				<Button
-					builders={[builder]}
-					variant="outline"
-					role="combobox"
-					aria-expanded={openCustomer}
-					class="w-full justify-between font-normal"
-				>
-					{customerId ? customers.find((c) => c.id === customerId)?.name : 'Selecionar cliente...'}
-					<ChevronsUpDown class="ml-2 size-4 shrink-0 opacity-50" />
-				</Button>
+			<Popover.Trigger>
+				{#snippet child({ props })}
+					<Button
+						{...props}
+						variant="outline"
+						role="combobox"
+						aria-expanded={openCustomer}
+						class="w-full justify-between font-normal"
+					>
+						{selectedCustomerName}
+						<ChevronsUpDown class="ml-2 size-4 shrink-0 opacity-50" />
+					</Button>
+				{/snippet}
 			</Popover.Trigger>
 			<Popover.Content class="w-[--bits-popover-anchor-width] p-0" align="start">
 				<Command.Root>
 					<Command.Input placeholder="Buscar cliente..." />
-					<Command.Empty>Nenhum cliente encontrado.</Command.Empty>
-					<Command.Group>
-						{#each customers as customer (customer.id)}
-							<Command.Item
-								value={customer.name}
-								onSelect={() => {
-									customerId = customer.id;
-									openCustomer = false;
-								}}
-							>
-								<Check
-									class={cn('mr-2 size-4', customerId !== customer.id && 'text-transparent')}
-								/>
-								{customer.name}
-							</Command.Item>
-						{/each}
-					</Command.Group>
+					<Command.List>
+						<Command.Empty>Nenhum cliente encontrado.</Command.Empty>
+						<Command.Group>
+							{#each customers as customer (customer.id)}
+								<Command.Item
+									value={customer.name}
+									onSelect={() => {
+										customerId = customer.id;
+										openCustomer = false;
+									}}
+								>
+									<Check
+										class={cn('mr-2 size-4', customerId !== customer.id && 'text-transparent')}
+									/>
+									{customer.name}
+								</Command.Item>
+							{/each}
+						</Command.Group>
+					</Command.List>
 				</Command.Root>
 			</Popover.Content>
 		</Popover.Root>
 	</div>
 
+	<!-- Serviço -->
 	<div class="grid gap-2">
 		<Label>Serviço</Label>
 		<Popover.Root bind:open={openService}>
-			<Popover.Trigger asChild let:builder>
-				<Button
-					builders={[builder]}
-					variant="outline"
-					role="combobox"
-					aria-expanded={openService}
-					class="w-full justify-between font-normal"
-				>
-					{serviceId ? services.find((s) => s.id === serviceId)?.name : 'Selecionar serviço...'}
-					<ChevronsUpDown class="ml-2 size-4 shrink-0 opacity-50" />
-				</Button>
+			<Popover.Trigger>
+				{#snippet child({ props })}
+					<Button
+						{...props}
+						variant="outline"
+						role="combobox"
+						aria-expanded={openService}
+						class="w-full justify-between font-normal"
+					>
+						{selectedServiceName}
+						<ChevronsUpDown class="ml-2 size-4 shrink-0 opacity-50" />
+					</Button>
+				{/snippet}
 			</Popover.Trigger>
 			<Popover.Content class="w-[--bits-popover-anchor-width] p-0" align="start">
 				<Command.Root>
 					<Command.Input placeholder="Buscar serviço..." />
-					<Command.Empty>Nenhum serviço disponível.</Command.Empty>
-					<Command.Group>
-						{#each services as service (service.id)}
-							<Command.Item
-								value={service.name}
-								onSelect={() => {
-									serviceId = service.id;
-									openService = false;
-								}}
-							>
-								<Check class={cn('mr-2 size-4', serviceId !== service.id && 'text-transparent')} />
-								<div class="flex flex-1 items-center justify-between">
-									<span>{service.name}</span>
-									<span class="text-xs text-muted-foreground">{service.duration} min</span>
-								</div>
-							</Command.Item>
-						{/each}
-					</Command.Group>
+					<Command.List>
+						<Command.Empty>Nenhum serviço disponível.</Command.Empty>
+						<Command.Group>
+							{#each services as service (service.id)}
+								<Command.Item
+									value={service.name}
+									onSelect={() => {
+										serviceId = service.id;
+										openService = false;
+									}}
+								>
+									<Check
+										class={cn('mr-2 size-4', serviceId !== service.id && 'text-transparent')}
+									/>
+									<div class="flex flex-1 items-center justify-between">
+										<span>{service.name}</span>
+										<span class="text-xs text-muted-foreground">{service.duration} min</span>
+									</div>
+								</Command.Item>
+							{/each}
+						</Command.Group>
+					</Command.List>
 				</Command.Root>
 			</Popover.Content>
 		</Popover.Root>
 	</div>
 
+	<!-- Tempos -->
 	<div class="grid grid-cols-2 gap-4">
 		<div class="grid gap-2">
 			<Label for="start_at">Início</Label>

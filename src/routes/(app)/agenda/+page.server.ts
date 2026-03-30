@@ -1,5 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { today, getLocalTimeZone } from '@internationalized/date';
+import { fail } from '@sveltejs/kit';
 
 export const load: PageServerLoad = async ({ url, locals }) => {
 	// 1. Pega a data da URL ou define 'hoje'
@@ -28,4 +29,31 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 		appointments: appointments ?? [],
 		selectedDate: dateParam
 	};
+};
+
+export const actions = {
+	confirm: async ({ request, locals }) => {
+		const formData = await request.formData();
+		const id = formData.get('id');
+
+		const { error } = await locals.supabase
+			.from('appointments')
+			.update({ status: 'confirmed' }) // Altera o status
+			.eq('id', id);
+
+		if (error) return fail(500, { message: error.message });
+		return { success: true };
+	},
+	delete: async ({ request, locals }) => {
+		const formData = await request.formData();
+		const id = formData.get('id');
+
+		const { error } = await locals.supabase.from('appointments').delete().eq('id', id);
+
+		if (error) {
+			return fail(500, { message: error.message });
+		}
+
+		return { success: true };
+	}
 };

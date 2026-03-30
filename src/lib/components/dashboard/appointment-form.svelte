@@ -1,0 +1,181 @@
+<script lang="ts">
+	import { Check, ChevronsUpDown, LoaderCircle } from '@lucide/svelte';
+	import * as Command from '$lib/components/ui/command/index.js';
+	import * as Popover from '$lib/components/ui/popover/index.js';
+	import { Button } from '$lib/components/ui/button/index.js';
+	import { Input } from '$lib/components/ui/input/index.js';
+	import { Label } from '$lib/components/ui/label/index.js';
+	import { cn } from '$lib/utils.js';
+	import { enhance } from '$app/forms';
+	import { toast } from 'svelte-sonner';
+	import { parseTime } from '@internationalized/date';
+
+	// Props recebidas do +page.svelte (dados do load)
+	let { customers, services, selectedDate, onSuccess } = $props<{
+		customers: any[];
+		services: any[];
+		selectedDate: string;
+		onSuccess?: () => void;
+	}>();
+
+	// Estados do Formulário
+	let openCustomer = $state(false);
+	let openService = $state(false);
+	let isSubmitting = $state(false);
+
+	let customerId = $state('');
+	let serviceId = $state('');
+	let startTime = $state('09:00'); // Valor inicial padrão
+
+	// Encontra o serviço selecionado para pegar a duração
+	let selectedService = $derived(services.find((s) => s.id === serviceId));
+
+	// CÁLCULO AUTOMÁTICO DO TÉRMINO USANDO @internationalized/date
+	let endTime = $derived.by(() => {
+		if (!startTime || !selectedService) return '';
+
+		try {
+			// Converte a string "HH:mm" para um objeto Time
+			const time = parseTime(startTime);
+			// Soma a duração (minutos) e extrai apenas HH:mm da string resultante
+			const end = time.add({ minutes: selectedService.duration });
+			return end.toString().slice(0, 5);
+		} catch (e) {
+			return '';
+		}
+	});
+</script>
+
+<form
+	method="POST"
+	action="?/create"
+	class="grid gap-6 py-4"
+	use:enhance={() => {
+		isSubmitting = true;
+		return async ({ result, update }) => {
+			await update();
+			isSubmitting = false;
+
+			if (result.type === 'success') {
+				toast.success('Agendamento criado com sucesso!');
+				if (onSuccess) onSuccess();
+			} else if (result.type === 'failure') {
+				toast.error(result.data?.message ?? 'Erro ao agendar.');
+			}
+		};
+	}}
+>
+	<input type="hidden" name="customer_id" value={customerId} />
+	<input type="hidden" name="service_id" value={serviceId} />
+	<input type="hidden" name="date" value={selectedDate} />
+	<input type="hidden" name="end_at" value={endTime} />
+
+	<div class="grid gap-2">
+		<Label>Cliente</Label>
+		<Popover.Root bind:open={openCustomer}>
+			<Popover.Trigger asChild let:builder>
+				<Button
+					builders={[builder]}
+					variant="outline"
+					role="combobox"
+					aria-expanded={openCustomer}
+					class="w-full justify-between font-normal"
+				>
+					{customerId ? customers.find((c) => c.id === customerId)?.name : 'Selecionar cliente...'}
+					<ChevronsUpDown class="ml-2 size-4 shrink-0 opacity-50" />
+				</Button>
+			</Popover.Trigger>
+			<Popover.Content class="w-[--bits-popover-anchor-width] p-0" align="start">
+				<Command.Root>
+					<Command.Input placeholder="Buscar cliente..." />
+					<Command.Empty>Nenhum cliente encontrado.</Command.Empty>
+					<Command.Group>
+						{#each customers as customer (customer.id)}
+							<Command.Item
+								value={customer.name}
+								onSelect={() => {
+									customerId = customer.id;
+									openCustomer = false;
+								}}
+							>
+								<Check
+									class={cn('mr-2 size-4', customerId !== customer.id && 'text-transparent')}
+								/>
+								{customer.name}
+							</Command.Item>
+						{/each}
+					</Command.Group>
+				</Command.Root>
+			</Popover.Content>
+		</Popover.Root>
+	</div>
+
+	<div class="grid gap-2">
+		<Label>Serviço</Label>
+		<Popover.Root bind:open={openService}>
+			<Popover.Trigger asChild let:builder>
+				<Button
+					builders={[builder]}
+					variant="outline"
+					role="combobox"
+					aria-expanded={openService}
+					class="w-full justify-between font-normal"
+				>
+					{serviceId ? services.find((s) => s.id === serviceId)?.name : 'Selecionar serviço...'}
+					<ChevronsUpDown class="ml-2 size-4 shrink-0 opacity-50" />
+				</Button>
+			</Popover.Trigger>
+			<Popover.Content class="w-[--bits-popover-anchor-width] p-0" align="start">
+				<Command.Root>
+					<Command.Input placeholder="Buscar serviço..." />
+					<Command.Empty>Nenhum serviço disponível.</Command.Empty>
+					<Command.Group>
+						{#each services as service (service.id)}
+							<Command.Item
+								value={service.name}
+								onSelect={() => {
+									serviceId = service.id;
+									openService = false;
+								}}
+							>
+								<Check class={cn('mr-2 size-4', serviceId !== service.id && 'text-transparent')} />
+								<div class="flex flex-1 items-center justify-between">
+									<span>{service.name}</span>
+									<span class="text-xs text-muted-foreground">{service.duration} min</span>
+								</div>
+							</Command.Item>
+						{/each}
+					</Command.Group>
+				</Command.Root>
+			</Popover.Content>
+		</Popover.Root>
+	</div>
+
+	<div class="grid grid-cols-2 gap-4">
+		<div class="grid gap-2">
+			<Label for="start_at">Início</Label>
+			<Input id="start_at" name="start_at" type="time" bind:value={startTime} required />
+		</div>
+		<div class="grid gap-2">
+			<Label for="end_at" class="opacity-80">Término (Auto)</Label>
+			<Input
+				id="end_at"
+				type="time"
+				value={endTime}
+				readonly
+				class="bg-muted/50 text-muted-foreground"
+			/>
+		</div>
+	</div>
+
+	<div class="pt-2">
+		<Button type="submit" disabled={isSubmitting || !customerId || !serviceId} class="w-full">
+			{#if isSubmitting}
+				<LoaderCircle class="mr-2 size-4 animate-spin" />
+				Salvando...
+			{:else}
+				Confirmar Agendamento
+			{/if}
+		</Button>
+	</div>
+</form>

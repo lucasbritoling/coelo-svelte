@@ -4,8 +4,18 @@
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 
+	import { Toaster } from 'svelte-sonner';
 	let { children } = $props();
 </script>
+
+<Toaster
+	richColors
+	closeButton
+	position="bottom-right"
+	toastOptions={{
+		class: 'border-border/50 bg-background shadow-lg font-sans'
+	}}
+/>
 
 <Sidebar.Provider>
 	<AppSidebar />

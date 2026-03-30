@@ -4,9 +4,18 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
 	import { navigating } from '$app/state';
+	import { toast } from 'svelte-sonner';
+
+	import AppointmentCardAction from '$lib/components/dashboard/appointment-card-action.svelte';
 
 	// Svelte 5: Recebendo os dados da load function
 	let { data } = $props();
+
+	function teste() {
+		toast.success('Layout configurado!', {
+			description: 'O Sonner já está pronto para o Svelte 5.'
+		});
+	}
 
 	// Título formatado reativo (substitui o DynamicAgendaHeader do Next)
 	// Usamos a Intl nativa para evitar dependências extras como date-fns no cliente
@@ -33,7 +42,7 @@
 		</div>
 
 		<div class="flex items-center">
-			<Button size="sm" class="h-9 shadow-sm">
+			<Button onclick={teste} size="sm" class="h-9 shadow-sm">
 				<Plus class="mr-2 h-4 w-4" /> Novo Horário
 			</Button>
 		</div>
@@ -58,8 +67,13 @@
 				<div class="grid gap-3" class:opacity-50={navigating.to}>
 					{#each data.appointments as app (app.id)}
 						<Card.Root
-							class="group overflow-hidden border-sidebar-border/50 shadow-sm transition-all hover:border-primary/40"
+							class="group relative overflow-hidden border-sidebar-border/50 shadow-sm transition-all hover:border-primary/40"
 						>
+							<div
+								class="absolute top-2 right-2 z-10 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100"
+							>
+								<AppointmentCardAction appointmentId={app.id} />
+							</div>
 							<Card.Header class="flex-row items-center justify-between gap-5 space-y-0 pt-3">
 								<div class="flex w-full items-center gap-5">
 									<div class="flex min-w-18.75 flex-col border-r border-foreground/5 pr-5">

@@ -5,6 +5,10 @@
 	import { Button } from '$lib/components/ui/button';
 	import { navigating } from '$app/state';
 	import { toast } from 'svelte-sonner';
+	import * as Dialog from '$lib/components/ui/dialog';
+	import AppointmentForm from '$lib/components/dashboard/appointment-form.svelte';
+
+	let showAppointmentModal = $state(false);
 
 	import AppointmentCardAction from '$lib/components/dashboard/appointment-card-action.svelte';
 
@@ -42,9 +46,29 @@
 		</div>
 
 		<div class="flex items-center">
-			<Button onclick={teste} size="sm" class="h-9 shadow-sm">
-				<Plus class="mr-2 h-4 w-4" /> Novo Horário
-			</Button>
+			<Dialog.Root bind:open={showAppointmentModal}>
+				<Dialog.Trigger>
+					<Button size="sm" class="h-9 shadow-sm">
+						<Plus class="mr-2 h-4 w-4" /> Novo Horário
+					</Button>
+				</Dialog.Trigger>
+
+				<Dialog.Content class="sm:max-w-[425px]">
+					<Dialog.Header>
+						<Dialog.Title>Novo Agendamento</Dialog.Title>
+						<Dialog.Description>
+							Selecione o cliente e o serviço para a data de {formattedTitle}.
+						</Dialog.Description>
+					</Dialog.Header>
+
+					<AppointmentForm
+						customers={data.customers}
+						services={data.services}
+						selectedDate={data.selectedDate}
+						onSuccess={() => (showAppointmentModal = false)}
+					/>
+				</Dialog.Content>
+			</Dialog.Root>
 		</div>
 	</div>
 

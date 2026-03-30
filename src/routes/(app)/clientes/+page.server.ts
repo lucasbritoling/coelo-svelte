@@ -38,9 +38,22 @@ export const actions: Actions = {
 	delete: async ({ request, locals }) => {
 		const formData = await request.formData();
 		const id = formData.get('id');
+
 		const { error } = await locals.supabase.from('customers').delete().eq('id', id);
 
-		if (error) return fail(500, { message: error.message });
+		if (error) {
+			// Código 23503: foreign_key_violation (Violação de chave estrangeira)
+			// Ocorre quando o cliente está vinculado a um agendamento existente
+			if (error.code === '23503') {
+				return fail(400, {
+					message: 'Cliente possui agendamentos.'
+				});
+			}
+
+			// Erro genérico para outros problemas (permissão RLS, rede, etc)
+			return fail(500, { message: 'Erro ao tentar excluir o cliente.' });
+		}
+
 		return { success: true };
 	}
 };

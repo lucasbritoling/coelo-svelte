@@ -21,11 +21,11 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 
 	if (error) {
 		console.error('Erro na RPC:', error.message);
-		return { appointments: [], error: 'Falha ao carregar agendamentos.' };
+		return { appointments: [], selectedDate: dateParam, error: 'Falha ao carregar agendamentos.' };
 	}
 
 	return {
-		appointments,
+		appointments: appointments ?? [],
 		selectedDate: dateParam
 	};
 };

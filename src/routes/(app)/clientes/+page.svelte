@@ -1,0 +1,207 @@
+<script lang="ts">
+	import { Plus, Search, Pencil, Trash2, Phone, User, LoaderCircle } from '@lucide/svelte';
+	import * as Card from '$lib/components/ui/card';
+	import * as Dialog from '$lib/components/ui/dialog';
+	import * as AlertDialog from '$lib/components/ui/alert-dialog'; // Adicionado
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
+	import { toast } from 'svelte-sonner';
+	import { enhance } from '$app/forms';
+
+	let { data } = $props();
+
+	// Estados para Modais
+	let open = $state(false);
+	let openDelete = $state(false); // Estado do AlertDialog
+	let isSubmitting = $state(false);
+	let isDeleting = $state(false);
+
+	// Dados para manipulação
+	let editingCustomer = $state<{ id?: string; name: string; phone: string } | null>(null);
+	let customerToDelete = $state<{ id: string; name: string } | null>(null);
+
+	// Filtro de busca
+	let searchQuery = $state('');
+	let filteredCustomers = $derived(
+		data.customers.filter(
+			(c) =>
+				c.name.toLowerCase().includes(searchQuery.toLowerCase()) || c.phone.includes(searchQuery)
+		)
+	);
+
+	function startEdit(customer: any) {
+		editingCustomer = { ...customer };
+		open = true;
+	}
+
+	function startCreate() {
+		editingCustomer = { name: '', phone: '' };
+		open = true;
+	}
+
+	function confirmDelete(customer: any) {
+		customerToDelete = { id: customer.id, name: customer.name };
+		openDelete = true;
+	}
+</script>
+
+<div class="mx-auto flex max-w-7xl flex-col gap-6 p-6">
+	<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+		<div>
+			<h1 class="text-2xl font-bold tracking-tight">Clientes</h1>
+			<p class="text-sm text-muted-foreground">Gerencie sua base de contatos.</p>
+		</div>
+		<Button onclick={startCreate} size="sm" class="h-9 shadow-sm">
+			<Plus class="mr-2 h-4 w-4" /> Novo Cliente
+		</Button>
+	</div>
+
+	<Card.Root>
+		<Card.Header class="pb-3">
+			<div class="relative max-w-sm">
+				<Search class="absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground" />
+				<Input
+					type="search"
+					placeholder="Buscar por nome ou telefone..."
+					class="pl-9"
+					bind:value={searchQuery}
+				/>
+			</div>
+		</Card.Header>
+		<Card.Content>
+			<div class="rounded-md border">
+				<table class="w-full text-sm">
+					<thead>
+						<tr class="border-b bg-muted/50 text-left font-medium">
+							<th class="p-3">Nome</th>
+							<th class="p-3">WhatsApp</th>
+							<th class="p-3 text-right">Ações</th>
+						</tr>
+					</thead>
+					<tbody>
+						{#each filteredCustomers as customer (customer.id)}
+							<tr class="border-b transition-colors hover:bg-muted/30">
+								<td class="p-3 font-medium">{customer.name}</td>
+								<td class="p-3 font-mono text-muted-foreground">{customer.phone}</td>
+								<td class="p-3 text-right">
+									<div class="flex justify-end gap-2">
+										<Button variant="ghost" size="icon" onclick={() => startEdit(customer)}>
+											<Pencil class="h-4 w-4" />
+										</Button>
+
+										<Button
+											variant="ghost"
+											size="icon"
+											class="text-destructive hover:bg-destructive/10"
+											onclick={() => confirmDelete(customer)}
+										>
+											<Trash2 class="h-4 w-4" />
+										</Button>
+									</div>
+								</td>
+							</tr>
+						{:else}
+							<tr>
+								<td colspan="3" class="p-8 text-center text-muted-foreground italic"
+									>Nenhum cliente encontrado.</td
+								>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+		</Card.Content>
+	</Card.Root>
+</div>
+
+<Dialog.Root bind:open>
+	<Dialog.Content class="sm:max-w-[425px]">
+		<Dialog.Header>
+			<Dialog.Title>{editingCustomer?.id ? 'Editar Cliente' : 'Novo Cliente'}</Dialog.Title>
+		</Dialog.Header>
+		<form
+			method="POST"
+			action="?/upsert"
+			class="grid gap-4 py-4"
+			use:enhance={() => {
+				isSubmitting = true;
+				return async ({ result, update }) => {
+					await update();
+					isSubmitting = false;
+					if (result.type === 'success') {
+						open = false;
+						toast.success('Cliente salvo com sucesso!');
+					}
+				};
+			}}
+		>
+			{#if editingCustomer?.id}
+				<input type="hidden" name="id" value={editingCustomer.id} />
+			{/if}
+			<div class="grid gap-2">
+				<Label for="name">Nome completo</Label>
+				<Input id="name" name="name" bind:value={editingCustomer!.name} required />
+			</div>
+			<div class="grid gap-2">
+				<Label for="phone">WhatsApp (com DDD)</Label>
+				<Input
+					id="phone"
+					name="phone"
+					bind:value={editingCustomer!.phone}
+					placeholder="41999999999"
+					required
+				/>
+			</div>
+			<Dialog.Footer>
+				<Button type="submit" disabled={isSubmitting}>
+					{#if isSubmitting}
+						<LoaderCircle class="mr-2 h-4 w-4 animate-spin" />
+					{/if}
+					Salvar Cliente
+				</Button>
+			</Dialog.Footer>
+		</form>
+	</Dialog.Content>
+</Dialog.Root>
+
+<AlertDialog.Root bind:open={openDelete}>
+	<AlertDialog.Content>
+		<AlertDialog.Header>
+			<AlertDialog.Title>Excluir cliente?</AlertDialog.Title>
+			<AlertDialog.Description>
+				Tem certeza que deseja remover <strong>{customerToDelete?.name}</strong>? Esta ação também
+				poderá afetar agendamentos vinculados a este cliente.
+			</AlertDialog.Description>
+		</AlertDialog.Header>
+		<AlertDialog.Footer>
+			<AlertDialog.Cancel disabled={isDeleting}>Cancelar</AlertDialog.Cancel>
+
+			<form
+				method="POST"
+				action="?/delete"
+				use:enhance={() => {
+					isDeleting = true;
+					return async ({ result, update }) => {
+						await update();
+						isDeleting = false;
+						if (result.type === 'success') {
+							openDelete = false;
+							toast.success('Cliente removido com sucesso!');
+						} else {
+							toast.error('Erro ao excluir cliente.');
+						}
+					};
+				}}
+			>
+				<input type="hidden" name="id" value={customerToDelete?.id} />
+				<Button type="submit" variant="destructive" disabled={isDeleting} class="gap-2">
+					{#if isDeleting}
+						<LoaderCircle class="h-4 w-4 animate-spin" />
+					{/if}
+					Confirmar Exclusão
+				</Button>
+			</form>
+		</AlertDialog.Footer>
+	</AlertDialog.Content>
+</AlertDialog.Root>

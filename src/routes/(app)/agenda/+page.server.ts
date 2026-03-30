@@ -9,8 +9,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 	const from = `${dateParam}T00:00:00-03:00`;
 	const to = `${dateParam}T23:59:59-03:00`;
 
-	// 3. Usa o supabase que já está no locals
-	// O locals.supabase já deve estar autenticado pelo seu hook
+	// 3. Usa o supabase que está no locals
+	// O locals.supabase já deve estar autenticado pelo hook
 	const { data: appointments, error } = await locals.supabase.rpc('get_appointments', {
 		p_profile_id: locals.user?.id,
 		p_from_tz: from,

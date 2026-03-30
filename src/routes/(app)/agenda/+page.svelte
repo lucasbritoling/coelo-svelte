@@ -1,11 +1,133 @@
-<script>
-	import { CalendarDate, parseDate } from '@internationalized/date';
+<script lang="ts">
+	import { CalendarIcon, Clock, Plus, Copy, MessageCircle } from '@lucide/svelte';
+	import * as Card from '$lib/components/ui/card';
+	import { Badge } from '$lib/components/ui/badge';
+	import { Button } from '$lib/components/ui/button';
+	import { navigating } from '$app/state';
 
-	// Criando um estado reativo com uma data inicial
-	let dataSelecionada = $state(new CalendarDate(2024, 12, 25));
+	// Svelte 5: Recebendo os dados da load function
+	let { data } = $props();
 
-	// Ou convertendo uma string que veio de algum lugar
-	let dataDaApi = parseDate('2024-01-01');
+	// Título formatado reativo (substitui o DynamicAgendaHeader do Next)
+	// Usamos a Intl nativa para evitar dependências extras como date-fns no cliente
+	let formattedTitle = $derived.by(() => {
+		const [y, m, d] = data.selectedDate.split('-').map(Number);
+		const date = new Date(y, m - 1, d);
+		return new Intl.DateTimeFormat('pt-BR', {
+			weekday: 'long',
+			day: 'numeric',
+			month: 'long'
+		}).format(date);
+	});
 </script>
 
-<p>A data escolhida é: {dataDaApi.toString()}</p>
+<div class="mx-auto flex max-w-7xl flex-col gap-6 p-6">
+	<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+		<div class={navigating.to ? 'opacity-50 transition-opacity' : ''}>
+			<h1 class="text-2xl font-bold tracking-tight capitalize">
+				{formattedTitle}
+			</h1>
+			<p class="text-sm text-muted-foreground">
+				Visualize e controle seus atendimentos profissionais.
+			</p>
+		</div>
+
+		<div class="flex items-center">
+			<Button size="sm" class="h-9 shadow-sm">
+				<Plus class="mr-2 h-4 w-4" /> Novo Horário
+			</Button>
+		</div>
+	</div>
+
+	<div class="grid gap-8 lg:grid-cols-3">
+		<div class="space-y-4 lg:col-span-2">
+			<h2
+				class="mb-2 flex items-center gap-2 text-xs font-bold tracking-[0.2em] text-muted-foreground uppercase"
+			>
+				<Clock class="h-3.5 w-3.5 text-primary" />
+				Atendimentos do Dia
+			</h2>
+
+			{#if data.appointments.length === 0}
+				<div
+					class="flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-12 opacity-60"
+				>
+					<p class="text-sm text-muted-foreground italic">Nenhum agendamento encontrado.</p>
+				</div>
+			{:else}
+				<div class="grid gap-3" class:opacity-50={navigating.to}>
+					{#each data.appointments as app (app.id)}
+						<Card.Root
+							class="group overflow-hidden border-sidebar-border/50 shadow-sm transition-all hover:border-primary/40"
+						>
+							<Card.Header class="flex-row items-center justify-between gap-5 space-y-0 pt-3">
+								<div class="flex w-full items-center gap-5">
+									<div class="flex min-w-18.75 flex-col border-r border-foreground/5 pr-5">
+										<span class="text-base font-bold tracking-tight">{app.start_at}</span>
+										<span
+											class="text-[10px] font-medium tracking-widest text-muted-foreground/60 uppercase"
+											>Início</span
+										>
+									</div>
+
+									<div class="flex-1 space-y-0.5">
+										<Card.Title class="text-sm font-semibold tracking-tight"
+											>{app.customer_name}</Card.Title
+										>
+										<Card.Description class="text-xs">{app.service_name}</Card.Description>
+									</div>
+								</div>
+							</Card.Header>
+
+							<Card.Footer class="flex justify-between bg-muted/30 py-2">
+								<div class="flex items-center gap-3">
+									<Badge
+										variant={app.status === 'confirmed' ? 'default' : 'outline'}
+										class="h-4.5 px-1.5 text-[9px] font-bold tracking-wider uppercase"
+									>
+										{app.status === 'confirmed' ? 'Confirmado' : 'Pendente'}
+									</Badge>
+
+									{#if app.customer_phone}
+										<a
+											href="https://wa.me/{app.customer_phone.replace(
+												/\D/g,
+												''
+											)}?text=Olá {app.customer_name}..."
+											target="_blank"
+											class="group/wa flex items-center gap-2 font-mono text-[10px] text-muted-foreground/50 transition-all hover:text-green-600"
+										>
+											<MessageCircle
+												class="h-3.5 w-3.5 text-green-500 group-hover/wa:fill-green-500/10"
+											/>
+											<span class="group-hover:underline">{app.customer_phone}</span>
+										</a>
+									{/if}
+								</div>
+							</Card.Footer>
+						</Card.Root>
+					{/each}
+				</div>
+			{/if}
+		</div>
+
+		<div class="space-y-6">
+			<Card.Root class="border-none bg-muted/30 shadow-none ring-1 ring-foreground/5 ring-inset">
+				<Card.Header class="pb-3">
+					<Card.Title class="text-sm font-semibold tracking-tight">Link de Agendamento</Card.Title>
+					<Card.Description class="text-xs">Seus clientes marcam por aqui:</Card.Description>
+				</Card.Header>
+				<Card.Content class="space-y-3">
+					<div
+						class="truncate rounded-md border border-border bg-background/80 p-2.5 font-mono text-[11px] shadow-inner"
+					>
+						coelo.dev/placeholder
+					</div>
+					<Button variant="secondary" size="sm" class="w-full gap-2 text-xs font-medium">
+						<Copy class="h-3.5 w-3.5" /> Copiar Link
+					</Button>
+				</Card.Content>
+			</Card.Root>
+		</div>
+	</div>
+</div>

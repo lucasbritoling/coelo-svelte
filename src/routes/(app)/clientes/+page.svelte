@@ -1,25 +1,52 @@
 <script lang="ts">
-	import { Plus, Search, Pencil, Trash2, Phone, User, LoaderCircle } from '@lucide/svelte';
+	import { Plus, Search, Pencil, Trash2, LoaderCircle } from '@lucide/svelte';
 	import * as Card from '$lib/components/ui/card';
 	import * as Dialog from '$lib/components/ui/dialog';
-	import * as AlertDialog from '$lib/components/ui/alert-dialog'; // Adicionado
+	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { toast } from 'svelte-sonner';
+
+	import { customerSchema } from '$lib/schemas/app';
+	import { superForm } from 'sveltekit-superforms';
+	import { zod4Client } from 'sveltekit-superforms/adapters';
 	import { enhance } from '$app/forms';
 
 	let { data } = $props();
 
 	// Estados para Modais
 	let open = $state(false);
-	let openDelete = $state(false); // Estado do AlertDialog
-	let isSubmitting = $state(false);
+	let openDelete = $state(false);
 	let isDeleting = $state(false);
-
-	// Dados para manipulação
-	let editingCustomer = $state<{ id?: string; name: string; phone: string } | null>(null);
 	let customerToDelete = $state<{ id: string; name: string } | null>(null);
+
+	// Configuração do Superforms para o Upsert
+	// svelte-ignore state_referenced_locally
+	const {
+		form,
+		errors,
+		enhance: formEnhance,
+		delayed,
+		reset,
+		message
+	} = superForm(data.form, {
+		validators: zod4Client(customerSchema),
+		resetForm: true,
+
+		onUpdated: ({ form }) => {
+			if (form.valid) {
+				open = false;
+				toast.success('Cliente salvo com sucesso!');
+			} else {
+				if ($message) {
+					toast.error($message);
+				} else {
+					toast.error('Erro de validação. Verifique os campos.');
+				}
+			}
+		}
+	});
 
 	// Filtro de busca
 	let searchQuery = $state('');
@@ -31,12 +58,17 @@
 	);
 
 	function startEdit(customer: any) {
-		editingCustomer = { ...customer };
+		// Preenche o store do superform com os dados do cliente
+		$form = {
+			id: customer.id,
+			name: customer.name,
+			phone: customer.phone
+		};
 		open = true;
 	}
 
 	function startCreate() {
-		editingCustomer = { name: '', phone: '' };
+		reset(); // Limpa o formulário para um novo cliente
 		open = true;
 	}
 
@@ -89,7 +121,6 @@
 										<Button variant="ghost" size="icon" onclick={() => startEdit(customer)}>
 											<Pencil class="h-4 w-4" />
 										</Button>
-
 										<Button
 											variant="ghost"
 											size="icon"
@@ -103,9 +134,9 @@
 							</tr>
 						{:else}
 							<tr>
-								<td colspan="3" class="p-8 text-center text-muted-foreground italic"
-									>Nenhum cliente encontrado.</td
-								>
+								<td colspan="3" class="p-8 text-center text-muted-foreground italic">
+									Nenhum cliente encontrado.
+								</td>
 							</tr>
 						{/each}
 					</tbody>
@@ -118,44 +149,44 @@
 <Dialog.Root bind:open>
 	<Dialog.Content class="sm:max-w-[425px]">
 		<Dialog.Header>
-			<Dialog.Title>{editingCustomer?.id ? 'Editar Cliente' : 'Novo Cliente'}</Dialog.Title>
+			<Dialog.Title>{$form.id ? 'Editar Cliente' : 'Novo Cliente'}</Dialog.Title>
 		</Dialog.Header>
-		<form
-			method="POST"
-			action="?/upsert"
-			class="grid gap-4 py-4"
-			use:enhance={() => {
-				isSubmitting = true;
-				return async ({ result, update }) => {
-					await update();
-					isSubmitting = false;
-					if (result.type === 'success') {
-						open = false;
-						toast.success('Cliente salvo com sucesso!');
-					}
-				};
-			}}
-		>
-			{#if editingCustomer?.id}
-				<input type="hidden" name="id" value={editingCustomer.id} />
+
+		<form method="POST" action="?/upsert" class="grid gap-4 pt-4 pb-0" use:formEnhance>
+			{#if $form.id}
+				<input type="hidden" name="id" bind:value={$form.id} />
 			{/if}
+
 			<div class="grid gap-2">
 				<Label for="name">Nome completo</Label>
-				<Input id="name" name="name" bind:value={editingCustomer!.name} required />
+				<Input
+					id="name"
+					name="name"
+					bind:value={$form.name}
+					aria-invalid={$errors.name ? 'true' : undefined}
+				/>
+				{#if $errors.name}
+					<small class="text-destructive">{$errors.name}</small>
+				{/if}
 			</div>
+
 			<div class="grid gap-2">
 				<Label for="phone">WhatsApp (com DDD)</Label>
 				<Input
 					id="phone"
 					name="phone"
-					bind:value={editingCustomer!.phone}
+					bind:value={$form.phone}
 					placeholder="41999999999"
-					required
+					aria-invalid={$errors.phone ? 'true' : undefined}
 				/>
+				{#if $errors.phone}
+					<small class="text-destructive">{$errors.phone}</small>
+				{/if}
 			</div>
+
 			<Dialog.Footer>
-				<Button type="submit" disabled={isSubmitting}>
-					{#if isSubmitting}
+				<Button type="submit" disabled={$delayed}>
+					{#if $delayed}
 						<LoaderCircle class="mr-2 h-4 w-4 animate-spin" />
 					{/if}
 					Salvar Cliente
@@ -171,6 +202,8 @@
 			<AlertDialog.Title>Excluir cliente?</AlertDialog.Title>
 			<AlertDialog.Description>
 				Tem certeza que deseja remover <strong>{customerToDelete?.name}</strong>?
+				<br />
+				<span class="text-xs text-muted-foreground">Esta ação não pode ser desfeita.</span>
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
@@ -182,29 +215,30 @@
 				use:enhance={() => {
 					isDeleting = true;
 					return async ({ result, update }) => {
-						// Primeiro rodamos o update para garantir que o SvelteKit
-						// sincronize o estado da página (mesmo em caso de falha)
-						await update();
 						isDeleting = false;
-
 						if (result.type === 'success') {
-							openDelete = false; // Só fecha se realmente deletou
+							openDelete = false;
 							toast.success('Cliente removido com sucesso!');
+							await update();
 						} else if (result.type === 'failure') {
-							// Aqui capturamos o "Não é possível excluir..." da Action
-							toast.error(result.data?.message ?? 'Erro ao excluir cliente.');
-						} else {
-							toast.error('Ocorreu um erro inesperado.');
+							toast.error(result.data?.message || 'Erro ao excluir');
 						}
 					};
 				}}
 			>
 				<input type="hidden" name="id" value={customerToDelete?.id} />
-				<Button type="submit" variant="destructive" disabled={isDeleting} class="gap-2">
+
+				<Button
+					type="submit"
+					variant="destructive"
+					disabled={isDeleting}
+					class="min-w-[140px] gap-2"
+				>
 					{#if isDeleting}
 						<LoaderCircle class="h-4 w-4 animate-spin" />
 						Excluindo...
 					{:else}
+						<Trash2 class="h-4 w-4" />
 						Confirmar Exclusão
 					{/if}
 				</Button>

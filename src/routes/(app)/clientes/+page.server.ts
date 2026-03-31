@@ -1,38 +1,53 @@
+import { superValidate, message } from 'sveltekit-superforms';
+import { zod4 } from 'sveltekit-superforms/adapters';
+import { customerSchema } from '$lib/schemas/app';
 import { fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
+	const form = await superValidate(zod4(customerSchema));
 	const { data: customers, error } = await locals.supabase
 		.from('customers')
 		.select('*')
 		.order('name');
 
-	if (error) return { customers: [], error: error.message };
-	return { customers };
+	if (error) return { form, customers: [], error: error.message };
+	return { form, customers: customers ?? [] };
 };
 
 export const actions: Actions = {
 	upsert: async ({ request, locals }) => {
-		const formData = await request.formData();
-		const id = formData.get('id') as string;
-		const name = formData.get('name') as string;
-		const phone = formData.get('phone') as string;
+		// 1. Valida o formulário inteiro de uma vez
+		const form = await superValidate(request, zod4(customerSchema));
 
+		// 2. Se o Zod encontrar erros (nome curto, tel inválido, etc),
+		// ele já retorna os erros formatados para o componente
+		if (!form.valid) {
+			return fail(400, { form });
+		}
+
+		// 3. Monta o objeto de dados usando form.data (que já está tipado!)
+		const { id, name, phone } = form.data;
 		const customerData = {
 			name,
 			phone,
 			profile_id: locals.user?.id
 		};
 
-		let result;
-		if (id) {
-			result = await locals.supabase.from('customers').update(customerData).eq('id', id);
-		} else {
-			result = await locals.supabase.from('customers').insert([customerData]);
+		// 4. Supabase
+		const query = id
+			? locals.supabase.from('customers').update(customerData).eq('id', id)
+			: locals.supabase.from('customers').insert([customerData]);
+
+		const { error } = await query;
+
+		if (error) {
+			// O 'message' do Superforms é ótimo para erros globais do banco
+			return message(form, `Erro no banco: ${error.message}`, { status: 500 });
 		}
 
-		if (result.error) return fail(500, { message: result.error.message });
-		return { success: true };
+		// 5. Retorna o form limpo ou com os dados salvos
+		return { form };
 	},
 
 	delete: async ({ request, locals }) => {
@@ -42,16 +57,7 @@ export const actions: Actions = {
 		const { error } = await locals.supabase.from('customers').delete().eq('id', id);
 
 		if (error) {
-			// Código 23503: foreign_key_violation (Violação de chave estrangeira)
-			// Ocorre quando o cliente está vinculado a um agendamento existente
-			if (error.code === '23503') {
-				return fail(400, {
-					message: 'Cliente possui agendamentos.'
-				});
-			}
-
-			// Erro genérico para outros problemas (permissão RLS, rede, etc)
-			return fail(500, { message: 'Erro ao tentar excluir o cliente.' });
+			return fail(400, { message: 'Não foi possível excluir: ' + error.message });
 		}
 
 		return { success: true };

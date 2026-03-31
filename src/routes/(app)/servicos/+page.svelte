@@ -127,7 +127,7 @@
 		<form
 			method="POST"
 			action="?/upsert"
-			class="grid gap-4 py-4"
+			class="grid gap-4 pt-4 pb-0"
 			use:enhance={() => {
 				isSubmitting = true;
 				return async ({ result, update }) => {

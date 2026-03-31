@@ -6,6 +6,7 @@
 	import { navigating } from '$app/state';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import AppointmentForm from '$lib/components/dashboard/appointment-form.svelte';
+	import { toast } from 'svelte-sonner';
 
 	let showAppointmentModal = $state(false);
 
@@ -13,6 +14,19 @@
 
 	// Svelte 5: Recebendo os dados da load function
 	let { data } = $props();
+
+	const schedulingLink = 'coelo.dev/placeholder';
+
+	function copyToClipboard() {
+		navigator.clipboard
+			.writeText(schedulingLink)
+			.then(() => {
+				toast.success('Link copiado para a área de transferência!');
+			})
+			.catch(() => {
+				toast.error('Erro ao copiar o link. Tente manualmente.');
+			});
+	}
 
 	// Título formatado reativo (substitui o DynamicAgendaHeader do Next)
 	// Usamos a Intl nativa para evitar dependências extras como date-fns no cliente
@@ -158,9 +172,14 @@
 					<div
 						class="truncate rounded-md border border-border bg-background/80 p-2.5 font-mono text-[11px] shadow-inner"
 					>
-						coelo.dev/placeholder
+						{schedulingLink}
 					</div>
-					<Button variant="secondary" size="sm" class="w-full gap-2 text-xs font-medium">
+					<Button
+						onclick={copyToClipboard}
+						variant="secondary"
+						size="sm"
+						class="w-full gap-2 text-xs font-medium"
+					>
 						<Copy class="h-3.5 w-3.5" /> Copiar Link
 					</Button>
 				</Card.Content>

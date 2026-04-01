@@ -10,6 +10,21 @@
 
 	let { data } = $props();
 
+	let saveTimeout: ReturnType<typeof setTimeout>;
+
+	function handleTimeChange(e: Event) {
+        const form = (e.currentTarget as HTMLInputElement).form;
+        if (!form) return;
+
+        // Limpa o timer anterior toda vez que o usuário digita algo novo
+        clearTimeout(saveTimeout);
+
+        // Define um novo timer de 1000ms (1 segundo)
+        saveTimeout = setTimeout(() => {
+            form.requestSubmit();
+        }, 1000); 
+    }
+
 	const daysOfWeek = [
 		'Domingo',
 		'Segunda-feira',
@@ -85,30 +100,24 @@
 					</div>
 
 					<div class="flex items-center gap-2" class:opacity-30={!day.is_active}>
-						<Input
-							type="time"
-							name="start_time"
-							bind:value={day.start_time}
-							class="h-9 w-28"
-							readonly={!day.is_active}
-							onchange={(e) => {
-								console.log('Horário Início alterado:', e.currentTarget.value);
-								e.currentTarget.form?.requestSubmit();
-							}}
-						/>
-						<span class="font-mono text-xs text-muted-foreground">-</span>
-						<Input
-							type="time"
-							name="end_time"
-							bind:value={day.end_time}
-							class="h-9 w-28"
-							readonly={!day.is_active}
-							onchange={(e) => {
-								console.log('Horário Término alterado:', e.currentTarget.value);
-								e.currentTarget.form?.requestSubmit();
-							}}
-						/>
-					</div>
+    <Input
+        type="time"
+        name="start_time"
+        bind:value={day.start_time}
+        class="h-9 w-28"
+        readonly={!day.is_active}
+        oninput={handleTimeChange} 
+    />
+    <span class="font-mono text-xs text-muted-foreground">-</span>
+    <Input
+        type="time"
+        name="end_time"
+        bind:value={day.end_time}
+        class="h-9 w-28"
+        readonly={!day.is_active}
+        oninput={handleTimeChange} 
+    />
+</div>
 				</form>
 			{/each}
 		</div>

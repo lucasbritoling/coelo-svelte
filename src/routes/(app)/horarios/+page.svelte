@@ -37,28 +37,48 @@
 			</h2>
 			{#each data.workingHours as day (day.id)}
 				<form
+					id="form-{day.id}"
 					method="POST"
 					action="?/updateWorkingDay"
 					use:enhance={() => {
-						return async ({ result }) => {
-							if (result.type === 'success')
-								toast.success(`Atualizado: ${daysOfWeek[day.day_of_week]}`);
-							if (result.type === 'failure') toast.error('Horário inválido');
+						console.log(`ENVIANDO FORM ${day.id}:`, { is_active: day.is_active });
+						return async ({ result, update }) => {
+							console.log('RESULTADO DA ACTION RECEBIDO:', result.type);
+							await update({ invalidateAll: true });
 						};
 					}}
-					class="flex items-center gap-4 rounded-xl border bg-card p-4 shadow-sm transition-all hover:border-primary/20"
+					class="flex items-center gap-4 rounded-xl border bg-card p-4 shadow-sm transition-all"
 				>
 					<input type="hidden" name="id" value={day.id} />
 
+					<input
+						type="checkbox"
+						name="is_active"
+						id="check-{day.id}"
+						checked={day.is_active}
+						class="hidden"
+					/>
+
 					<div class="flex flex-1 items-center gap-4">
 						<Switch
-							name="is_active"
 							checked={day.is_active}
 							onCheckedChange={(v) => {
-								// Pequeno truque para disparar o submit ao mudar o switch
+								console.log(`SWITCH CLICK: Novo valor = ${v} para o dia ${day.day_of_week}`);
+
+								// 1. Atualiza o estado reativo do Svelte 5
+								day.is_active = v;
+
+								// 2. Sincroniza o input nativo (o SvelteKit precisa dele)
+								const checkbox = document.getElementById(`check-${day.id}`) as HTMLInputElement;
+								if (checkbox) checkbox.checked = v;
+
+								console.log('Checkbox real está marcado?', checkbox?.checked);
+
+								// 3. Dispara o submit
 								setTimeout(() => {
-									(day as any).formElement?.requestSubmit();
-								}, 0);
+									const form = document.getElementById(`form-${day.id}`) as HTMLFormElement;
+									form?.requestSubmit();
+								}, 50);
 							}}
 						/>
 						<span class="w-24 text-sm font-medium">{daysOfWeek[day.day_of_week]}</span>
@@ -68,19 +88,25 @@
 						<Input
 							type="time"
 							name="start_time"
-							value={day.start_time.slice(0, 5)}
+							bind:value={day.start_time}
 							class="h-9 w-28"
-							disabled={!day.is_active}
-							onchange={(e) => (e.currentTarget.form as HTMLFormElement).requestSubmit()}
+							readonly={!day.is_active}
+							onchange={(e) => {
+								console.log('Horário Início alterado:', e.currentTarget.value);
+								e.currentTarget.form?.requestSubmit();
+							}}
 						/>
 						<span class="font-mono text-xs text-muted-foreground">-</span>
 						<Input
 							type="time"
 							name="end_time"
-							value={day.end_time.slice(0, 5)}
+							bind:value={day.end_time}
 							class="h-9 w-28"
-							disabled={!day.is_active}
-							onchange={(e) => (e.currentTarget.form as HTMLFormElement).requestSubmit()}
+							readonly={!day.is_active}
+							onchange={(e) => {
+								console.log('Horário Término alterado:', e.currentTarget.value);
+								e.currentTarget.form?.requestSubmit();
+							}}
 						/>
 					</div>
 				</form>

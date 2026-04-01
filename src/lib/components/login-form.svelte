@@ -86,7 +86,7 @@
 					<Field>
 						<Button type="submit">Entrar</Button>
 						<FieldDescription class="text-center">
-							Não possui uma conta? <a href="##">Inscreva-se</a>
+							Não possui uma conta? <a href="/signup">Inscreva-se</a>
 						</FieldDescription>
 					</Field>
 				</FieldGroup>

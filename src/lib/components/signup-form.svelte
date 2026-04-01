@@ -5,8 +5,25 @@
 	import * as Field from '$lib/components/ui/field/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import type { HTMLAttributes } from 'svelte/elements';
+	import { LoaderCircle } from '@lucide/svelte';
 
-	let { class: className, ...restProps }: HTMLAttributes<HTMLDivElement> = $props();
+	import { superForm } from 'sveltekit-superforms';
+	import type { SuperValidated, Infer } from 'sveltekit-superforms';
+	import { signupSchema } from '$lib/schemas/auth';
+	import { zod4Client } from 'sveltekit-superforms/adapters';
+
+	interface Props extends HTMLAttributes<HTMLDivElement> {
+		data: SuperValidated<Infer<typeof signupSchema>>;
+	}
+
+	// Svelte 5: Usando snippets/props desestruturados
+	let { class: className, data, ...restProps }: Props = $props();
+
+	// Inicialização do Superforms v2 (totalmente compatível com Runes)
+	const { form, errors, enhance, message, delayed } = superForm(data, {
+		validators: zod4Client(signupSchema),
+		resetForm: false
+	});
 </script>
 
 <div class={cn('flex flex-col gap-6', className)} {...restProps}>
@@ -16,33 +33,74 @@
 			<Card.Description>Insira seu e-mail abaixo para criar sua conta</Card.Description>
 		</Card.Header>
 		<Card.Content>
-			<form>
+			<form method="POST" use:enhance>
+				{#if $message}
+					<div class="mb-4 text-center text-sm font-medium text-destructive">
+						{$message}
+					</div>
+				{/if}
+
 				<Field.Group>
 					<Field.Field>
-						<Field.Label for="name">Nome Completo</Field.Label>
-						<Input id="name" type="text" placeholder="Maria Oliveira" required />
+						<Field.Label for="full_name">Nome Completo</Field.Label>
+						<Input name="full_name" bind:value={$form.full_name} />
+						{#if $errors.full_name}<span class="text-xs text-destructive">{$errors.full_name}</span
+							>{/if}
+					</Field.Field>
+
+					<Field.Field>
+						<Field.Label for="username">Link na bio</Field.Label>
+						<Input name="username" bind:value={$form.username} />
+						{#if $errors.username}<span class="text-xs text-destructive">{$errors.username}</span
+							>{/if}
 					</Field.Field>
 					<Field.Field>
 						<Field.Label for="email">E-mail</Field.Label>
-						<Input id="email" type="email" placeholder="email@exemplo.com" required />
+						<Input
+							name="email"
+							id="email"
+							type="email"
+							placeholder="email@exemplo.com"
+							bind:value={$form.email}
+						/>
+						{#if $errors.email}
+							<span class="text-xs text-destructive">{$errors.email}</span>
+						{/if}
 					</Field.Field>
-					<Field.Field>
-						<Field.Field class="grid grid-cols-2 gap-4">
-							<Field.Field>
-								<Field.Label for="password">Senha</Field.Label>
-								<Input id="password" type="password" required />
-							</Field.Field>
-							<Field.Field>
-								<Field.Label for="confirm-password">Confirmar Senha</Field.Label>
-								<Input id="confirm-password" type="password" required />
-							</Field.Field>
+
+					<div class="grid grid-cols-2 gap-4">
+						<Field.Field>
+							<Field.Label for="password">Senha</Field.Label>
+							<Input name="password" id="password" type="password" bind:value={$form.password} />
 						</Field.Field>
-						<Field.Description>Ao menos 6 caracteres.</Field.Description>
-					</Field.Field>
+						<Field.Field>
+							<Field.Label for="confirmPassword">Confirmar</Field.Label>
+							<Input
+								name="confirmPassword"
+								id="confirmPassword"
+								type="password"
+								bind:value={$form.confirmPassword}
+							/>
+						</Field.Field>
+					</div>
+
+					{#if $errors.password || $errors.confirmPassword}
+						<p class="text-xs text-destructive">
+							{$errors.password || $errors.confirmPassword}
+						</p>
+					{/if}
+
 					<Field.Field>
-						<Button type="submit">Criar conta</Button>
+						<Button type="submit" class="w-full" disabled={$delayed}>
+							{#if $delayed}
+								<LoaderCircle class="mr-2 size-4 animate-spin" />
+								Criando conta...
+							{:else}
+								Criar conta
+							{/if}
+						</Button>
 						<Field.Description class="text-center">
-							Possui uma conta? <a href="#/">Entrar</a>
+							Possui uma conta? <a href="/login" class="underline">Entrar</a>
 						</Field.Description>
 					</Field.Field>
 				</Field.Group>

@@ -3,7 +3,7 @@ import { type Handle, redirect } from '@sveltejs/kit';
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY } from '$env/static/public';
 
 const PUBLIC_ROUTES = new Set(['/login', '/signup']);
-const PRIVATE_ROUTES = new Set(['/agenda', '/clientes', '/servicos']);
+const PRIVATE_ROUTES = new Set(['/agenda', '/clientes', '/servicos', '/horarios']);
 
 export const handle: Handle = async ({ event, resolve }) => {
 	// instanciação única (singleton) do objeto de conexão com o supabase

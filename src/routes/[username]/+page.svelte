@@ -6,9 +6,24 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { Label } from '$lib/components/ui/label/index.js';
-	import { today, getLocalTimeZone, parseDate } from '@internationalized/date';
+	import {
+		today,
+		getLocalTimeZone,
+		parseDate,
+		parseAbsoluteToLocal
+	} from '@internationalized/date';
+	import { enhance } from '$app/forms';
+	import { Input } from '$lib/components/ui/input/index.js';
+	import { navigating } from '$app/state';
 
 	let { data } = $props();
+	let selectedSlot = $state<any>(null);
+
+	// --- ADICIONE ESTAS LINHAS ---
+	let isConfirming = $state(false);
+	let customerName = $state('');
+	let customerPhone = $state('');
+	// -----------------------------
 
 	// Estado derivado para facilitar o acesso
 	const { professional, services, slots } = $derived(data);
@@ -19,12 +34,44 @@
 	);
 
 	// Função para atualizar a URL e disparar o load novamente (reatividade do SvelteKit)
-	function updateSelection(params: { date?: string; serviceId?: string }) {
+	async function updateSelection(params: { date?: string; serviceId?: string }) {
+		selectedSlot = null;
+		isConfirming = false;
+
 		const newUrl = new URL(page.url);
 		if (params.date) newUrl.searchParams.set('date', params.date);
 		if (params.serviceId) newUrl.searchParams.set('serviceId', params.serviceId);
 
-		goto(newUrl, { keepFocus: true, noScroll: true, replaceState: true });
+		// No SvelteKit, navegar para a busca (?...) na mesma página
+		// é mais seguro passando apenas o search string
+		try {
+			await goto(newUrl.search, {
+				keepFocus: true,
+				noScroll: true,
+				replaceState: true
+			});
+		} catch (e) {
+			console.error('Navegação interrompida:', e);
+		}
+	}
+
+	function formatSlotTime(isoString: string) {
+		try {
+			// Se o banco retornar '2026-04-08 09:00:00', precisamos garantir que o JS entenda como UTC
+			// antes de converter. Se já vier com 'Z' ou '+00', o parseAbsoluteToLocal resolve direto.
+			const normalized =
+				isoString.includes('Z') || isoString.includes('+')
+					? isoString
+					: isoString.replace(' ', 'T') + 'Z';
+
+			return parseAbsoluteToLocal(normalized).toDate().toLocaleTimeString('pt-BR', {
+				hour: '2-digit',
+				minute: '2-digit'
+			});
+		} catch (e) {
+			console.error('Erro ao formatar data:', e);
+			return isoString; // Fallback
+		}
 	}
 </script>
 
@@ -95,21 +142,71 @@
 				</Card.Description>
 			</Card.Header>
 			<Card.Content>
-				{#if slots.length > 0}
-					<div class="grid grid-cols-2 gap-2">
-						{#each slots as slot (slot.slot_start)}
-							<Button variant="outline" class="font-mono">
-								{new Date(slot.slot_start).toLocaleTimeString('pt-BR', {
-									hour: '2-digit',
-									minute: '2-digit'
-								})}
-							</Button>
-						{/each}
-					</div>
-				{:else if data.selectedServiceId && data.selectedDate}
-					<p class="text-center text-sm text-muted-foreground">
-						Sem horários disponíveis para este dia.
-					</p>
+				{#if !isConfirming}
+					{#if slots.length > 0}
+						<div class="grid grid-cols-2 gap-2">
+							{#each slots as slot (slot.slot_start)}
+								<Button
+									variant={selectedSlot?.slot_start === slot.slot_start ? 'default' : 'outline'}
+									class="font-mono transition-all"
+									onclick={() => (selectedSlot = slot)}
+								>
+									{formatSlotTime(slot.slot_start)}
+								</Button>
+							{/each}
+						</div>
+
+						{#if selectedSlot}
+							<div class="mt-6 animate-in border-t pt-4 fade-in slide-in-from-top-2">
+								<Button class="w-full" size="lg" onclick={() => (isConfirming = true)}>
+									Avançar
+								</Button>
+							</div>
+						{/if}
+					{:else if data.selectedServiceId && data.selectedDate}
+						<p class="py-4 text-center text-sm text-muted-foreground">Sem horários disponíveis.</p>
+					{/if}
+				{:else}
+					<form
+						method="POST"
+						action="?/createAppointment"
+						use:enhance
+						class="animate-in space-y-4 fade-in slide-in-from-right-4"
+					>
+						<input type="hidden" name="slot_start" value={selectedSlot.slot_start} />
+						<input type="hidden" name="service_id" value={data.selectedServiceId} />
+						<input type="hidden" name="profile_id" value={professional.id} />
+						<input type="hidden" name="username" value={professional.username} />
+
+						<div class="space-y-2">
+							<Label for="customer_name">Seu Nome</Label>
+							<Input
+								name="customer_name"
+								id="customer_name"
+								bind:value={customerName}
+								required
+								placeholder="Como deseja ser chamado?"
+							/>
+						</div>
+
+						<div class="space-y-2">
+							<Label for="customer_phone">Telefone / WhatsApp</Label>
+							<Input
+								name="customer_phone"
+								id="customer_phone"
+								bind:value={customerPhone}
+								required
+								placeholder="(00) 00000-0000"
+							/>
+						</div>
+
+						<div class="flex gap-2 pt-4">
+							<Button variant="outline" class="flex-1" onclick={() => (isConfirming = false)}
+								>Voltar</Button
+							>
+							<Button type="submit" class="flex-1">Finalizar Agendamento</Button>
+						</div>
+					</form>
 				{/if}
 			</Card.Content>
 		</Card.Root>

@@ -3,20 +3,26 @@ import { today, getLocalTimeZone } from '@internationalized/date';
 import { fail } from '@sveltejs/kit';
 
 export const load: PageServerLoad = async ({ url, locals }) => {
+	const userId = locals.user?.id;
 	const dateParam = url.searchParams.get('date') ?? today(getLocalTimeZone()).toString();
 
 	const from = `${dateParam}T00:00:00-03:00`;
 	const to = `${dateParam}T23:59:59-03:00`;
 
 	// Buscamos os 3 conjuntos de dados em paralelo para não travar o carregamento
-	const [appointmentsRes, customersRes, servicesRes] = await Promise.all([
+	const [appointmentsRes, customersRes, servicesRes, profileRes] = await Promise.all([
 		locals.supabase.rpc('get_appointments', {
 			p_profile_id: locals.user?.id,
 			p_from_tz: from,
 			p_to_tz: to
 		}),
-		locals.supabase.from('customers').select('id, name').order('name'),
-		locals.supabase.from('services').select('id, name, duration').order('name')
+		locals.supabase.from('customers').select('id, name').eq('profile_id', userId).order('name'),
+		locals.supabase
+			.from('services')
+			.select('id, name, duration')
+			.eq('profile_id', userId)
+			.order('name'),
+		locals.supabase.from('profiles').select('username').eq('id', userId).single()
 	]);
 
 	// Se a RPC falhar, ainda retornamos as listas vazias para o TS não reclamar
@@ -26,6 +32,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 			appointments: [],
 			customers: customersRes.data ?? [],
 			services: servicesRes.data ?? [],
+			username: profileRes.data?.username ?? 'user',
 			selectedDate: dateParam,
 			error: 'Falha ao carregar agendamentos.'
 		};
@@ -35,6 +42,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 		appointments: appointmentsRes.data ?? [],
 		customers: customersRes.data ?? [],
 		services: servicesRes.data ?? [],
+		username: profileRes.data?.username ?? 'user',
 		selectedDate: dateParam
 	};
 };

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Clock, Plus, Copy, MessageCircle } from '@lucide/svelte';
+	import { Clock, Plus, Copy, MessageCircle, Check } from '@lucide/svelte';
 	import * as Card from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
@@ -13,18 +13,24 @@
 	import AppointmentCardAction from '$lib/components/dashboard/appointment-card-action.svelte';
 
 	// Svelte 5: Recebendo os dados da load function
+	let copied = $state(false);
 	let { data } = $props();
 
-	const schedulingLink = 'coelo.dev/placeholder';
+	const schedulingLink = $derived(`coelo.dev/${data.username}`);
 
 	function copyToClipboard() {
 		navigator.clipboard
 			.writeText(schedulingLink)
 			.then(() => {
-				toast.success('Link copiado para a área de transferência!');
+				// Ativa o estado de feedback e reseta após 2 segundos
+				copied = true;
+				toast.success('Link copiado!');
+				setTimeout(() => {
+					copied = false;
+				}, 2000);
 			})
 			.catch(() => {
-				toast.error('Erro ao copiar o link. Tente manualmente.');
+				toast.error('Erro ao copiar o link.');
 			});
 	}
 
@@ -176,11 +182,17 @@
 					</div>
 					<Button
 						onclick={copyToClipboard}
-						variant="secondary"
+						variant={copied ? 'default' : 'secondary'}
 						size="sm"
-						class="w-full gap-2 text-xs font-medium"
+						class="w-full gap-2 text-xs font-medium transition-all"
 					>
-						<Copy class="h-3.5 w-3.5" /> Copiar Link
+						{#if copied}
+							<Check class="h-3.5 w-3.5" />
+							Copiado!
+						{:else}
+							<Copy class="h-3.5 w-3.5" />
+							Copiar Link
+						{/if}
 					</Button>
 				</Card.Content>
 			</Card.Root>

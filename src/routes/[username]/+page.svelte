@@ -97,9 +97,9 @@
 			<Card.Content>
 				{#if slots.length > 0}
 					<div class="grid grid-cols-2 gap-2">
-						{#each slots as slot (slot.id)}
+						{#each slots as slot (slot.slot_start)}
 							<Button variant="outline" class="font-mono">
-								{new Date(slot.slot_start).toLocaleTimeString([], {
+								{new Date(slot.slot_start).toLocaleTimeString('pt-BR', {
 									hour: '2-digit',
 									minute: '2-digit'
 								})}

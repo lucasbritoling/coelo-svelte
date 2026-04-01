@@ -5,6 +5,20 @@ export const loginSchema = z.object({
 	password: z.string().min(6, 'Muito curto')
 });
 
+export const forgotPasswordSchema = z.object({
+	email: z.email('E-mail inválido')
+});
+
+export const resetPasswordSchema = z
+	.object({
+		password: z.string().min(6, 'A senha deve ter ao menos 6 caracteres'),
+		confirmPassword: z.string()
+	})
+	.refine((data) => data.password === data.confirmPassword, {
+		message: 'As senhas não coincidem',
+		path: ['confirmPassword']
+	});
+
 // Lista de nomes reservados para evitar conflitos com rotas do sistema e personificação [1, 2, 3]
 const RESERVED_USERNAMES = new Set([
 	'admin',

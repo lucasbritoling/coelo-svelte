@@ -71,7 +71,7 @@
 					<Field>
 						<div class="flex items-center">
 							<FieldLabel for="password-{id}">Senha</FieldLabel>
-							<a href="##" class="ms-auto text-sm underline-offset-4 hover:underline">
+							<a href="/forgot" class="ms-auto text-sm underline-offset-4 hover:underline">
 								Esqueceu sua senha?
 							</a>
 						</div>

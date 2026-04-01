@@ -72,23 +72,36 @@ export const actions: Actions = {
 
 	upsertOverride: async ({ request, locals: { supabase, user } }) => {
 		const formData = await request.formData();
+
+		// Coleta de dados para o log
 		const date = formData.get('date');
 		const is_available = formData.has('is_available');
-
 		const start_time = formData.get('start_time')?.toString() || null;
 		const end_time = formData.get('end_time')?.toString() || null;
 		const note = formData.get('note')?.toString() || null;
 
-		const { error } = await supabase.from('availability_overrides').upsert({
+		console.log('--- DEBUG: upsertOverride ---');
+		console.log('Recebido do Form:', { date, is_available, start_time, end_time, note });
+
+		const payload = {
 			profile_id: user?.id,
 			date,
 			is_available,
 			start_time: is_available ? start_time : null,
 			end_time: is_available ? end_time : null,
-			note
-		});
+			note: note || null
+		};
 
-		if (error) return fail(400, { message: error.message });
+		console.log('Payload para o Supabase:', payload);
+
+		const { data, error } = await supabase.from('availability_overrides').upsert(payload).select();
+
+		if (error) {
+			console.error('ERRO SUPABASE OVERRIDE:', error.message, error.details);
+			return fail(400, { message: error.message });
+		}
+
+		console.log('SUCESSO OVERRIDE:', data?.[0]);
 		return { success: true };
 	},
 

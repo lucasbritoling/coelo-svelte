@@ -135,7 +135,20 @@
 					<Card.Description>Feriados, folgas ou horários especiais.</Card.Description>
 				</Card.Header>
 				<Card.Content>
-					<form method="POST" action="?/upsertOverride" use:enhance class="space-y-4">
+					<form
+						method="POST"
+						action="?/upsertOverride"
+						use:enhance={() => {
+							return async ({ result, update }) => {
+								await update(); // Isso limpa o formulário e atualiza o data.overrides
+								if (result.type === 'success') {
+									toast.success('Exceção salva com sucesso!');
+									isAvailableOverride = false; // Reseta o switch visual
+								}
+							};
+						}}
+						class="space-y-4"
+					>
 						<div class="grid gap-2">
 							<Label for="date">Data</Label>
 							<Input type="date" name="date" required />
@@ -143,7 +156,18 @@
 
 						<div class="flex items-center justify-between rounded-lg border bg-muted/20 p-3">
 							<Label for="is_available" class="text-sm">Estará disponível?</Label>
-							<Switch name="is_available" bind:checked={isAvailableOverride} />
+
+							<input
+								type="checkbox"
+								name="is_available"
+								checked={isAvailableOverride}
+								class="hidden"
+							/>
+
+							<Switch
+								checked={isAvailableOverride}
+								onCheckedChange={(v) => (isAvailableOverride = v)}
+							/>
 						</div>
 
 						{#if isAvailableOverride}

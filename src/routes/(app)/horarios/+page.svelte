@@ -12,15 +12,21 @@
 
 	let saveTimeout: ReturnType<typeof setTimeout>;
 
-	function handleTimeChange(e: Event) {
+	function handleTimeChange(e: Event, dayId: string, isActive: boolean) {
 		const form = (e.currentTarget as HTMLInputElement).form;
 		if (!form) return;
 
-		// Limpa o timer anterior toda vez que o usuário digita algo novo
 		clearTimeout(saveTimeout);
 
-		// Define um novo timer de 1000ms (1 segundo)
 		saveTimeout = setTimeout(() => {
+			// --- CORREÇÃO AQUI ---
+			// Forçamos o checkbox escondido a ter o valor REAL do estado 'is_active'
+			// antes de disparar o envio. Isso evita que o navegador ignore o campo.
+			const checkbox = document.getElementById(`check-${dayId}`) as HTMLInputElement;
+			if (checkbox) {
+				checkbox.checked = isActive;
+			}
+
 			form.requestSubmit();
 		}, 1000);
 	}
@@ -103,19 +109,19 @@
 						<Input
 							type="time"
 							name="start_time"
-							bind:value={day.start_time}
+							value={day.start_time}
 							class="h-9 w-28"
 							readonly={!day.is_active}
-							oninput={handleTimeChange}
+							oninput={(e) => handleTimeChange(e, day.id, day.is_active)}
 						/>
 						<span class="font-mono text-xs text-muted-foreground">-</span>
 						<Input
 							type="time"
 							name="end_time"
-							bind:value={day.end_time}
+							value={day.end_time}
 							class="h-9 w-28"
 							readonly={!day.is_active}
-							oninput={handleTimeChange}
+							oninput={(e) => handleTimeChange(e, day.id, day.is_active)}
 						/>
 					</div>
 				</form>

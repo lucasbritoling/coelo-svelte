@@ -1,47 +1,51 @@
 <script lang="ts">
-	import { Plus, Search, Pencil, Trash2, Clock, Settings2, LoaderCircle } from '@lucide/svelte';
+	import { Plus, Search, Pencil, Trash2, Clock, LoaderCircle } from '@lucide/svelte';
 	import * as Card from '$lib/components/ui/card';
-	import * as Dialog from '$lib/components/ui/dialog';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
-	import { Label } from '$lib/components/ui/label';
 	import { toast } from 'svelte-sonner';
 	import { enhance } from '$app/forms';
+	import ServicesForm from './services-form.svelte';
 
+	// Svelte 5: Recebendo as props (data vem do +page.server.ts)
 	let { data } = $props();
 
-	// Estados de Controle
-	let open = $state(false);
+	// Estados de Controle (Runes)
+	let openForm = $state(false);
 	let openDelete = $state(false);
-	let isSubmitting = $state(false);
 	let isDeleting = $state(false);
 
-	// Dados Reativos
-	let editingService = $state<{ id?: string; name: string; duration: number | string } | null>(
-		null
-	);
+	// Estado para o serviço que será editado ou deletado
+	let selectedService = $state<any>(null);
 	let serviceToDelete = $state<{ id: string; name: string } | null>(null);
 
+	// Filtro Reativo usando $derived
 	let searchQuery = $state('');
 	let filteredServices = $derived(
-		data.services.filter((s) => s.name.toLowerCase().includes(searchQuery.toLowerCase()))
+		data.services.filter((s: any) => s.name.toLowerCase().includes(searchQuery.toLowerCase()))
 	);
 
-	function startEdit(service: any) {
-		editingService = { ...service };
-		open = true;
+	// Funções de Ação
+	function startCreate() {
+		selectedService = null; // Garante que o form venha limpo
+		openForm = true;
 	}
 
-	function startCreate() {
-		editingService = { name: '', duration: 30 }; // 30min padrão
-		open = true;
+	function startEdit(service: any) {
+		selectedService = service; // Passa o objeto completo para o Form
+		openForm = true;
 	}
 
 	function confirmDelete(service: any) {
 		serviceToDelete = { id: service.id, name: service.name };
 		openDelete = true;
 	}
+
+	const formatter = new Intl.NumberFormat('pt-BR', {
+		style: 'currency',
+		currency: 'BRL'
+	});
 </script>
 
 <div class="mx-auto flex max-w-7xl flex-col gap-6 p-6">
@@ -76,6 +80,7 @@
 						<tr class="border-b bg-muted/50 text-left font-medium">
 							<th class="p-3">Nome do Serviço</th>
 							<th class="p-3">Duração</th>
+							<th class="p-3 text-right">Preço</th>
 							<th class="p-3 text-right">Ações</th>
 						</tr>
 					</thead>
@@ -88,6 +93,9 @@
 										<Clock class="h-3.5 w-3.5" />
 										{service.duration} min
 									</div>
+								</td>
+								<td class="p-3 text-right font-medium">
+									{formatter.format(service.price)}
 								</td>
 								<td class="p-3 text-right">
 									<div class="flex justify-end gap-2">
@@ -107,9 +115,9 @@
 							</tr>
 						{:else}
 							<tr>
-								<td colspan="3" class="p-8 text-center text-muted-foreground italic"
-									>Nenhum serviço registrado.</td
-								>
+								<td colspan="4" class="p-8 text-center text-muted-foreground italic">
+									Nenhum serviço encontrado.
+								</td>
 							</tr>
 						{/each}
 					</tbody>
@@ -119,76 +127,15 @@
 	</Card.Root>
 </div>
 
-<Dialog.Root bind:open>
-	<Dialog.Content class="sm:max-w-[400px]">
-		<Dialog.Header>
-			<Dialog.Title>{editingService?.id ? 'Editar Serviço' : 'Novo Serviço'}</Dialog.Title>
-		</Dialog.Header>
-		<form
-			method="POST"
-			action="?/upsert"
-			class="grid gap-4 pt-4 pb-0"
-			use:enhance={() => {
-				isSubmitting = true;
-				return async ({ result, update }) => {
-					await update();
-					isSubmitting = false;
-					if (result.type === 'success') {
-						open = false;
-						toast.success('Serviço guardado!');
-					}
-				};
-			}}
-		>
-			{#if editingService?.id}
-				<input type="hidden" name="id" value={editingService.id} />
-			{/if}
-
-			<div class="grid gap-2">
-				<Label for="name">Nome do serviço</Label>
-				<Input
-					id="name"
-					name="name"
-					bind:value={editingService!.name}
-					placeholder="Ex: Corte de Cabelo"
-					required
-				/>
-			</div>
-
-			<div class="grid gap-2">
-				<Label for="duration">Duração (minutos)</Label>
-				<div class="relative">
-					<Clock class="absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground" />
-					<Input
-						id="duration"
-						name="duration"
-						type="number"
-						class="pl-9"
-						bind:value={editingService!.duration}
-						min="1"
-						required
-					/>
-				</div>
-			</div>
-
-			<Dialog.Footer>
-				<Button type="submit" disabled={isSubmitting} class="w-full">
-					{#if isSubmitting}
-						<LoaderCircle class="mr-2 h-4 w-4 animate-spin" />
-					{/if}
-					Guardar Alterações
-				</Button>
-			</Dialog.Footer>
-		</form>
-	</Dialog.Content>
-</Dialog.Root>
+<ServicesForm formData={data.form} service={selectedService} bind:open={openForm} />
 
 <AlertDialog.Root bind:open={openDelete}>
 	<AlertDialog.Content>
 		<AlertDialog.Header>
 			<AlertDialog.Title>Excluir serviço?</AlertDialog.Title>
 			<AlertDialog.Description>
-				Tem a certeza que deseja remover <strong>{serviceToDelete?.name}</strong>?
+				Tem a certeza que deseja remover <strong>{serviceToDelete?.name}</strong>? Esta ação não
+				pode ser desfeita.
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
@@ -199,28 +146,23 @@
 				use:enhance={() => {
 					isDeleting = true;
 					return async ({ result, update }) => {
-						// O update() garante que a página sincronize, mas
-						// precisamos verificar o tipo de resultado ANTES de fechar o modal.
 						await update();
 						isDeleting = false;
-
 						if (result.type === 'success') {
 							openDelete = false;
 							toast.success('Removido com sucesso!');
 						} else if (result.type === 'failure') {
-							// Aqui pegamos a mensagem amigável que você definiu no fail(400, { message: ... })
-							toast.error(result.data?.message ?? 'Erro ao excluir registro.');
-						} else {
-							toast.error('Ocorreu um erro inesperado.');
+							// @ts-ignore
+							toast.error(result.data?.message ?? 'Erro ao excluir.');
 						}
 					};
 				}}
 			>
 				<input type="hidden" name="id" value={serviceToDelete?.id} />
-				<Button type="submit" variant="destructive" disabled={isDeleting} class="gap-2">
+				<Button type="submit" variant="destructive" disabled={isDeleting} class="min-w-[140px]">
 					{#if isDeleting}
-						<LoaderCircle class="size-4 animate-spin" />
-						Processando...
+						<LoaderCircle class="mr-2 size-4 animate-spin" />
+						Removendo...
 					{:else}
 						Confirmar Exclusão
 					{/if}

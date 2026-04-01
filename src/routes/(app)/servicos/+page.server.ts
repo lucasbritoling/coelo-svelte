@@ -1,61 +1,102 @@
-import { fail } from '@sveltejs/kit';
+import { fail, error } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
+import { superValidate } from 'sveltekit-superforms';
+import { zod4 } from 'sveltekit-superforms/adapters';
+import { serviceSchema } from '$lib/schemas/app';
 
-export const load: PageServerLoad = async ({ locals }) => {
-	const { data: services, error } = await locals.supabase
+export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
+	// 1. Busca os serviços apenas do profissional logado
+	const { data: services, error: dbError } = await supabase
 		.from('services')
 		.select('*')
+		.eq('profile_id', user?.id) // Segurança: Filtra pelo dono
 		.order('name');
 
-	if (error) return { services: [], error: error.message };
-	return { services };
+	if (dbError) {
+		throw error(500, 'Erro ao carregar serviços: ' + dbError.message);
+	}
+
+	// 2. Inicializa o formulário do Superforms com o schema Zod
+	// Importante: Isso evita o erro de "No form data sent to superForm" no frontend
+	const form = await superValidate(zod4(serviceSchema));
+
+	return {
+		services: services ?? [],
+		form
+	};
 };
 
 export const actions: Actions = {
-	upsert: async ({ request, locals }) => {
-		const formData = await request.formData();
-		const id = formData.get('id') as string;
-		const name = formData.get('name') as string;
-		const duration = parseInt(formData.get('duration') as string);
+	/**
+	 * UPSERT: Cria ou Atualiza um serviço
+	 */
+	upsert: async ({ request, locals: { supabase, user } }) => {
+		const form = await superValidate(request, zod4(serviceSchema));
 
-		if (isNaN(duration) || duration <= 0) {
-			return fail(400, { message: 'Duração inválida' });
+		// Validação do Zod (lado do servidor)
+		if (!form.valid) {
+			return fail(400, { form });
 		}
 
+		const { id, ...data } = form.data;
+
+		// Dados formatados para o Supabase
 		const serviceData = {
-			name,
-			duration,
-			profile_id: locals.user?.id
+			...data,
+			profile_id: user?.id
 		};
 
 		let result;
-		if (id) {
-			result = await locals.supabase.from('services').update(serviceData).eq('id', id);
+
+		if (id && id !== '') {
+			// Caso tenha ID, atualiza o registro existente
+			result = await supabase
+				.from('services')
+				.update(serviceData)
+				.eq('id', id)
+				.eq('profile_id', user?.id); // Garantia extra de posse
 		} else {
-			result = await locals.supabase.from('services').insert([serviceData]);
+			// Caso não tenha ID, insere um novo
+			result = await supabase.from('services').insert([serviceData]);
 		}
 
-		if (result.error) return fail(500, { message: result.error.message });
-		return { success: true };
+		if (result.error) {
+			console.error('Erro no Supabase:', result.error);
+			return fail(500, {
+				form,
+				message: 'Erro ao salvar no banco de dados.'
+			});
+		}
+
+		return { form };
 	},
 
-	delete: async ({ request, locals }) => {
+	/**
+	 * DELETE: Remove um serviço
+	 */
+	delete: async ({ request, locals: { supabase, user } }) => {
 		const formData = await request.formData();
 		const id = formData.get('id');
 
-		const { error } = await locals.supabase.from('services').delete().eq('id', id);
+		if (!id) {
+			return fail(400, { message: 'ID do serviço não fornecido.' });
+		}
 
-		if (error) {
-			// Código 23503: Violação de chave estrangeira (foreign_key_violation)
-			// Acontece quando o serviço está sendo usado em outra tabela (ex: appointments)
-			if (error.code === '23503') {
+		const { error: dbError } = await supabase
+			.from('services')
+			.delete()
+			.eq('id', id)
+			.eq('profile_id', user?.id); // Segurança: Só deleta se for o dono
+
+		if (dbError) {
+			// Código 23503: foreign_key_violation (Serviço vinculado a agendamentos)
+			if (dbError.code === '23503') {
 				return fail(400, {
 					message: 'Não é possível excluir: este serviço possui agendamentos vinculados.'
 				});
 			}
 
-			// Para outros erros (conexão, permissão, etc)
-			return fail(500, { message: 'Erro interno ao tentar excluir o serviço.' });
+			return fail(500, { message: 'Erro ao tentar excluir o serviço.' });
 		}
 
 		return { success: true };

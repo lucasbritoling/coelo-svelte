@@ -1,11 +1,4 @@
 <script lang="ts">
-	import * as Card from '$lib/components/ui/card/index.js';
-	import * as RadioGroup from '$lib/components/ui/radio-group';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Calendar } from '$lib/components/ui/calendar/index.js';
-	import { goto } from '$app/navigation';
-	import { page } from '$app/state';
-	import { Label } from '$lib/components/ui/label/index.js';
 	import {
 		today,
 		getLocalTimeZone,
@@ -13,46 +6,47 @@
 		parseAbsoluteToLocal
 	} from '@internationalized/date';
 	import { enhance } from '$app/forms';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
+
+	import { Calendar } from '$lib/components/ui/calendar/index.js';
+	import * as RadioGroup from '$lib/components/ui/radio-group';
+	import * as Card from '$lib/components/ui/card/index.js';
+	import { Label } from '$lib/components/ui/label/index.js';
+	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
-	import { navigating } from '$app/state';
+	
 
 	let { data } = $props();
-	let selectedSlot = $state<any>(null);
 
-	// --- ADICIONE ESTAS LINHAS ---
+	const { professional, services, slots } = $derived(data);
+	const selectedService = $derived(services.find(s => s.id == data.selectedServiceId));
+
+	let selectedSlot = $state<any>(null);
 	let isConfirming = $state(false);
 	let customerName = $state('');
 	let customerPhone = $state('');
-	// -----------------------------
 
-	// Estado derivado para facilitar o acesso
-	const { professional, services, slots } = $derived(data);
-
-	// Sincroniza a data do calendário com a URL ou "Hoje"
+	// Sincroniza o componente de Calendário com a data que veio da URL
 	let calendarValue = $state(
 		data.selectedDate ? parseDate(data.selectedDate) : today(getLocalTimeZone())
 	);
-
-	// Função para atualizar a URL e disparar o load novamente (reatividade do SvelteKit)
+	
+	
 	async function updateSelection(params: { date?: string; serviceId?: string }) {
+		// resetamos estados locais ao trocar data/serviço para evitar confusão
 		selectedSlot = null;
 		isConfirming = false;
 
 		const newUrl = new URL(page.url);
 		if (params.date) newUrl.searchParams.set('date', params.date);
 		if (params.serviceId) newUrl.searchParams.set('serviceId', params.serviceId);
-
-		// No SvelteKit, navegar para a busca (?...) na mesma página
-		// é mais seguro passando apenas o search string
-		try {
-			await goto(newUrl.search, {
-				keepFocus: true,
-				noScroll: true,
-				replaceState: true
-			});
-		} catch (e) {
-			console.error('Navegação interrompida:', e);
-		}
+		
+		await goto(newUrl.search, {
+			keepFocus: true,
+			noScroll: true,
+			replaceState: true // não polui histórico do browser
+		});
 	}
 
 	function formatSlotTime(isoString: string) {

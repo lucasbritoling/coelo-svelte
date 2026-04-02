@@ -41,6 +41,8 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase } }
 				p_service_duration_min: selectedService.duration
 			});
 
+			console.log(slots);
+
 			if (rpcError) {
 				console.error('❌ ERRO NA RPC:', rpcError.message);
 			} else {
@@ -122,7 +124,7 @@ export const actions: Actions = {
 			// Erro de sobreposição (Constraint EXCLUDE do GIST)
 			if (appointmentError.code === '23P01') {
 				return fail(400, {
-					message: 'Horário indisponível: este slot coincide com outro agendamento.'
+					message: 'Horário indisponível: coincide com outro agendamento.'
 				});
 			}
 			console.error('Erro ao agendar:', appointmentError);

@@ -6,15 +6,15 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 	const userId = locals.user?.id;
 	const dateParam = url.searchParams.get('date') ?? today(getLocalTimeZone()).toString();
 
-	const from = `${dateParam}T00:00:00-03:00`;
-	const to = `${dateParam}T23:59:59-03:00`;
+	const from = `${dateParam} 00:00:00`;
+	const to = `${dateParam} 23:59:59`;
 
 	// Buscamos os 3 conjuntos de dados em paralelo para não travar o carregamento
 	const [appointmentsRes, customersRes, servicesRes, profileRes] = await Promise.all([
 		locals.supabase.rpc('get_appointments', {
-			p_profile_id: locals.user?.id,
-			p_from_tz: from,
-			p_to_tz: to
+			p_profile_id: userId,
+			p_from: from,
+			p_to: to
 		}),
 		locals.supabase.from('customers').select('id, name').eq('profile_id', userId).order('name'),
 		locals.supabase
@@ -57,8 +57,7 @@ export const actions: Actions = {
 		const end_at = formData.get('end_at');
 
 		// 1. Montamos o range no formato do Postgres: [inicio, fim)
-		// O sufixo -03:00 (ou o seu fuso local) é importante para o timestamptz
-		const slot = `[${date}T${start_at}:00-03:00, ${date}T${end_at}:00-03:00)`;
+		const slot = `[${date} ${start_at}:00, ${date} ${end_at}:00)`;
 
 		// 2. Inserimos usando a coluna 'slot'
 		const { error } = await locals.supabase.from('appointments').insert([
@@ -78,7 +77,7 @@ export const actions: Actions = {
 			// Isso acontece quando o slot && outro_slot (sobreposição)
 			if (error.code === '23P01') {
 				return fail(400, {
-					message: 'Horário indisponível: este slot coincide com outro agendamento.'
+					message: 'Horário indisponível: este horário coincide com outro agendamento.'
 				});
 			}
 

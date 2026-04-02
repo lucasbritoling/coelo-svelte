@@ -15,12 +15,11 @@
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
-	
 
 	let { data } = $props();
 
 	const { professional, services, slots } = $derived(data);
-	const selectedService = $derived(services.find(s => s.id == data.selectedServiceId));
+	const selectedService = $derived(services.find((s) => s.id == data.selectedServiceId));
 
 	let selectedSlot = $state<any>(null);
 	let isConfirming = $state(false);
@@ -31,8 +30,7 @@
 	let calendarValue = $state(
 		data.selectedDate ? parseDate(data.selectedDate) : today(getLocalTimeZone())
 	);
-	
-	
+
 	async function updateSelection(params: { date?: string; serviceId?: string }) {
 		// resetamos estados locais ao trocar data/serviço para evitar confusão
 		selectedSlot = null;
@@ -41,7 +39,7 @@
 		const newUrl = new URL(page.url);
 		if (params.date) newUrl.searchParams.set('date', params.date);
 		if (params.serviceId) newUrl.searchParams.set('serviceId', params.serviceId);
-		
+
 		await goto(newUrl.search, {
 			keepFocus: true,
 			noScroll: true,
@@ -51,20 +49,15 @@
 
 	function formatSlotTime(isoString: string) {
 		try {
-			// Se o banco retornar '2026-04-08 09:00:00', precisamos garantir que o JS entenda como UTC
-			// antes de converter. Se já vier com 'Z' ou '+00', o parseAbsoluteToLocal resolve direto.
-			const normalized =
-				isoString.includes('Z') || isoString.includes('+')
-					? isoString
-					: isoString.replace(' ', 'T') + 'Z';
-
-			return parseAbsoluteToLocal(normalized).toDate().toLocaleTimeString('pt-BR', {
+			// Como o banco já envia "+00:00", o parseAbsoluteToLocal
+			// entende que é UTC e converte para o fuso local do usuário.
+			return parseAbsoluteToLocal(isoString).toDate().toLocaleTimeString('pt-BR', {
 				hour: '2-digit',
 				minute: '2-digit'
 			});
 		} catch (e) {
-			console.error('Erro ao formatar data:', e);
-			return isoString; // Fallback
+			console.error('Erro ao formatar horário:', e);
+			return isoString;
 		}
 	}
 </script>

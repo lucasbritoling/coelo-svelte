@@ -47,18 +47,10 @@
 		});
 	}
 
-	function formatSlotTime(isoString: string) {
-		try {
-			// Como o banco já envia "+00:00", o parseAbsoluteToLocal
-			// entende que é UTC e converte para o fuso local do usuário.
-			return parseAbsoluteToLocal(isoString).toDate().toLocaleTimeString('pt-BR', {
-				hour: '2-digit',
-				minute: '2-digit'
-			});
-		} catch (e) {
-			console.error('Erro ao formatar horário:', e);
-			return isoString;
-		}
+	function formatSlotTime(time: string) {
+		if (!time) return '';
+		// Caso venha "14:30:00", pegamos só os 5 primeiros caracteres
+		return time.slice(0, 5);
 	}
 </script>
 
@@ -160,10 +152,10 @@
 						use:enhance
 						class="animate-in space-y-4 fade-in slide-in-from-right-4"
 					>
-						<input type="hidden" name="slot_start" value={selectedSlot.slot_start} />
-						<input type="hidden" name="service_id" value={data.selectedServiceId} />
+						<input type="hidden" name="selected_date" value={calendarValue.toString()} />
+						<input type="hidden" name="slot_start" value={selectedSlot?.slot_start} />
 						<input type="hidden" name="profile_id" value={professional.id} />
-						<input type="hidden" name="username" value={professional.username} />
+						<input type="hidden" name="service_id" value={data.selectedServiceId} />
 
 						<div class="space-y-2">
 							<Label for="customer_name">Seu Nome</Label>

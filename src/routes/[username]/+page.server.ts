@@ -1,5 +1,6 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
+import { CalendarDateTime } from '@internationalized/date';
 
 export const load: PageServerLoad = async ({ params, url, locals: { supabase } }) => {
 	const { username } = params;
@@ -67,69 +68,93 @@ export const actions: Actions = {
 	finishSelfBooking: async ({ request, locals: { supabase } }) => {
 		const formData = await request.formData();
 
+		// Dados do agendamento
 		const profile_id = formData.get('profile_id') as string;
 		const service_id = formData.get('service_id') as string;
-		const slot_start_iso = formData.get('slot_start') as string;
+		const selected_date = formData.get('selected_date') as string; // Ex: "2026-04-03"
+		const slot_start_time = formData.get('slot_start') as string; // Ex: "14:30"
+
+		// Dados do cliente
 		const customer_name = formData.get('customer_name') as string;
 		const customer_phone = formData.get('customer_phone') as string;
 
-		if (!customer_name || !customer_phone) {
-			return fail(400, { message: 'Nome e telefone obrigatórios.' });
+		// Validação básica de entrada
+		if (!customer_name || !customer_phone || !selected_date || !slot_start_time) {
+			return fail(400, { message: 'Preencha todos os campos obrigatórios.' });
 		}
 
-		// 1. Garantir que o cliente existe na tabela public.customers
-		// Usamos upsert para evitar duplicados se o cliente agendar novamente
+		// 1. Garantir que o cliente existe (Upsert baseado na constraint composta)
+		// Nota: Conforme seu DDL, a coluna é 'name' e não 'full_name'
 		const { data: customer, error: customerError } = await supabase
 			.from('customers')
 			.upsert(
 				{
-					profile_id: profile_id,
-					full_name: customer_name,
+					profile_id,
+					name: customer_name,
 					phone: customer_phone
 				},
-				{ onConflict: 'phone' }
+				{ onConflict: 'profile_id, phone' }
 			)
 			.select('id')
 			.single();
 
 		if (customerError || !customer) {
-			console.error('Erro upsert customer selfbooking:', customerError);
-			return fail(500, { message: 'Erro ao registrar dados do cliente.' });
+			console.error('Erro no upsert do cliente:', customerError);
+			return fail(500, { message: 'Erro ao processar dados do cliente.' });
 		}
 
-		// 2. Obter a duração do serviço para calcular o fim do slot
-		const { data: service } = await supabase
+		// 2. Buscar duração do serviço para calcular o fim do slot
+		const { data: service, error: serviceError } = await supabase
 			.from('services')
 			.select('duration')
 			.eq('id', service_id)
 			.single();
 
-		if (!service) return fail(400, { message: 'Serviço não encontrado.' });
+		if (serviceError || !service) {
+			return fail(400, { message: 'Serviço não encontrado.' });
+		}
 
-		// ÚNICA PARTE QUE AINDA FALTA TER CERTEZA QUE ESTÁ CORRETA?: ---------
-		// 3. Montar o tstzrange (slot)
-		const startDate = new Date(slot_start_iso);
-		const endDate = new Date(startDate.getTime() + service.duration * 60000);
-		const slot = `[${startDate.toISOString()}, ${endDate.toISOString()})`;
+		// 3. Montar o TSRANGE usando @internationalized/date
+		let slotString: string;
+		try {
+			// Desmembrar strings para números (YYYY-MM-DD e HH:mm)
+			const [year, month, day] = selected_date.split('-').map(Number);
+			const [hour, minute] = slot_start_time.split(':').map(Number);
 
-		// 4. Inserir na tabela public.appointments
+			// Criar objeto de data e hora sem fuso horário (CalendarDateTime)
+			const start = new CalendarDateTime(year, month, day, hour, minute);
+			const end = start.add({ minutes: service.duration });
+
+			// Formatar para o padrão tsrange do Postgres: [YYYY-MM-DD HH:mm:ss, YYYY-MM-DD HH:mm:ss)
+			// .toString() retorna "YYYY-MM-DDTHH:mm:ss", trocamos o T por espaço
+			const startFmt = start.toString().replace('T', ' ');
+			const endFmt = end.toString().replace('T', ' ');
+
+			slotString = `[${startFmt}, ${endFmt})`;
+		} catch (e) {
+			console.error('Erro ao processar data/hora:', e);
+			return fail(400, { message: 'Horário selecionado inválido.' });
+		}
+
+		// 4. Inserir o agendamento na tabela public.appointments
 		const { error: appointmentError } = await supabase.from('appointments').insert({
-			slot,
+			profile_id,
 			customer_id: customer.id,
 			service_id,
-			profile_id,
+			slot: slotString,
 			status: 'pending'
 		});
 
 		if (appointmentError) {
-			// Erro de sobreposição (Constraint EXCLUDE do GIST)
+			// Erro 23P01: Violation of Exclusion Constraint (Sobreposição de horário)
 			if (appointmentError.code === '23P01') {
 				return fail(400, {
-					message: 'Horário indisponível: coincide com outro agendamento.'
+					message: 'Este horário acabou de ser ocupado. Por favor, escolha outro.'
 				});
 			}
-			console.error('Erro selfbooking appointmentError:', appointmentError);
-			return fail(500, { message: 'Erro ao salvar agendamento.' });
+
+			console.error('Erro ao salvar agendamento:', appointmentError);
+			return fail(500, { message: 'Erro interno ao salvar o agendamento.' });
 		}
 
 		return { success: true };

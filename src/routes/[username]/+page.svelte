@@ -156,7 +156,7 @@
 				{:else}
 					<form
 						method="POST"
-						action="?/createAppointment"
+						action="?/finishSelfBooking"
 						use:enhance
 						class="animate-in space-y-4 fade-in slide-in-from-right-4"
 					>
@@ -167,13 +167,7 @@
 
 						<div class="space-y-2">
 							<Label for="customer_name">Seu Nome</Label>
-							<Input
-								name="customer_name"
-								id="customer_name"
-								bind:value={customerName}
-								required
-								placeholder="Como deseja ser chamado?"
-							/>
+							<Input name="customer_name" id="customer_name" bind:value={customerName} required />
 						</div>
 
 						<div class="space-y-2">
@@ -183,7 +177,7 @@
 								id="customer_phone"
 								bind:value={customerPhone}
 								required
-								placeholder="(00) 00000-0000"
+								placeholder="DDD + 9 Dígitos"
 							/>
 						</div>
 

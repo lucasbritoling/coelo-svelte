@@ -64,17 +64,17 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase } }
 };
 
 export const actions: Actions = {
-	createAppointment: async ({ request, locals: { supabase } }) => {
+	finishSelfBooking: async ({ request, locals: { supabase } }) => {
 		const formData = await request.formData();
 
 		const profile_id = formData.get('profile_id') as string;
 		const service_id = formData.get('service_id') as string;
-		const slot_start_iso = formData.get('slot_start') as string; // Ex: "2026-04-01T09:00:00Z"
+		const slot_start_iso = formData.get('slot_start') as string;
 		const customer_name = formData.get('customer_name') as string;
 		const customer_phone = formData.get('customer_phone') as string;
 
 		if (!customer_name || !customer_phone) {
-			return fail(400, { message: 'Nome e telefone são obrigatórios.' });
+			return fail(400, { message: 'Nome e telefone obrigatórios.' });
 		}
 
 		// 1. Garantir que o cliente existe na tabela public.customers
@@ -83,9 +83,9 @@ export const actions: Actions = {
 			.from('customers')
 			.upsert(
 				{
+					profile_id: profile_id,
 					full_name: customer_name,
-					phone: customer_phone,
-					profile_id: profile_id // Vincula este cliente ao profissional
+					phone: customer_phone
 				},
 				{ onConflict: 'phone' }
 			)
@@ -93,8 +93,8 @@ export const actions: Actions = {
 			.single();
 
 		if (customerError || !customer) {
-			console.error('Erro ao processar cliente:', customerError);
-			return fail(500, { message: 'Erro ao registar dados do cliente.' });
+			console.error('Erro upsert customer selfbooking:', customerError);
+			return fail(500, { message: 'Erro ao registrar dados do cliente.' });
 		}
 
 		// 2. Obter a duração do serviço para calcular o fim do slot
@@ -106,6 +106,7 @@ export const actions: Actions = {
 
 		if (!service) return fail(400, { message: 'Serviço não encontrado.' });
 
+		// ÚNICA PARTE QUE AINDA FALTA TER CERTEZA QUE ESTÁ CORRETA?: ---------
 		// 3. Montar o tstzrange (slot)
 		const startDate = new Date(slot_start_iso);
 		const endDate = new Date(startDate.getTime() + service.duration * 60000);
@@ -127,7 +128,7 @@ export const actions: Actions = {
 					message: 'Horário indisponível: coincide com outro agendamento.'
 				});
 			}
-			console.error('Erro ao agendar:', appointmentError);
+			console.error('Erro selfbooking appointmentError:', appointmentError);
 			return fail(500, { message: 'Erro ao salvar agendamento.' });
 		}
 

@@ -1,10 +1,5 @@
 <script lang="ts">
-	import {
-		today,
-		getLocalTimeZone,
-		parseDate,
-		parseAbsoluteToLocal
-	} from '@internationalized/date';
+	import { today, getLocalTimeZone, parseDate } from '@internationalized/date';
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
@@ -109,7 +104,7 @@
 			</Card.Content>
 		</Card.Root>
 
-		<Card.Root class="lg:col-span-1">
+		<Card.Root class="flex h-full flex-col lg:col-span-1">
 			<Card.Header>
 				<Card.Title>3. Horários</Card.Title>
 				<Card.Description>
@@ -120,7 +115,7 @@
 					{/if}
 				</Card.Description>
 			</Card.Header>
-			<Card.Content>
+			<Card.Content class="flex flex-1 flex-col">
 				{#if !isConfirming}
 					{#if slots.length > 0}
 						<div class="grid grid-cols-2 gap-2">
@@ -150,19 +145,25 @@
 						method="POST"
 						action="?/finishSelfBooking"
 						use:enhance
-						class="animate-in space-y-4 fade-in slide-in-from-right-4"
+						class="flex flex-1 animate-in flex-col space-y-4 fade-in slide-in-from-right-4"
 					>
 						<input type="hidden" name="selected_date" value={calendarValue.toString()} />
 						<input type="hidden" name="slot_start" value={selectedSlot?.slot_start} />
 						<input type="hidden" name="profile_id" value={professional.id} />
 						<input type="hidden" name="service_id" value={data.selectedServiceId} />
 
-						<div class="space-y-2">
+						<div class="justify-center space-y-2">
 							<Label for="customer_name">Seu Nome</Label>
-							<Input name="customer_name" id="customer_name" bind:value={customerName} required />
+							<Input
+								name="customer_name"
+								id="customer_name"
+								placeholder="Maria Oliveira"
+								bind:value={customerName}
+								required
+							/>
 						</div>
 
-						<div class="space-y-2">
+						<div class="justify-center space-y-2">
 							<Label for="customer_phone">Telefone / WhatsApp</Label>
 							<Input
 								name="customer_phone"
@@ -173,7 +174,7 @@
 							/>
 						</div>
 
-						<div class="flex gap-2 pt-4">
+						<div class="mt-auto flex w-full justify-center gap-2 pt-4">
 							<Button variant="outline" class="flex-1" onclick={() => (isConfirming = false)}
 								>Voltar</Button
 							>

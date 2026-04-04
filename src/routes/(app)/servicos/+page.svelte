@@ -48,20 +48,20 @@
 	});
 </script>
 
-<div class="mx-auto flex max-w-7xl flex-col gap-6 p-6">
-	<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+<div class="flex min-w-0! flex-col gap-6 p-3 sm:p-6">
+	<div class="flex min-w-0! flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 		<div>
 			<h1 class="text-2xl font-bold tracking-tight">Serviços</h1>
 			<p class="text-sm text-muted-foreground">
 				Configure os procedimentos e tempos de atendimento.
 			</p>
 		</div>
-		<Button onclick={startCreate} size="sm" class="h-9">
+		<Button onclick={startCreate} size="sm" class="h-9 w-full sm:w-auto">
 			<Plus class="mr-2 h-4 w-4" /> Novo Serviço
 		</Button>
 	</div>
 
-	<Card.Root>
+	<Card.Root class="min-w-0!">
 		<Card.Header class="pb-3">
 			<div class="relative max-w-sm">
 				<Search class="absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground" />
@@ -74,11 +74,11 @@
 			</div>
 		</Card.Header>
 		<Card.Content>
-			<div class="rounded-md border">
+			<div class="overflow-x-auto rounded-md border">
 				<table class="w-full text-sm">
 					<thead>
 						<tr class="border-b bg-muted/50 text-left font-medium">
-							<th class="p-3">Nome do Serviço</th>
+							<th class="p-3">Nome</th>
 							<th class="p-3">Duração</th>
 							<th class="p-3 text-right">Preço</th>
 							<th class="p-3 text-right">Ações</th>

@@ -86,13 +86,13 @@
 	}
 </script>
 
-<div class="mx-auto flex max-w-7xl flex-col gap-6 p-6">
+<div class="flex w-full flex-col gap-6 p-3 sm:p-6">
 	<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 		<div>
 			<h1 class="text-2xl font-bold tracking-tight">Clientes</h1>
 			<p class="text-sm text-muted-foreground">Gerencie sua base de contatos.</p>
 		</div>
-		<Button onclick={startCreate} size="sm" class="h-9 shadow-sm">
+		<Button onclick={startCreate} size="sm" class="h-9 shadow-sm sm:w-auto">
 			<Plus class="mr-2 h-4 w-4" /> Novo Cliente
 		</Button>
 	</div>

@@ -47,7 +47,7 @@
 	let isAvailableOverride = $state(false);
 </script>
 
-<div class="mx-auto max-w-6xl space-y-8 p-6">
+<div class="w-full space-y-8 p-3 sm:p-6">
 	<div>
 		<h1 class="text-2xl font-bold tracking-tight">Horários</h1>
 		<p class="text-sm text-muted-foreground">Gerencie sua rotina semanal e datas excepcionais.</p>
@@ -70,7 +70,7 @@
 							await update({ invalidateAll: true });
 						};
 					}}
-					class="flex items-center gap-4 rounded-xl border bg-card p-4 shadow-sm transition-all"
+					class="flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-sm sm:flex-row sm:items-center"
 				>
 					<input type="hidden" name="id" value={day.id} />
 
@@ -107,12 +107,12 @@
 						<span class="w-24 text-sm font-medium">{daysOfWeek[day.day_of_week]}</span>
 					</div>
 
-					<div class="flex items-center gap-2" class:opacity-30={!day.is_active}>
+					<div class="flex min-w-0 items-center gap-2" class:opacity-30={!day.is_active}>
 						<Input
 							type="time"
 							name="start_time"
 							value={day.start_time}
-							class="h-9 w-28"
+							class="h-9 w-full min-w-0"
 							readonly={!day.is_active}
 							oninput={(e) => handleTimeChange(e, day.id, day.is_active)}
 						/>
@@ -121,7 +121,7 @@
 							type="time"
 							name="end_time"
 							value={day.end_time}
-							class="h-9 w-28"
+							class="h-9 w-full min-w-0"
 							readonly={!day.is_active}
 							oninput={(e) => handleTimeChange(e, day.id, day.is_active)}
 						/>

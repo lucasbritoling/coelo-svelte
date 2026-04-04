@@ -18,6 +18,7 @@
 			bind:value={value as any}
 			{onValueChange}
 			type="single"
+			preventDeselect={true}
 			class="select-none [&_[data-bits-calendar-head-cell]]:w-[33px] [&_[role=gridcell]]:w-[33px] [&_[role=gridcell]_[data-selected]]:bg-sidebar-primary [&_[role=gridcell]_[data-selected]]:text-sidebar-primary-foreground
     [&_[role=gridcell]_[data-today]:not([data-selected])]:bg-sidebar-accent
     [&_[role=gridcell]_[data-today]:not([data-selected])]:font-bold

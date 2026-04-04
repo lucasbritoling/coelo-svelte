@@ -10,10 +10,11 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { today, getLocalTimeZone, parseDate } from '@internationalized/date';
+	import { SvelteURL } from 'svelte/reactivity';
 
 	import DatePicker from './date-picker.svelte';
 	import NavUser from './nav-user.svelte';
-	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+	import * as Sidebar from '$lib/components/ui/sidebar';
 	import type { ComponentProps } from 'svelte';
 	import NavMain from './nav-main.svelte';
 
@@ -31,7 +32,12 @@
 	function handleDateChange(date: any) {
 		if (!date) return;
 
-		const newUrl = new URL(page.url);
+		const newUrl = new SvelteURL(page.url);
+
+		if (newUrl.pathname !== '/agenda') {
+			newUrl.pathname = '/agenda';
+		}
+
 		newUrl.searchParams.set('date', date.toString());
 
 		// eslint-disable-next-line svelte/no-navigation-without-resolve

@@ -10,6 +10,7 @@
 		ref = $bindable(null),
 		value = $bindable(),
 		placeholder = $bindable(),
+		preventDeselect = true,
 		class: className,
 		weekdayFormat = 'short',
 		buttonVariant = 'ghost',
@@ -47,6 +48,7 @@ get along, so we shut typescript up by casting `value` to `never`.
 	bind:value={value as never}
 	bind:ref
 	bind:placeholder
+	{preventDeselect}
 	{weekdayFormat}
 	{disableDaysOutsideMonth}
 	class={cn(

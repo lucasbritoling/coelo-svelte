@@ -14,7 +14,7 @@
 	// Estados de Controle (Runes)
 	let openForm = $state(false);
 	let openDelete = $state(false);
-	let isDeleting = $state(false);
+	let isLoading = $state(false);
 
 	// Estado para o serviço que será editado ou deletado
 	let selectedService = $state<any>(null);
@@ -139,15 +139,15 @@
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
-			<AlertDialog.Cancel disabled={isDeleting}>Cancelar</AlertDialog.Cancel>
+			<AlertDialog.Cancel disabled={isLoading}>Cancelar</AlertDialog.Cancel>
 			<form
 				method="POST"
 				action="?/delete"
 				use:enhance={() => {
-					isDeleting = true;
+					isLoading = true;
 					return async ({ result, update }) => {
 						await update();
-						isDeleting = false;
+						isLoading = false;
 						if (result.type === 'success') {
 							openDelete = false;
 							toast.success('Removido com sucesso!');
@@ -159,8 +159,8 @@
 				}}
 			>
 				<input type="hidden" name="id" value={serviceToDelete?.id} />
-				<Button type="submit" variant="destructive" disabled={isDeleting} class="min-w-[140px]">
-					{#if isDeleting}
+				<Button type="submit" variant="destructive" disabled={isLoading} class="min-w-[140px]">
+					{#if isLoading}
 						<LoaderCircle class="mr-2 size-4 animate-spin" />
 						Removendo...
 					{:else}

@@ -20,6 +20,7 @@
 	let openDelete = $state(false);
 	let isDeleting = $state(false);
 	let customerToDelete = $state<{ id: string; name: string } | null>(null);
+	let isLoading = $state(false);
 
 	// Configuração do Superforms para o Upsert
 	// svelte-ignore state_referenced_locally
@@ -33,6 +34,13 @@
 	} = superForm(data.form, {
 		validators: zod4Client(customerSchema),
 		resetForm: true,
+
+		onSubmit: () => {
+			isLoading = true;
+		},
+		onResult: () => {
+			isLoading = false;
+		},
 
 		onUpdated: ({ form }) => {
 			if (form.valid) {
@@ -185,11 +193,13 @@
 			</div>
 
 			<Dialog.Footer>
-				<Button type="submit" disabled={$delayed}>
-					{#if $delayed}
+				<Button type="submit" disabled={isLoading}>
+					{#if isLoading}
 						<LoaderCircle class="mr-2 h-4 w-4 animate-spin" />
+						Salvando...
+					{:else}
+						Salvar Cliente
 					{/if}
-					Salvar Cliente
 				</Button>
 			</Dialog.Footer>
 		</form>
@@ -215,13 +225,14 @@
 				use:enhance={() => {
 					isDeleting = true;
 					return async ({ result, update }) => {
-						isDeleting = false;
 						if (result.type === 'success') {
 							openDelete = false;
 							toast.success('Cliente removido com sucesso!');
 							await update();
+							isDeleting = false;
 						} else if (result.type === 'failure') {
 							toast.error(result.data?.message || 'Erro ao excluir');
+							isDeleting = false;
 						}
 					};
 				}}

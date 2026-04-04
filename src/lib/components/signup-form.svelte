@@ -19,10 +19,20 @@
 	// Svelte 5: Usando snippets/props desestruturados
 	let { class: className, data, ...restProps }: Props = $props();
 
+	let isLoading = $state(false);
+
 	// Inicialização do Superforms v2 (totalmente compatível com Runes)
-	const { form, errors, enhance, message, delayed } = superForm(data, {
+	const { form, errors, enhance, message } = superForm(data, {
 		validators: zod4Client(signupSchema),
-		resetForm: false
+		resetForm: false,
+
+		onSubmit: () => {
+			isLoading = true;
+		},
+
+		onResult: () => {
+			isLoading = false;
+		}
 	});
 </script>
 
@@ -91,8 +101,8 @@
 					{/if}
 
 					<Field.Field>
-						<Button type="submit" class="w-full" disabled={$delayed}>
-							{#if $delayed}
+						<Button type="submit" class="w-full" disabled={isLoading}>
+							{#if isLoading}
 								<LoaderCircle class="mr-2 size-4 animate-spin" />
 								Criando conta...
 							{:else}

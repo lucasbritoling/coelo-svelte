@@ -9,7 +9,7 @@
 	let { appointmentId }: { appointmentId: string } = $props();
 
 	let isDeleting = $state(false);
-	let isConfirming = $state(false);
+	let isLoading = $state(false);
 	let showConfirmDialog = $state(false);
 </script>
 
@@ -32,14 +32,15 @@
 			method="POST"
 			action="?/confirm"
 			use:enhance={() => {
-				isConfirming = true;
+				isLoading = true;
 				return async ({ result, update }) => {
-					isConfirming = false;
 					if (result.type === 'success') {
 						toast.success('Presença confirmada!');
 						await update();
+						isLoading = false;
 					} else {
 						toast.error('Erro ao confirmar presença.');
+						isLoading = false;
 					}
 				};
 			}}
@@ -47,10 +48,10 @@
 			<input type="hidden" name="id" value={appointmentId} />
 			<button
 				type="submit"
-				disabled={isConfirming}
+				disabled={isLoading}
 				class="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-primary transition-colors outline-none hover:bg-primary/10 disabled:opacity-50"
 			>
-				{#if isConfirming}
+				{#if isLoading}
 					<LoaderCircle class="size-3.5 animate-spin" />
 				{:else}
 					<CircleCheckBig class="size-3.5" />

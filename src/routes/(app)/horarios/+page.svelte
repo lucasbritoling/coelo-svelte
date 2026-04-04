@@ -7,8 +7,10 @@
 	import { Label } from '$lib/components/ui/label';
 	import { enhance } from '$app/forms';
 	import { toast } from 'svelte-sonner';
+	import { LoaderCircle } from '@lucide/svelte';
 
 	let { data } = $props();
+	let isLoading = $state(false);
 
 	let saveTimeout: ReturnType<typeof setTimeout>;
 
@@ -139,8 +141,10 @@
 						method="POST"
 						action="?/upsertOverride"
 						use:enhance={() => {
+							isLoading = true;
 							return async ({ result, update }) => {
 								await update(); // Isso limpa o formulário e atualiza o data.overrides
+								isLoading = false;
 								if (result.type === 'success') {
 									toast.success('Exceção salva com sucesso!');
 									isAvailableOverride = false; // Reseta o switch visual
@@ -188,7 +192,14 @@
 							<Input name="note" placeholder="Ex: Feriado Municipal" />
 						</div>
 
-						<Button type="submit" class="w-full">Salvar Exceção</Button>
+						<Button type="submit" disabled={isLoading} class="w-full">
+							{#if isLoading}
+								<LoaderCircle class="animate-spin" />
+								Salvando...
+							{:else}
+								Salvar Exceção
+							{/if}
+						</Button>
 					</form>
 				</Card.Content>
 			</Card.Root>

@@ -12,10 +12,19 @@
 	// service: o objeto do serviço selecionado para edição (ou null para novo)
 	// open: controle de visibilidade do modal (bindable)
 	let { formData, service, open = $bindable() } = $props();
+	let isLoading = $state(false);
 
 	const { form, errors, enhance, delayed, constraints } = superForm(formData, {
 		resetForm: true,
 		invalidateAll: true,
+
+		onSubmit: () => {
+			isLoading = true;
+		},
+		onResult: () => {
+			isLoading = false;
+		},
+
 		onUpdated: ({ form }) => {
 			if (form.valid) {
 				open = false;
@@ -110,11 +119,13 @@
 			</div>
 
 			<Dialog.Footer>
-				<Button type="submit" disabled={$delayed} class="w-full">
-					{#if $delayed}
+				<Button type="submit" disabled={isLoading} class="w-full">
+					{#if isLoading}
 						<LoaderCircle class="mr-2 h-4 w-4 animate-spin" />
+						Salvando...
+					{:else}
+						{$form.id ? 'Salvar Alterações' : 'Criar Serviço'}
 					{/if}
-					{$form.id ? 'Salvar Alterações' : 'Criar Serviço'}
 				</Button>
 			</Dialog.Footer>
 		</form>

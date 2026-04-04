@@ -13,12 +13,15 @@
 	import type { HTMLAttributes } from 'svelte/elements';
 	import type { ActionData } from '../../routes/(auth)/login/$types';
 	import { enhance } from '$app/forms';
+	import { LoaderCircle } from '@lucide/svelte';
 
 	interface Props extends HTMLAttributes<HTMLDivElement> {
 		form?: ActionData;
 	}
 
 	let { form, class: className, ...restProps }: Props = $props();
+	let isLoading = $state(false);
+
 	const id = $props.id();
 </script>
 
@@ -29,7 +32,16 @@
 			<Card.Description>Entre com sua conta Apple ou Google</Card.Description>
 		</Card.Header>
 		<Card.Content>
-			<form method="POST" use:enhance>
+			<form
+				method="POST"
+				use:enhance={() => {
+					isLoading = true;
+					return async ({ update }) => {
+						await update();
+						isLoading = false;
+					};
+				}}
+			>
 				<FieldGroup>
 					<Field>
 						<Button variant="outline" type="button">
@@ -84,7 +96,14 @@
 						<p class="text-center text-sm font-medium text-destructive">{form.message}</p>
 					{/if}
 					<Field>
-						<Button type="submit">Entrar</Button>
+						<Button type="submit" disabled={isLoading}>
+							{#if isLoading}
+								<LoaderCircle class="animate-spin" />
+								Entrando...
+							{:else}
+								Entrar
+							{/if}
+						</Button>
 						<FieldDescription class="text-center">
 							Não possui uma conta? <a href="/signup">Inscreva-se</a>
 						</FieldDescription>

@@ -151,11 +151,12 @@
 						use:enhance={() => {
 							isLoading = true;
 							return async ({ result, update }) => {
-								isLoading = false;
 								if (result.type === 'success') {
+									isLoading = false;
 									isSuccess = true;
 								} else if (result.type === 'failure') {
 									await update();
+									isLoading = false;
 								}
 							};
 						}}

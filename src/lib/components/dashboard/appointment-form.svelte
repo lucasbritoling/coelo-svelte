@@ -26,7 +26,7 @@
 	// 2. Estados com Runas
 	let openCustomer = $state(false);
 	let openService = $state(false);
-	let isSubmitting = $state(false);
+	let isLoading = $state(false);
 
 	let customerId = $state('');
 	let serviceId = $state('');
@@ -58,10 +58,10 @@
 	action="?/create"
 	class="grid gap-6 py-4"
 	use:enhance={() => {
-		isSubmitting = true;
+		isLoading = true;
 		return async ({ result, update }) => {
 			await update();
-			isSubmitting = false;
+			isLoading = false;
 
 			if (result.type === 'success') {
 				toast.success('Agendamento criado com sucesso!');
@@ -189,8 +189,8 @@
 	</div>
 
 	<div class="pt-2">
-		<Button type="submit" disabled={isSubmitting || !customerId || !serviceId} class="w-full">
-			{#if isSubmitting}
+		<Button type="submit" disabled={isLoading || !customerId || !serviceId} class="w-full">
+			{#if isLoading}
 				<LoaderCircle class="mr-2 size-4 animate-spin" />
 				Salvando...
 			{:else}

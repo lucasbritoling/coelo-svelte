@@ -19,14 +19,14 @@ export const actions: Actions = {
 			return fail(400, { form });
 		}
 
-		const { email, password, name, username } = form.data;
+		const { email, password, full_name, username } = form.data;
 
 		const { error } = await locals.supabase.auth.signUp({
 			email,
 			password,
 			options: {
 				data: {
-					name, // Salva no campo raw_user_meta_data do Supabase
+					full_name, // Salva no campo raw_user_meta_data do Supabase
 					username
 				}
 			}

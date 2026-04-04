@@ -10,11 +10,15 @@
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
+	import { LoaderCircle, CircleCheckBig } from '@lucide/svelte';
 
-	let { data } = $props();
+	let { data, form } = $props();
 
 	const { professional, services, slots } = $derived(data);
 	const selectedService = $derived(services.find((s) => s.id == data.selectedServiceId));
+
+	let isLoading = $state(false);
+	let isSuccess = $state(false);
 
 	let selectedSlot = $state<any>(null);
 	let isConfirming = $state(false);
@@ -144,7 +148,17 @@
 					<form
 						method="POST"
 						action="?/finishSelfBooking"
-						use:enhance
+						use:enhance={() => {
+							isLoading = true;
+							return async ({ result, update }) => {
+								isLoading = false;
+								if (result.type === 'success') {
+									isSuccess = true;
+								} else if (result.type === 'failure') {
+									await update();
+								}
+							};
+						}}
 						class="flex flex-1 animate-in flex-col space-y-4 fade-in slide-in-from-right-4"
 					>
 						<input type="hidden" name="selected_date" value={calendarValue.toString()} />
@@ -175,10 +189,20 @@
 						</div>
 
 						<div class="mt-auto flex w-full justify-center gap-2 pt-4">
-							<Button variant="outline" class="flex-1" onclick={() => (isConfirming = false)}
-								>Voltar</Button
+							<Button
+								variant="outline"
+								disabled={isLoading}
+								class="flex-1"
+								onclick={() => (isConfirming = false)}>Voltar</Button
 							>
-							<Button type="submit" class="flex-1">Finalizar Agendamento</Button>
+							<Button type="submit" disabled={isLoading} class="flex-1">
+								{#if isLoading}
+									<LoaderCircle class="mr-2 h-4 w-4 animate-spin" />
+									Processando...
+								{:else}
+									Finalizar Agendamento
+								{/if}
+							</Button>
 						</div>
 					</form>
 				{/if}

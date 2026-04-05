@@ -194,7 +194,7 @@
 				<LoaderCircle class="mr-2 size-4 animate-spin" />
 				Salvando...
 			{:else}
-				Confirmar Agendamento
+				Salvar Agendamento
 			{/if}
 		</Button>
 	</div>

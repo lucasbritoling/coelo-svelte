@@ -19,7 +19,7 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
 		.gte('date', new Date().toISOString().split('T')[0])
 		.order('date');
 
-	console.log('LOAD - Working Hours enviadas para UI:', workingHours?.length);
+	//console.log('LOAD - Working Hours enviadas para UI:', workingHours?.length);
 
 	return {
 		// TRATAMENTO CRUCIAL: O input type="time" buga com segundos (HH:mm:ss).

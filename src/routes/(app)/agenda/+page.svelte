@@ -62,9 +62,11 @@
 		<div class="flex items-center">
 			<Dialog.Root bind:open={showAppointmentModal}>
 				<Dialog.Trigger>
-					<Button size="sm" class="h-9 shadow-sm">
-						<Plus class="mr-2 h-4 w-4" /> Novo Horário
-					</Button>
+					{#snippet child({ props })}
+						<Button {...props} size="sm" class="h-9 shadow-sm">
+							<Plus class="mr-2 h-4 w-4" /> Novo Horário
+						</Button>
+					{/snippet}
 				</Dialog.Trigger>
 
 				<Dialog.Content class="sm:max-w-106.25">

@@ -65,7 +65,7 @@
 			<Dialog.Title>{$form.id ? 'Editar Serviço' : 'Novo Serviço'}</Dialog.Title>
 		</Dialog.Header>
 
-		<form method="POST" action="?/upsert" class="grid gap-4 pb-0 py-4" use:enhance>
+		<form method="POST" action="?/upsert" class="grid gap-4 py-4 pb-0" use:enhance>
 			<input type="hidden" name="id" bind:value={$form.id} />
 
 			<div class="grid gap-2">

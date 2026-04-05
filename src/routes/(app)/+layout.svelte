@@ -31,7 +31,7 @@
 				</Breadcrumb.List>
 			</Breadcrumb.Root>
 		</header>
-		<main class="flex min-w-0! sm:items-center flex-1 flex-col gap-4 p-4">
+		<main class="flex min-w-0! flex-1 flex-col gap-4 p-4 sm:items-center">
 			{@render children()}
 		</main>
 	</Sidebar.Inset>

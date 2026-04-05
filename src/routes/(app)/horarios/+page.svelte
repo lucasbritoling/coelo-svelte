@@ -47,7 +47,7 @@
 	let isAvailableOverride = $state(false);
 </script>
 
-<div class="w-full max-w-3xl space-y-8 p-3 sm:p-6">
+<div class="w-full space-y-8 p-3 sm:p-6 md:max-w-xl lg:max-w-3xl">
 	<div>
 		<h1 class="text-2xl font-bold tracking-tight">Horários</h1>
 		<p class="text-sm text-muted-foreground">Gerencie sua rotina semanal e datas excepcionais.</p>

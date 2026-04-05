@@ -134,8 +134,7 @@
 		<AlertDialog.Header>
 			<AlertDialog.Title>Excluir serviço?</AlertDialog.Title>
 			<AlertDialog.Description>
-				Tem a certeza que deseja remover <strong>{serviceToDelete?.name}</strong>? Esta ação não
-				pode ser desfeita.
+				Esta ação não pode ser desfeita. Remover <strong>{serviceToDelete?.name}</strong>?
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>

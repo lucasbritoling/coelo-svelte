@@ -211,9 +211,7 @@
 		<AlertDialog.Header>
 			<AlertDialog.Title>Excluir cliente?</AlertDialog.Title>
 			<AlertDialog.Description>
-				Tem certeza que deseja remover <strong>{customerToDelete?.name}</strong>?
-				<br />
-				<span class="text-xs text-muted-foreground">Esta ação não pode ser desfeita.</span>
+				Esta ação não pode ser desfeita. Remover <strong>{customerToDelete?.name}</strong>?
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
@@ -239,17 +237,11 @@
 			>
 				<input type="hidden" name="id" value={customerToDelete?.id} />
 
-				<Button
-					type="submit"
-					variant="destructive"
-					disabled={isDeleting}
-					class="min-w-[140px] gap-2"
-				>
+				<Button type="submit" variant="destructive" disabled={isDeleting} class="min-w-35 gap-2">
 					{#if isDeleting}
 						<LoaderCircle class="h-4 w-4 animate-spin" />
 						Excluindo...
 					{:else}
-						<Trash2 class="h-4 w-4" />
 						Confirmar Exclusão
 					{/if}
 				</Button>

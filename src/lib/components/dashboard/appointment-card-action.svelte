@@ -67,7 +67,7 @@
 			onSelect={() => (showConfirmDialog = true)}
 		>
 			<Trash2 class="size-3.5" />
-			<span>Cancelar horário</span>
+			<span>Excluir</span>
 		</DropdownMenu.Item>
 	</DropdownMenu.Content>
 </DropdownMenu.Root>
@@ -75,14 +75,14 @@
 <AlertDialog.Root bind:open={showConfirmDialog}>
 	<AlertDialog.Content>
 		<AlertDialog.Header>
-			<AlertDialog.Title>Deseja realmente cancelar?</AlertDialog.Title>
+			<AlertDialog.Title>Excluir agendamento?</AlertDialog.Title>
 			<AlertDialog.Description>
 				Esta ação não pode ser desfeita. O horário ficará disponível para outros clientes
 				imediatamente.
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
-			<AlertDialog.Cancel disabled={isDeleting}>Voltar</AlertDialog.Cancel>
+			<AlertDialog.Cancel disabled={isDeleting}>Cancelar</AlertDialog.Cancel>
 
 			<form
 				method="POST"
@@ -114,7 +114,7 @@
 						<LoaderCircle class="size-3.5 animate-spin" />
 						Aguarde...
 					{:else}
-						Confirmar Cancelamento
+						Confirmar Exclusão
 					{/if}
 				</Button>
 			</form>

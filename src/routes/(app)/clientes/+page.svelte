@@ -86,7 +86,7 @@
 	}
 </script>
 
-<div class="flex w-full flex-col gap-6 p-3 sm:p-6">
+<div class="flex w-full max-w-md flex-col gap-6 p-3 sm:p-6">
 	<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 		<div>
 			<h1 class="text-2xl font-bold tracking-tight">Clientes</h1>

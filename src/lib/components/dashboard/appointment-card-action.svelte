@@ -1,12 +1,20 @@
 <script lang="ts">
-	import { Ellipsis, Pencil, CircleCheckBig, Trash2, LoaderCircle } from '@lucide/svelte';
+	import {
+		Ellipsis,
+		CircleQuestionMark,
+		CircleCheckBig,
+		Trash2,
+		LoaderCircle,
+		CircleSlash
+	} from '@lucide/svelte';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import { Button } from '$lib/components/ui/button';
 	import { toast } from 'svelte-sonner';
 	import { enhance } from '$app/forms';
 
-	let { appointmentId }: { appointmentId: string } = $props();
+	let { appointmentId, appointmentStatus }: { appointmentId: string; appointmentStatus: string } =
+		$props();
 
 	let isDeleting = $state(false);
 	let isLoading = $state(false);
@@ -59,6 +67,29 @@
 				<span>Confirmar presença</span>
 			</button>
 		</form>
+
+		{#if appointmentStatus !== 'cancelled'}
+			<form
+				method="POST"
+				action="?/cancel"
+				use:enhance={() => {
+					return async ({ result, update }) => {
+						if (result.type === 'success') {
+							toast.success('Presença cancelada.');
+							await update();
+						}
+					};
+				}}
+			>
+				<input type="hidden" name="id" value={appointmentId} />
+				<button
+					type="submit"
+					class="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+				>
+					<CircleSlash class="size-3.5" /> <span>Cancelar presença</span>
+				</button>
+			</form>
+		{/if}
 
 		<DropdownMenu.Separator />
 

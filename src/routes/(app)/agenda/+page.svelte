@@ -115,7 +115,10 @@
 							<div
 								class="absolute top-2 right-2 z-10 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100"
 							>
-								<AppointmentCardAction appointmentId={appointment.id} />
+								<AppointmentCardAction
+									appointmentId={appointment.id}
+									appointmentStatus={appointment.status}
+								/>
 							</div>
 							<Card.Header class="flex-row items-center justify-between gap-5 space-y-0 pt-3">
 								<div class="flex w-full items-center gap-5">
@@ -139,10 +142,19 @@
 							<Card.Footer class="flex justify-between bg-muted/30 py-2">
 								<div class="flex items-center gap-3">
 									<Badge
-										variant={appointment.status === 'confirmed' ? 'default' : 'outline'}
-										class="h-4.5 px-1.5 text-[9px] font-bold tracking-wider uppercase"
+										variant="outline"
+										class="h-4.5 px-1.5 text-[9px] font-bold tracking-wider uppercase 
+    {appointment.status === 'confirmed' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : ''}
+    {appointment.status === 'cancelled' ? 'border-red-200 bg-red-50 text-red-700' : ''}
+    {appointment.status === 'pending' ? 'border-slate-200 bg-slate-50 text-slate-600' : ''}"
 									>
-										{appointment.status === 'confirmed' ? 'Confirmado' : 'Pendente'}
+										{#if appointment.status === 'confirmed'}
+											Confirmado
+										{:else if appointment.status === 'cancelled'}
+											Cancelado
+										{:else}
+											Pendente
+										{/if}
 									</Badge>
 
 									{#if appointment.customer_phone}

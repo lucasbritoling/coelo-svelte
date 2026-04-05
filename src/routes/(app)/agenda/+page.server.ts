@@ -100,6 +100,19 @@ export const actions: Actions = {
 		return { success: true };
 	},
 
+	cancel: async ({ request, locals }) => {
+		const formData = await request.formData();
+		const id = formData.get('id');
+
+		const { error } = await locals.supabase
+			.from('appointments')
+			.update({ status: 'cancelled' })
+			.eq('id', id);
+
+		if (error) return fail(500, { message: error.message });
+		return { success: true };
+	},
+
 	delete: async ({ request, locals }) => {
 		const formData = await request.formData();
 		const id = formData.get('id');

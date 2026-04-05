@@ -38,16 +38,20 @@
 	<DropdownMenu.Content align="end" class="min-w-48">
 		<form
 			method="POST"
-			action="?/confirm"
+			action="?/toggleConfirmation"
 			use:enhance={() => {
 				isLoading = true;
 				return async ({ result, update }) => {
 					if (result.type === 'success') {
-						toast.success('Presença confirmada!');
+						// Toast dinâmico
+						const message =
+							appointmentStatus === 'confirmed' ? 'Confirmação removida!' : 'Presença confirmada!';
+						toast.success(message);
+
 						await update();
 						isLoading = false;
 					} else {
-						toast.error('Erro ao confirmar presença.');
+						toast.error('Erro ao processar solicitação.');
 						isLoading = false;
 					}
 				};
@@ -57,14 +61,20 @@
 			<button
 				type="submit"
 				disabled={isLoading}
-				class="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-primary transition-colors outline-none hover:bg-primary/10 disabled:opacity-50"
+				class="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm transition-colors outline-none disabled:opacity-50
+        "
 			>
 				{#if isLoading}
 					<LoaderCircle class="size-3.5 animate-spin" />
+				{:else if appointmentStatus === 'confirmed'}
+					<CircleQuestionMark class="size-3.5" />
 				{:else}
 					<CircleCheckBig class="size-3.5" />
 				{/if}
-				<span>Confirmar presença</span>
+
+				<span>
+					{appointmentStatus === 'confirmed' ? 'Desfazer confirmação' : 'Confirmar presença'}
+				</span>
 			</button>
 		</form>
 

@@ -87,16 +87,35 @@ export const actions: Actions = {
 		return { success: true };
 	},
 
-	confirm: async ({ request, locals }) => {
+	toggleConfirmation: async ({ request, locals }) => {
 		const formData = await request.formData();
 		const id = formData.get('id');
 
-		const { error } = await locals.supabase
+		// 1. Primeiro, buscamos o status atual do agendamento
+		const { data: appointment, error: fetchError } = await locals.supabase
 			.from('appointments')
-			.update({ status: 'confirmed' })
+			.select('status')
+			.eq('id', id)
+			.single();
+
+		if (fetchError || !appointment) {
+			return fail(404, { message: 'Agendamento não encontrado.' });
+		}
+
+		// 2. Lógica de inversão (Toggle)
+		// Se estiver confirmado, volta para pending. Caso contrário, vira confirmed.
+		const newStatus = appointment.status === 'confirmed' ? 'pending' : 'confirmed';
+
+		// 3. Update no banco com o novo status
+		const { error: updateError } = await locals.supabase
+			.from('appointments')
+			.update({ status: newStatus })
 			.eq('id', id);
 
-		if (error) return fail(500, { message: error.message });
+		if (updateError) {
+			return fail(500, { message: updateError.message });
+		}
+
 		return { success: true };
 	},
 

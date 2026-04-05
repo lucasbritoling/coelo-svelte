@@ -48,7 +48,7 @@
 	});
 </script>
 
-<div class="flex min-w-0! flex-col gap-6 p-3 sm:p-6">
+<div class="flex min-w-0! max-w-2xl flex-col gap-6 p-3 sm:p-6">
 	<div class="flex min-w-0! flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 		<div>
 			<h1 class="text-2xl font-bold tracking-tight">Serviços</h1>

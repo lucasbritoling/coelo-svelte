@@ -110,7 +110,7 @@
 			</div>
 		</Card.Header>
 		<Card.Content>
-			<div class="rounded-md border">
+			<div class="w-full overflow-x-auto rounded-md border">
 				<table class="w-full text-sm">
 					<thead>
 						<tr class="border-b bg-muted/50 text-left font-medium">

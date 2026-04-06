@@ -184,6 +184,7 @@
 					id="phone"
 					name="phone"
 					bind:value={$form.phone}
+					inputmode="numeric"
 					placeholder="41999999999"
 					aria-invalid={$errors.phone ? 'true' : undefined}
 				/>

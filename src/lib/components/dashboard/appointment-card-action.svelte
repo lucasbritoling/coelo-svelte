@@ -84,9 +84,11 @@
 				action="?/cancel"
 				use:enhance={() => {
 					return async ({ result, update }) => {
+						isLoading = true;
 						if (result.type === 'success') {
 							toast.success('Presença cancelada.');
 							await update();
+							isLoading = false;
 						}
 					};
 				}}
@@ -94,9 +96,13 @@
 				<input type="hidden" name="id" value={appointmentId} />
 				<button
 					type="submit"
+					disabled={isLoading}
 					class="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-				>
-					<CircleSlash class="size-3.5" /> <span>Cancelar presença</span>
+					>{#if isLoading}
+						<LoaderCircle class="size-3.5 animate-spin" /> <span>Cancelar presença</span>
+					{:else}
+						<CircleSlash class="size-3.5" /> <span>Cancelar presença</span>
+					{/if}
 				</button>
 			</form>
 		{/if}

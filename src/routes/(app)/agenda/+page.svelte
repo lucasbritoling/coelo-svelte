@@ -164,10 +164,10 @@
 												''
 											)}?text=Olá {appointment.customer_name}..."
 											target="_blank"
-											class="group/wa flex items-center gap-2 font-mono text-[10px] text-muted-foreground/50 transition-all hover:text-green-600"
+											class="group/wa flex items-center gap-2 font-mono text-[12px] text-green-600 transition-all hover:text-green-600 sm:text-muted-foreground/50"
 										>
 											<MessageCircle
-												class="h-3.5 w-3.5 text-green-500 group-hover/wa:fill-green-500/10"
+												class="h-4 w-4 text-green-500 group-hover/wa:fill-green-500/15"
 											/>
 											<span class="group-hover:underline">{appointment.customer_phone}</span>
 										</a>

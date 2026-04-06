@@ -30,7 +30,7 @@
 			isLoading = true;
 		},
 
-		onResult: () => {
+		onUpdated: () => {
 			isLoading = false;
 		}
 	});

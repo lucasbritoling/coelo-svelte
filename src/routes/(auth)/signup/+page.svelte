@@ -1,5 +1,5 @@
 <script>
-	import GalleryVerticalEndIcon from '@lucide/svelte/icons/gallery-vertical-end';
+	import { Rabbit } from '@lucide/svelte';
 	import SignupForm from '$lib/components/signup-form.svelte';
 	let { data } = $props();
 </script>
@@ -10,7 +10,7 @@
 			<div
 				class="flex size-6 items-center justify-center rounded-md bg-primary text-primary-foreground"
 			>
-				<GalleryVerticalEndIcon class="size-4" />
+				<Rabbit class="size-4" />
 			</div>
 			Coelo
 		</a>

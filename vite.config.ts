@@ -13,6 +13,7 @@ export default defineConfig({
 			manifest: {
 				name: 'Coelo',
 				short_name: 'Coelo',
+				id: '/',
 				theme_color: '#ffffff',
 				background_color: '#ffffff',
 				display: 'standalone',

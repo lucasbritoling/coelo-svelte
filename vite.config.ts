@@ -9,6 +9,7 @@ export default defineConfig({
 		sveltekit(),
 		SvelteKitPWA({
 			registerType: 'autoUpdate',
+			injectRegister: 'auto',
 			manifest: {
 				name: 'Coelo',
 				short_name: 'Coelo',

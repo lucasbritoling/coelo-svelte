@@ -2,7 +2,7 @@ import adapter from '@sveltejs/adapter-cloudflare';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-	kit: { adapter: adapter() },
+	kit: { adapter: adapter(), serviceWorker: { register: false } },
 	vitePlugin: {
 		dynamicCompileOptions: ({ filename }) =>
 			filename.includes('node_modules') ? undefined : { runes: true }

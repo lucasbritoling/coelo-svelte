@@ -64,9 +64,9 @@
 					method="POST"
 					action="?/updateWorkingDay"
 					use:enhance={() => {
-						console.log(`ENVIANDO FORM ${day.id}:`, { is_active: day.is_active });
+						//console.log(`ENVIANDO FORM ${day.id}:`, { is_active: day.is_active });
 						return async ({ result, update }) => {
-							console.log('RESULTADO DA ACTION RECEBIDO:', result.type);
+							//console.log('RESULTADO DA ACTION RECEBIDO:', result.type);
 							await update({ invalidateAll: true });
 						};
 					}}
@@ -86,7 +86,7 @@
 						<Switch
 							checked={day.is_active}
 							onCheckedChange={(v) => {
-								console.log(`SWITCH CLICK: Novo valor = ${v} para o dia ${day.day_of_week}`);
+								//console.log(`SWITCH CLICK: Novo valor = ${v} para o dia ${day.day_of_week}`);
 
 								// 1. Atualiza o estado reativo do Svelte 5
 								day.is_active = v;
@@ -95,7 +95,7 @@
 								const checkbox = document.getElementById(`check-${day.id}`) as HTMLInputElement;
 								if (checkbox) checkbox.checked = v;
 
-								console.log('Checkbox real está marcado?', checkbox?.checked);
+								//console.log('Checkbox real está marcado?', checkbox?.checked);
 
 								// 3. Dispara o submit
 								setTimeout(() => {

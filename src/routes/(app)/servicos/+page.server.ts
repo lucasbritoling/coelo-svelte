@@ -61,7 +61,7 @@ export const actions: Actions = {
 		}
 
 		if (result.error) {
-			console.error('Erro no Supabase:', result.error);
+			//console.error('Erro no Supabase:', result.error);
 			return fail(500, {
 				form,
 				message: 'Erro ao salvar no banco de dados.'

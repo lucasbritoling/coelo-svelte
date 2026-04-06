@@ -3,13 +3,13 @@ import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
 	// 1. Busca Working Hours
-	const { data: workingHours, error: whError } = await supabase
+	const { data: workingHours } = await supabase
 		.from('working_hours')
 		.select('*')
 		.eq('profile_id', user?.id)
 		.order('day_of_week');
 
-	if (whError) console.error('Erro ao buscar Working Hours:', whError);
+	//if (whError) console.error('Erro ao buscar Working Hours:', whError);
 
 	// 2. Busca Exceções (Overrides)
 	const { data: overrides } = await supabase
@@ -43,14 +43,14 @@ export const actions: Actions = {
 		const end_time = formData.get('end_time')?.toString();
 
 		// --- DEBUG SERVER ---
-		console.log('--- ACTION: updateWorkingDay ---');
-		console.log('Form Data Bruto:', { id, is_active, start_time, end_time });
+		//console.log('--- ACTION: updateWorkingDay ---');
+		//console.log('Form Data Bruto:', { id, is_active, start_time, end_time });
 
 		const updateData: any = { is_active };
 		if (start_time && start_time !== '') updateData.start_time = start_time;
 		if (end_time && end_time !== '') updateData.end_time = end_time;
 
-		console.log('Objeto enviado para o Supabase:', updateData);
+		//console.log('Objeto enviado para o Supabase:', updateData);
 
 		const { data, error, status } = await supabase
 			.from('working_hours')
@@ -60,12 +60,12 @@ export const actions: Actions = {
 			.select(); // Forçamos o select para ver o que mudou
 
 		if (error) {
-			console.error('ERRO SUPABASE:', error.message);
+			//console.error('ERRO SUPABASE:', error.message);
 			return fail(400, { message: error.message });
 		}
 
-		console.log('SUCESSO NO BANCO. Novo estado:', data?.[0]);
-		console.log('Status HTTP:', status);
+		//console.log('SUCESSO NO BANCO. Novo estado:', data?.[0]);
+		//console.log('Status HTTP:', status);
 
 		return { success: true };
 	},
@@ -80,8 +80,8 @@ export const actions: Actions = {
 		const end_time = formData.get('end_time')?.toString() || null;
 		const note = formData.get('note')?.toString() || null;
 
-		console.log('--- DEBUG: upsertOverride ---');
-		console.log('Recebido do Form:', { date, is_available, start_time, end_time, note });
+		//console.log('--- DEBUG: upsertOverride ---');
+		//console.log('Recebido do Form:', { date, is_available, start_time, end_time, note });
 
 		const payload = {
 			profile_id: user?.id,
@@ -92,16 +92,16 @@ export const actions: Actions = {
 			note: note || null
 		};
 
-		console.log('Payload para o Supabase:', payload);
+		//console.log('Payload para o Supabase:', payload);
 
 		const { data, error } = await supabase.from('availability_overrides').upsert(payload).select();
 
 		if (error) {
-			console.error('ERRO SUPABASE OVERRIDE:', error.message, error.details);
+			//console.error('ERRO SUPABASE OVERRIDE:', error.message, error.details);
 			return fail(400, { message: error.message });
 		}
 
-		console.log('SUCESSO OVERRIDE:', data?.[0]);
+		//console.log('SUCESSO OVERRIDE:', data?.[0]);
 		return { success: true };
 	},
 

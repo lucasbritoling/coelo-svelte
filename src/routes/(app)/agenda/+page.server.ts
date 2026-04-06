@@ -27,7 +27,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 
 	// Se a RPC falhar, ainda retornamos as listas vazias para o TS não reclamar
 	if (appointmentsRes.error) {
-		console.error('Erro na RPC:', appointmentsRes.error.message);
+		//console.error('Erro na RPC:', appointmentsRes.error.message);
 		return {
 			appointments: [],
 			customers: customersRes.data ?? [],
@@ -71,7 +71,7 @@ export const actions: Actions = {
 		]);
 
 		if (error) {
-			console.error(error);
+			//console.error(error);
 
 			// 3. Captura o erro da constraint EXCLUDE (código 23P01 no Postgres)
 			// Isso acontece quando o slot && outro_slot (sobreposição)

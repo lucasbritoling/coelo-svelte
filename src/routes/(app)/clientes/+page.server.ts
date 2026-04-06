@@ -56,8 +56,12 @@ export const actions: Actions = {
 
 		const { error } = await locals.supabase.from('customers').delete().eq('id', id);
 
-		if (error) {
-			return fail(400, { message: 'Não foi possível excluir: ' + error.message });
+		if (error?.code === '23503') {
+			return fail(400, {
+				message: 'Não é possível excluir: este cliente possui agendamentos vinculados'
+			});
+		} else if (error) {
+			return fail(400, { message: 'Não foi possível excluir.' });
 		}
 
 		return { success: true };

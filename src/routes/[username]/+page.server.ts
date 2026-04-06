@@ -45,7 +45,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase } }
 			//console.log(slots);
 
 			if (rpcError) {
-				console.error('❌ ERRO NA RPC:', rpcError.message);
+				//console.error('❌ ERRO NA RPC:', rpcError.message);
 			} else {
 				availableSlots = slots ?? [];
 				//console.log('✅ Slots encontrados:', availableSlots.length);

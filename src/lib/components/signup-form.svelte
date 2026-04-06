@@ -59,8 +59,8 @@
 					</Field.Field>
 
 					<Field.Field>
-						<Field.Label for="username">Link na bio</Field.Label>
-						<Input name="username" bind:value={$form.username} />
+						<Field.Label for="username">Link da sua agenda</Field.Label>
+						<Input name="username" bind:value={$form.username} placeholder="seu-nome" />
 						{#if $errors.username}<span class="text-xs text-destructive">{$errors.username}</span
 							>{/if}
 					</Field.Field>

@@ -13,7 +13,7 @@
 			>
 				<GalleryVerticalEndIcon class="size-4" />
 			</div>
-			Acme Inc.
+			Coelo
 		</a>
 		<LoginForm {form} />
 	</div>

@@ -85,9 +85,7 @@
 							<RadioGroup.Item value={service.id} id={service.id} />
 							<Label for={service.id} class="flex flex-1 cursor-pointer flex-col">
 								<span class="font-bold">{service.name}</span>
-								<span class="text-xs text-muted-foreground"
-									>{service.duration} min • R$ {service.price}</span
-								>
+								<span class="text-xs text-muted-foreground">{service.duration} min</span>
 							</Label>
 						</div>
 					{/each}
@@ -237,6 +235,10 @@
 									id="customer_phone"
 									bind:value={customerPhone}
 									required
+									pattern="[0-9]+"
+									inputmode="numeric"
+									minlength={11}
+									maxlength={11}
 									placeholder="DDD + 9 Dígitos"
 								/>
 							</div>

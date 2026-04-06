@@ -53,16 +53,28 @@
 				<Field.Group>
 					<Field.Field>
 						<Field.Label for="full_name">Nome Completo</Field.Label>
-						<Input name="full_name" bind:value={$form.full_name} />
+						<Input name="full_name" bind:value={$form.full_name} placeholder="Maria Oliveira" />
 						{#if $errors.full_name}<span class="text-xs text-destructive">{$errors.full_name}</span
 							>{/if}
 					</Field.Field>
 
 					<Field.Field>
-						<Field.Label for="username">Link da sua agenda</Field.Label>
-						<Input name="username" bind:value={$form.username} placeholder="seu-nome" />
-						{#if $errors.username}<span class="text-xs text-destructive">{$errors.username}</span
-							>{/if}
+						<Field.Label for="username">Endereço da sua agenda</Field.Label>
+						<div class="relative">
+							<span class="absolute top-1/2 left-3 -translate-y-1/2 text-sm text-muted-foreground">
+								coelo.dev/
+							</span>
+							<Input
+								name="username"
+								bind:value={$form.username}
+								class="pl-19.5"
+								placeholder="seu-nome"
+							/>
+						</div>
+						<Field.Description>Seus clientes agendam por aqui.</Field.Description>
+						{#if $errors.username}
+							<span class="text-xs text-destructive">{$errors.username}</span>
+						{/if}
 					</Field.Field>
 					<Field.Field>
 						<Field.Label for="email">E-mail</Field.Label>

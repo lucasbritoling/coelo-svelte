@@ -15,10 +15,13 @@
 	<Sidebar.Menu>
 		{#each navItems as item (item.url)}
 			<Sidebar.MenuItem>
-				<Sidebar.MenuButton isActive={page.url.pathname === item.url}>
+				<Sidebar.MenuButton
+					class="h-12 text-lg sm:h-9 sm:text-sm"
+					isActive={page.url.pathname === item.url}
+				>
 					{#snippet child({ props })}
 						<a href={item.url} {...props}>
-							<item.icon class="size-4" />
+							<item.icon class="!size-6 sm:!size-4" />
 							<span>{item.title}</span>
 						</a>
 					{/snippet}

@@ -183,7 +183,7 @@
 		<!-- Card de 'Copiar' Link -->
 
 		<div class="space-y-6">
-			<Card.Root class="border-none bg-muted/30 shadow-none ring-1 ring-foreground/5 ring-inset">
+			<Card.Root class="border-none bg-zinc-50 shadow-none ring-1 ring-foreground/5 ring-inset">
 				<Card.Header class="pb-3">
 					<Card.Title class="text-sm font-semibold tracking-tight">Link de Agendamento</Card.Title>
 					<Card.Description class="text-xs">Seus clientes marcam por aqui:</Card.Description>

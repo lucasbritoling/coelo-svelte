@@ -148,9 +148,6 @@
 					</div>
 
 					<div class="mt-8 w-full space-y-3">
-						<Button variant="outline" class="w-full" onclick={() => location.reload()}>
-							Novo Agendamento
-						</Button>
 						<p class="text-[10px] text-muted-foreground">
 							Dúvidas? Entre em contato com o suporte do profissional.
 						</p>

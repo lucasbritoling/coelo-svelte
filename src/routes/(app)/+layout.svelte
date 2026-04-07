@@ -21,7 +21,7 @@
 	<AppSidebar />
 	<Sidebar.Inset class="flex h-svh flex-col overflow-hidden">
 		<header
-			class="sticky! bottom-0! z-20 order-last flex h-16 shrink-0 items-center gap-2 border-t bg-background px-4 sm:top-0! sm:bottom-auto! sm:order-0 sm:border-t-0 sm:border-b"
+			class="sticky! bottom-0! z-20 order-last flex h-16 shrink-0 items-center gap-2 border-t bg-muted px-4 shadow-[0_-4px_12px_rgba(0,0,0,0.1)] sm:top-0! sm:bottom-auto! sm:order-0 sm:border-t-0 sm:border-b sm:bg-background sm:shadow-none dark:shadow-[0_-4px_12px_rgba(0,0,0,0.3)]"
 		>
 			<Sidebar.Trigger class="order-last -me-1 sm:order-0 sm:-ms-1 sm:me-0" />
 			<Separator

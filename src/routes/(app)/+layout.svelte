@@ -21,11 +21,14 @@
 	<AppSidebar />
 	<Sidebar.Inset class="flex h-svh flex-col overflow-hidden">
 		<header
-			class="sticky! top-0! z-20 flex h-16 shrink-0 items-center gap-2 border-b bg-background px-4"
+			class="sticky! bottom-0! z-20 order-last flex h-16 shrink-0 items-center gap-2 border-t bg-background px-4 sm:top-0! sm:bottom-auto! sm:order-0 sm:border-t-0 sm:border-b"
 		>
-			<Sidebar.Trigger class="-ms-1" />
-			<Separator orientation="vertical" class="me-2 data-[orientation=vertical]:h-4" />
-			<Breadcrumb.Root>
+			<Sidebar.Trigger class="order-last -me-1 sm:order-0 sm:-ms-1 sm:me-0" />
+			<Separator
+				orientation="vertical"
+				class="me-2 hidden data-[orientation=vertical]:h-4 sm:block"
+			/>
+			<Breadcrumb.Root class="flex-1">
 				<Breadcrumb.List>
 					<Breadcrumb.Item>
 						<Breadcrumb.Page></Breadcrumb.Page>
@@ -33,7 +36,9 @@
 				</Breadcrumb.List>
 			</Breadcrumb.Root>
 		</header>
-		<main class="flex min-w-0! flex-1 flex-col gap-4 overflow-y-auto p-4 sm:items-center">
+		<main
+			class="order-first flex min-w-0! flex-1 flex-col gap-4 overflow-y-auto p-4 sm:order-0 sm:items-center"
+		>
 			{@render children()}
 		</main>
 	</Sidebar.Inset>

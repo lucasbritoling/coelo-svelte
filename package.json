@@ -17,7 +17,7 @@
 		"test": "npm run test:e2e",
 		"gen": "wrangler types",
 		"clean": "rm -rf .svelte-kit",
-		"okay": "prettier --write . && git add . && git commit -m 'minor' && git push"
+		"push": "prettier --write . && git add . && git commit -m 'minor' && git push"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^2.0.4",

@@ -96,7 +96,7 @@
 							<Input name="password" id="password" type="password" bind:value={$form.password} />
 						</Field.Field>
 						<Field.Field>
-							<Field.Label for="confirmPassword">Confirmar</Field.Label>
+							<Field.Label for="confirmPassword">Confirmar Senha</Field.Label>
 							<Input
 								name="confirmPassword"
 								id="confirmPassword"

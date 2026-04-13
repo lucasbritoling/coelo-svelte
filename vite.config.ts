@@ -16,9 +16,9 @@ export default defineConfig({
 				start_url: '/',
 				id: '/',
 				scope: '/',
-				description: 'Link de agendamento para profissionais',
-				theme_color: '#ffffff',
-				background_color: '#ffffff',
+				description: 'Link de autoagendamento. Rápido. Simples.',
+				theme_color: '#000000',
+				background_color: '#000000',
 				icons: [
 					{
 						src: 'icon-192.png',

@@ -17,18 +17,26 @@ export default defineConfig({
 				id: '/',
 				scope: '/',
 				description: 'Link de autoagendamento. Rápido. Simples.',
-				theme_color: '#000000',
-				background_color: '#000000',
+				theme_color: '#191919',
+				background_color: '#191919',
 				icons: [
 					{
-						src: 'icon-192.png',
-						sizes: '192x192',
-						type: 'image/png'
+						src: 'favicon.svg',
+						sizes: 'any',
+						type: 'image/svg+xml',
+						purpose: 'any'
 					},
 					{
-						src: 'icon-512.png',
+						src: 'icon-512-rounded.png',
 						sizes: '512x512',
-						type: 'image/png'
+						type: 'image/png',
+						purpose: 'any' // Desktop e Splash Screens (usa a transparência nativa)
+					},
+					{
+						src: 'icon-512-squared.png',
+						sizes: '512x512',
+						type: 'image/png',
+						purpose: 'maskable' // Android (permite ao sistema cortar em círculo, gota ou quadrado)
 					}
 				]
 			}

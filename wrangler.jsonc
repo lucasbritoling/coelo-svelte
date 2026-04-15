@@ -7,20 +7,5 @@
 	"vars": {
 		"PUBLIC_SUPABASE_URL": "https://ftuqhtdwptawwbctpfgh.supabase.co",
 		"PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY": "sb_publishable_yAstaAnmOsf03OMgi4P4WQ_tkd8NCtr"
-	},
-	"observability": {
-		"enabled": false,
-		"head_sampling_rate": 1,
-		"logs": {
-			"enabled": true,
-			"head_sampling_rate": 1,
-			"persist": true,
-			"invocation_logs": true
-		},
-		"traces": {
-			"enabled": false,
-			"persist": true,
-			"head_sampling_rate": 1
-		}
 	}
 }

@@ -66,6 +66,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	response.headers.set('X-Content-Type-Options', 'nosniff');
 	response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
 	response.headers.set('Cross-Origin-Resource-Policy', 'same-origin');
+	response.headers.set('X-XSS-Protection', '0');
 	response.headers.set(
 		'Permissions-Policy',
 		'camera=(), microphone=(), geolocation=(), interest-cohort=()'

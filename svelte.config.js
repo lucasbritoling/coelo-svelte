@@ -17,8 +17,8 @@ const config = {
 				'base-uri': ['self'],
 				'form-action': ['self'],
 				'frame-ancestors': ['none'],
-				'upgrade-insecure-requests': [],
-				'block-all-mixed-content': []
+				'upgrade-insecure-requests': true,
+				'block-all-mixed-content': true
 			}
 		}
 	},

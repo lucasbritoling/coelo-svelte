@@ -15,6 +15,7 @@ const config = {
 				'connect-src': ['self', 'https://cloudflareinsights.com'],
 				'object-src': ['none'],
 				'base-uri': ['self'],
+				'form-action': ['self'],
 				'frame-ancestors': ['none']
 			}
 		}

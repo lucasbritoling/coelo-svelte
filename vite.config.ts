@@ -9,6 +9,20 @@ export default defineConfig({
 		sveltekit(),
 		SvelteKitPWA({
 			registerType: 'autoUpdate',
+  workbox: {
+                // 1. Força o cache de todos os arquivos gerados e da pasta static
+                globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
+                
+                // 2. Garante que o app funcione como Single Page App (SPA) offline
+                navigateFallback: '/',
+                
+                // 3. Limpa caches de versões antigas automaticamente
+                cleanupOutdatedCaches: true,
+
+                // 4. Faz o Service Worker assumir o controle do app na hora
+                skipWaiting: true,
+                clientsClaim: true
+            },
 			manifest: {
 				name: 'Coelo',
 				short_name: 'Coelo',

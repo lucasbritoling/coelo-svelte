@@ -6,6 +6,7 @@ const config = {
 		adapter: adapter(),
 		serviceWorker: { register: false },
 		csp: {
+  mode: 'nonce',
 			directives: {
 				'default-src': ['self'],
 				'script-src': ['self', 'https://static.cloudflareinsights.com'],
@@ -14,7 +15,7 @@ const config = {
 				'font-src': ['self'],
 				'connect-src': ['self', 'https://cloudflareinsights.com'],
 				'object-src': ['none'],
-				'base-uri': ['self'],
+				'base-uri': ['none'],
 				'form-action': ['self'],
 				'frame-ancestors': ['none'],
 				'upgrade-insecure-requests': true,

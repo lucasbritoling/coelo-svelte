@@ -9,7 +9,30 @@ export default defineConfig({
 		sveltekit(),
 		SvelteKitPWA({
 			registerType: 'autoUpdate',
-  workbox: {
+  workbox: { runtimeCaching: [
+    {
+      // 1. Cache Agressivo (Ex: Página de Serviços ou Horários Fixos)
+      // Perfeito para o que quase nunca muda. Tenta o cache e NEM OLHA para a rede.
+      urlPattern: /\/(servicos|horarios)/,
+      handler: 'CacheFirst', 
+      options: {
+        cacheName: 'paginas-estaticas',
+        expiration: {
+          maxEntries: 10,
+          maxAgeSeconds: 60 * 60 * 24 * 30, // Mantém por 30 dias
+        },
+      },
+    },
+    {
+      // 2. Cache Inteligente (Ex: Agenda ou Perfil do Usuário)
+      // Mostra o que tem no cache instantaneamente, mas atualiza em segundo plano.
+      urlPattern: /\/(agenda|clientes|[\w-]+)/, 
+      handler: 'StaleWhileRevalidate',
+      options: {
+        cacheName: 'dados-dinamicos',
+      },
+    }
+  ],
                 // 1. Força o cache de todos os arquivos gerados e da pasta static
                 globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
                 

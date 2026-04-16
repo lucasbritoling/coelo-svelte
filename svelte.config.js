@@ -6,14 +6,14 @@ const config = {
 		adapter: adapter(),
 		serviceWorker: { register: false },
 		csp: {
-  mode: 'nonce',
+			mode: 'nonce',
 			directives: {
 				'default-src': ['self'],
-				'script-src': ['self', 'https://static.cloudflareinsights.com'],
+				'script-src': ['self', 'strict-dynamic'],
 				'style-src': ['self', 'unsafe-inline'],
 				'img-src': ['self', 'data:'],
 				'font-src': ['self'],
-				'connect-src': ['self', 'https://cloudflareinsights.com'],
+				'connect-src': ['self'],
 				'object-src': ['none'],
 				'base-uri': ['none'],
 				'form-action': ['self'],

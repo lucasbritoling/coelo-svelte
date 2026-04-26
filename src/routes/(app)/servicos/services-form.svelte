@@ -119,7 +119,7 @@
 			</div>
 
 			<Dialog.Footer>
-				<Button type="submit" disabled={isLoading} class="w-full">
+				<Button type="submit" disabled={isLoading} class="cursor-pointer">
 					{#if isLoading}
 						<LoaderCircle class="mr-2 h-4 w-4 animate-spin" />
 						Salvando...

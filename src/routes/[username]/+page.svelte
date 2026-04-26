@@ -39,6 +39,10 @@
 		if (params.date) newUrl.searchParams.set('date', params.date);
 		if (params.serviceId) newUrl.searchParams.set('serviceId', params.serviceId);
 
+		if (data.singleService && !newUrl.searchParams.get('serviceId')) {
+        newUrl.searchParams.set('serviceId', String(data.services[0].id));
+    }
+
 		await goto(newUrl.search, {
 			keepFocus: true,
 			noScroll: true,
@@ -68,7 +72,8 @@
 		<p class="font-medium text-muted-foreground">@{professional.username}</p>
 	</header>
 
-	<div class="grid gap-8 lg:grid-cols-3">
+	<div class="grid gap-8 lg:grid-cols-{data.singleService ? '2' : '3'}">
+	{#if !data.singleService}
 		<Card.Root class="lg:col-span-1">
 			<Card.Header>
 				<Card.Title>1. Escolha o serviço</Card.Title>
@@ -92,6 +97,7 @@
 				</RadioGroup.Root>
 			</Card.Content>
 		</Card.Root>
+		{/if}
 
 		<Card.Root class="lg:col-span-1">
 			<Card.Header>
@@ -102,6 +108,8 @@
 					bind:value={calendarValue}
 					onValueChange={(v) => updateSelection({ date: v?.toString() })}
 					class="rounded-md border shadow-sm"
+					fixedWeeks
+					minValue={today(getLocalTimeZone())}
 				/>
 			</Card.Content>
 		</Card.Root>
@@ -156,7 +164,7 @@
 			{:else}
 				<Card.Header>
 					<Card.Title>3. Horários</Card.Title>
-					<Card.Description>
+					<Card.Description class="justify-center align-middle">
 						{#if !data.selectedServiceId}
 							Selecione um serviço primeiro
 						{:else if !data.selectedDate}

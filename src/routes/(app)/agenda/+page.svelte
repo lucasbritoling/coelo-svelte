@@ -63,7 +63,7 @@
 			<Dialog.Root bind:open={showAppointmentModal}>
 				<Dialog.Trigger>
 					{#snippet child({ props })}
-						<Button {...props} size="sm" class="h-9 shadow-sm">
+						<Button {...props} size="sm" class="h-9 hover:shadow-sm cursor-pointer">
 							<Plus class="mr-2 h-4 w-4" /> Novo Horário
 						</Button>
 					{/snippet}
@@ -71,9 +71,9 @@
 
 				<Dialog.Content class="sm:max-w-106.25">
 					<Dialog.Header>
-						<Dialog.Title>Novo Agendamento</Dialog.Title>
-						<Dialog.Description>
-							Selecione o cliente e o serviço para a data de {formattedTitle}.
+						<Dialog.Title>Novo Horário</Dialog.Title>
+						<Dialog.Description class="capitalize">
+							{formattedTitle}
 						</Dialog.Description>
 					</Dialog.Header>
 
@@ -110,7 +110,7 @@
 				<div class="grid gap-3" class:opacity-50={navigating.to}>
 					{#each data.appointments as appointment (appointment.id)}
 						<Card.Root
-							class="group relative overflow-hidden border-sidebar-border/50 shadow-sm transition-all hover:border-primary/40"
+							class="group relative overflow-hidden border-sidebar-border/50 shadow-sm transition-all hover:shadow-md hover:border-primary/40"
 						>
 							<div
 								class="absolute top-2 right-2 z-10 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100"
@@ -162,14 +162,14 @@
 											href="https://wa.me/{appointment.customer_phone.replace(
 												/\D/g,
 												''
-											)}?text=Olá {appointment.customer_name}..."
+											)}"
 											target="_blank"
 											class="group/wa flex items-center gap-2 font-mono text-[12px] text-green-600 transition-all hover:text-green-600 sm:text-muted-foreground/50"
 										>
 											<MessageCircle
-												class="h-4 w-4 text-green-500 group-hover/wa:fill-green-500/15"
+												class="h-4 w-4 mb-0.5 text-green-500 group-hover/wa:fill-green-500/15"
 											/>
-											<span class="group-hover:underline">{appointment.customer_phone}</span>
+											<span class="">{appointment.customer_phone}</span>
 										</a>
 									{/if}
 								</div>
@@ -198,7 +198,7 @@
 						onclick={copyToClipboard}
 						variant={copied ? 'default' : 'secondary'}
 						size="sm"
-						class="w-full gap-2 text-xs font-medium transition-all"
+						class="w-full gap-2 text-xs hover:shadow-sm font-medium transition-all cursor-pointer border-sm"
 					>
 						{#if copied}
 							<Check class="h-3.5 w-3.5" />

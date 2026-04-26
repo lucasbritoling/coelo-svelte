@@ -63,8 +63,8 @@ get along, so we shut typescript up by casting `value` to `never`.
 	{#snippet children({ months, weekdays })}
 		<Calendar.Months>
 			<Calendar.Nav>
-				<Calendar.PrevButton variant={buttonVariant} />
-				<Calendar.NextButton variant={buttonVariant} />
+				<Calendar.PrevButton variant={buttonVariant} class="cursor-pointer"/>
+				<Calendar.NextButton variant={buttonVariant} class="cursor-pointer"/>
 			</Calendar.Nav>
 			{#each months as month, monthIndex (month)}
 				<Calendar.Month>
@@ -95,7 +95,7 @@ get along, so we shut typescript up by casting `value` to `never`.
 							{#each month.weeks as weekDates (weekDates)}
 								<Calendar.GridRow class="mt-2 w-full">
 									{#each weekDates as date (date)}
-										<Calendar.Cell {date} month={month.value}>
+										<Calendar.Cell {date} month={month.value} class="cursor-pointer">
 											{#if day}
 												{@render day({
 													day: date,

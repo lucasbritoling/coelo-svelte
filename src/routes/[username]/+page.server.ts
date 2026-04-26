@@ -16,6 +16,13 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase } }
 
 	if (profileError || !profile) throw error(404, 'Profissional não encontrado');
 
+	const services = profile?.services;
+	const autoServiceId = services?.length === 1 ? String(services[0].id) : null;
+
+	const effectiveServiceId = serviceId ?? autoServiceId;
+
+	
+
 	let availableSlots = [];
 
 	// --- LOG DE ENTRADA ---
@@ -25,11 +32,11 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase } }
 	if (date && serviceId) {
 		// 2. TENTATIVA DE ENCONTRAR O SERVIÇO
 		// Usamos == (dois iguais) caso o ID no banco seja número e na URL string
-		const selectedService = profile.services.find((s) => s.id == serviceId);
+		const selectedService = profile.services.find((s) => s.id == effectiveServiceId);
 
 		//console.log('Serviço selecionado encontrado?', !!selectedService);
 
-		if (selectedService) {
+		if (date && selectedService) {
 			/*console.log('Chamando RPC get_available_slots com:', {
 				p_profile_id: profile.id,
 				p_date: date,
@@ -60,7 +67,8 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase } }
 		services: profile.services,
 		slots: availableSlots,
 		selectedDate: date,
-		selectedServiceId: serviceId
+		selectedServiceId: effectiveServiceId,
+		singleService: services.length === 1
 	};
 };
 

@@ -92,7 +92,7 @@
 			<h1 class="text-2xl font-bold tracking-tight">Clientes</h1>
 			<p class="text-sm text-muted-foreground">Gerencie sua base de contatos.</p>
 		</div>
-		<Button onclick={startCreate} size="sm" class="h-9 shadow-sm sm:w-auto">
+		<Button onclick={startCreate} size="sm" class="h-9 cursor-pointer hover:shadow-sm sm:w-auto">
 			<Plus class="mr-2 h-4 w-4" /> Novo Cliente
 		</Button>
 	</div>
@@ -100,11 +100,11 @@
 	<Card.Root>
 		<Card.Header class="pb-3">
 			<div class="relative max-w-sm">
-				<Search class="absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground" />
+				<Search class="absolute top-2 left-2.5 h-4 w-4 text-muted-foreground" />
 				<Input
 					type="search"
 					placeholder="Buscar por nome ou telefone..."
-					class="pl-9"
+					class="pl-9 hover:shadow-sm"
 					bind:value={searchQuery}
 				/>
 			</div>
@@ -126,13 +126,13 @@
 								<td class="p-3 font-mono text-muted-foreground">{customer.phone}</td>
 								<td class="p-3 text-right">
 									<div class="flex justify-end gap-2">
-										<Button variant="ghost" size="icon" onclick={() => startEdit(customer)}>
+										<Button variant="ghost" class="cursor-pointer hover:shadow-sm" size="icon" onclick={() => startEdit(customer)}>
 											<Pencil class="h-4 w-4" />
 										</Button>
 										<Button
 											variant="ghost"
 											size="icon"
-											class="text-destructive hover:bg-destructive/10"
+											class="text-destructive cursor-pointer hover:shadow-sm hover:bg-destructive/10"
 											onclick={() => confirmDelete(customer)}
 										>
 											<Trash2 class="h-4 w-4" />
@@ -216,7 +216,7 @@
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
-			<AlertDialog.Cancel disabled={isDeleting}>Cancelar</AlertDialog.Cancel>
+			<AlertDialog.Cancel disabled={isDeleting} class="cursor-pointer">Cancelar</AlertDialog.Cancel>
 
 			<form
 				method="POST"
@@ -238,7 +238,7 @@
 			>
 				<input type="hidden" name="id" value={customerToDelete?.id} />
 
-				<Button type="submit" variant="destructive" disabled={isDeleting} class="min-w-35 gap-2">
+				<Button type="submit" variant="destructive" disabled={isDeleting} class="min-w-35 gap-2 cursor-pointer">
 					{#if isDeleting}
 						<LoaderCircle class="h-4 w-4 animate-spin" />
 						Excluindo...

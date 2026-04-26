@@ -28,7 +28,7 @@
 				{...props}
 				variant="ghost"
 				size="icon"
-				class="size-8 text-muted-foreground transition-colors hover:bg-accent data-[state=open]:bg-accent"
+				class="size-8 cursor-pointer text-muted-foreground transition-colors hover:bg-accent data-[state=open]:bg-accent"
 			>
 				<Ellipsis class="size-4" />
 			</Button>
@@ -61,7 +61,7 @@
 			<button
 				type="submit"
 				disabled={isLoading}
-				class="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm transition-colors outline-none disabled:opacity-50
+				class="flex w-full cursor-pointer hover:bg-accent items-center gap-2 rounded-sm px-2 py-1.5 text-sm transition-colors outline-none disabled:opacity-50
         "
 			>
 				{#if isLoading}
@@ -97,7 +97,7 @@
 				<button
 					type="submit"
 					disabled={isLoading}
-					class="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+					class="flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
 					>{#if isLoading}
 						<LoaderCircle class="size-3.5 animate-spin" /> <span>Cancelar presença</span>
 					{:else}
@@ -110,7 +110,7 @@
 		<DropdownMenu.Separator />
 
 		<DropdownMenu.Item
-			class="gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive"
+			class="gap-2 cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive"
 			onSelect={() => (showConfirmDialog = true)}
 		>
 			<Trash2 class="size-3.5" />
@@ -129,7 +129,7 @@
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
-			<AlertDialog.Cancel disabled={isDeleting}>Cancelar</AlertDialog.Cancel>
+			<AlertDialog.Cancel disabled={isDeleting} class="cursor-pointer">Cancelar</AlertDialog.Cancel>
 
 			<form
 				method="POST"
@@ -156,7 +156,7 @@
 				}}
 			>
 				<input type="hidden" name="id" value={appointmentId} />
-				<Button type="submit" variant="destructive" disabled={isDeleting} class="gap-2">
+				<Button type="submit" variant="destructive" disabled={isDeleting} class="gap-2 cursor-pointer">
 					{#if isDeleting}
 						<LoaderCircle class="size-3.5 animate-spin" />
 						Aguarde...

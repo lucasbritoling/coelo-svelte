@@ -56,19 +56,19 @@
 				Configure os procedimentos e tempos de atendimento.
 			</p>
 		</div>
-		<Button onclick={startCreate} size="sm" class="h-9 w-full sm:w-auto">
+		<Button onclick={startCreate} size="sm" class="h-9 w-full sm:w-auto cursor-pointer hover:shadow-sm">
 			<Plus class="mr-2 h-4 w-4" /> Novo Serviço
 		</Button>
 	</div>
 
 	<Card.Root class="min-w-0!">
 		<Card.Header class="pb-3">
-			<div class="relative max-w-sm">
-				<Search class="absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground" />
+			<div class="relative max-w-full min-w-0">
+				<Search class="absolute top-2 left-2.5 h-4 w-4 text-muted-foreground" />
 				<Input
 					type="search"
 					placeholder="Procurar serviço..."
-					class="pl-9"
+					class="pl-9 hover:shadow-sm"
 					bind:value={searchQuery}
 				/>
 			</div>
@@ -99,13 +99,13 @@
 								</td>
 								<td class="p-3 text-right">
 									<div class="flex justify-end gap-2">
-										<Button variant="ghost" size="icon" onclick={() => startEdit(service)}>
+										<Button variant="ghost" size="icon" class="cursor-pointer hover:shadow-sm" onclick={() => startEdit(service)}>
 											<Pencil class="h-4 w-4" />
 										</Button>
 										<Button
 											variant="ghost"
 											size="icon"
-											class="text-destructive hover:bg-destructive/10"
+											class="text-destructive cursor-pointer hover:shadow-sm hover:bg-destructive/10"
 											onclick={() => confirmDelete(service)}
 										>
 											<Trash2 class="h-4 w-4" />
@@ -138,7 +138,7 @@
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
-			<AlertDialog.Cancel disabled={isLoading}>Cancelar</AlertDialog.Cancel>
+			<AlertDialog.Cancel disabled={isLoading} class="cursor-pointer">Cancelar</AlertDialog.Cancel>
 			<form
 				method="POST"
 				action="?/delete"
@@ -158,7 +158,7 @@
 				}}
 			>
 				<input type="hidden" name="id" value={serviceToDelete?.id} />
-				<Button type="submit" variant="destructive" disabled={isLoading} class="min-w-[140px]">
+				<Button type="submit" variant="destructive" disabled={isLoading} class="min-w-[140px] cursor-pointer">
 					{#if isLoading}
 						<LoaderCircle class="mr-2 size-4 animate-spin" />
 						Removendo...

@@ -28,7 +28,7 @@
 						<Sidebar.MenuButton
 							{...props}
 							size="lg"
-							class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+							class="cursor-pointer data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
 						>
 							<Avatar.Root class="size-8 rounded-lg">
 								<Avatar.Image src={user.avatar} alt={user.full_name} />

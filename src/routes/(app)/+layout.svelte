@@ -28,13 +28,7 @@
 				orientation="vertical"
 				class="me-2 hidden data-[orientation=vertical]:h-4 xs:block"
 			/>
-			<Breadcrumb.Root class="flex-1">
-				<Breadcrumb.List>
-					<Breadcrumb.Item>
-						<Breadcrumb.Page></Breadcrumb.Page>
-					</Breadcrumb.Item>
-				</Breadcrumb.List>
-			</Breadcrumb.Root>
+
 		</header>
 		<main
 			class="order-first flex min-w-0! flex-1 flex-col gap-4 overflow-y-auto bg-zinc-50! p-4 xs:order-0 xs:items-center"

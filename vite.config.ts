@@ -28,7 +28,7 @@ export default defineConfig({
 						// 2. Cache Inteligente (Ex: Agenda ou Perfil do Usuário)
 						// Mostra o que tem no cache instantaneamente, mas atualiza em segundo plano.
 						urlPattern: /\/(agenda|clientes|[\w-]+)/,
-						handler: 'StaleWhileRevalidate',
+						handler: 'NetworkFirst',
 						options: {
 							cacheName: 'dados-dinamicos'
 						}

@@ -163,7 +163,7 @@
 				</div>
 			{:else}
 				<Card.Header>
-            <div class="flex items-start justify-between">
+            <div class="flex h-8 items-center justify-between">
                 <div>
                     <Card.Title>Horários</Card.Title>
                     <Card.Description>

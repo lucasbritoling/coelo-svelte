@@ -76,7 +76,7 @@
 	{#if !data.singleService}
 		<Card.Root class="lg:col-span-1">
 			<Card.Header>
-				<Card.Title>1. Escolha o serviço</Card.Title>
+				<Card.Title>Escolha o serviço</Card.Title>
 			</Card.Header>
 			<Card.Content>
 				<RadioGroup.Root
@@ -101,7 +101,7 @@
 
 		<Card.Root class="lg:col-span-1">
 			<Card.Header>
-				<Card.Title>2. Selecione o dia</Card.Title>
+				<Card.Title>Escolha o dia</Card.Title>
 			</Card.Header>
 			<Card.Content>
 				<Calendar
@@ -163,12 +163,12 @@
 				</div>
 			{:else}
 				<Card.Header>
-					<Card.Title>3. Horários</Card.Title>
+					<Card.Title>Horários</Card.Title>
 					<Card.Description class="justify-center align-middle">
 						{#if !data.selectedServiceId}
 							Selecione um serviço primeiro
 						{:else if !data.selectedDate}
-							Selecione uma data
+							Selecione uma data primeiro
 						{/if}
 					</Card.Description>
 				</Card.Header>

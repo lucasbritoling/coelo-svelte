@@ -163,15 +163,29 @@
 				</div>
 			{:else}
 				<Card.Header>
-					<Card.Title>Horários</Card.Title>
-					<Card.Description class="justify-center align-middle">
-						{#if !data.selectedServiceId}
-							Selecione um serviço primeiro
-						{:else if !data.selectedDate}
-							Selecione uma data primeiro
-						{/if}
-					</Card.Description>
-				</Card.Header>
+            <div class="flex items-start justify-between">
+                <div>
+                    <Card.Title>Horários</Card.Title>
+                    <Card.Description>
+                        {#if !data.selectedServiceId}
+                            Selecione um serviço primeiro
+                        {:else if !data.selectedDate}
+                            Selecione uma data primeiro
+                        {/if}
+                    </Card.Description>
+                </div>
+
+                {#if !isConfirming && selectedSlot}
+                    <Button 
+                        size="sm" 
+                        class="animate-in fade-in zoom-in w-20.5 h-7.5 cursor-pointer" 
+                        onclick={() => (isConfirming = true)}
+                    >
+                        Avançar
+                    </Button>
+                {/if}
+            </div>
+        </Card.Header>
 				<Card.Content class="flex flex-1 flex-col">
 					{#if !isConfirming}
 						{#if slots.length > 0}
@@ -179,21 +193,13 @@
 								{#each slots as slot (slot.slot_start)}
 									<Button
 										variant={selectedSlot?.slot_start === slot.slot_start ? 'default' : 'outline'}
-										class="font-mono transition-all"
+										class="font-mono transition-all cursor-pointer"
 										onclick={() => (selectedSlot = slot)}
 									>
 										{formatSlotTime(slot.slot_start)}
 									</Button>
 								{/each}
 							</div>
-
-							{#if selectedSlot}
-								<div class="mt-6 animate-in border-t pt-4 fade-in slide-in-from-top-2">
-									<Button class="w-full" size="lg" onclick={() => (isConfirming = true)}>
-										Avançar
-									</Button>
-								</div>
-							{/if}
 						{:else if data.selectedServiceId && data.selectedDate}
 							<p class="py-4 text-center text-sm text-muted-foreground">
 								Sem horários disponíveis.

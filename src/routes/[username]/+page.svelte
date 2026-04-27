@@ -26,9 +26,9 @@
 	let customerPhone = $state('');
 
 	// Sincroniza o componente de Calendário com a data que veio da URL
-	let calendarValue = $state(
-		data.selectedDate ? parseDate(data.selectedDate) : today(getLocalTimeZone())
-	);
+	let calendarValue = $state<any>(
+        data.selectedDate ? parseDate(data.selectedDate) : null
+    );
 
 	async function updateSelection(params: { date?: string; serviceId?: string }) {
 		// resetamos estados locais ao trocar data/serviço para evitar confusão
@@ -148,7 +148,7 @@
 									>Data e Hora</span
 								>
 								<span class="text-base font-semibold">
-									{calendarValue.day}/{calendarValue.month}/{calendarValue.year} às {selectedSlot?.slot_start}
+									{calendarValue?.day}/{calendarValue?.month}/{calendarValue?.year} às {selectedSlot?.slot_start}
 								</span>
 							</div>
 							<CalendarCheck2 class="h-5 w-5 text-muted-foreground/50" />
@@ -223,7 +223,7 @@
 							}}
 							class="flex flex-1 animate-in flex-col space-y-4 fade-in slide-in-from-right-4"
 						>
-							<input type="hidden" name="selected_date" value={calendarValue.toString()} />
+							<input type="hidden" name="selected_date" value={calendarValue?.toString() ?? ''} />
 							<input type="hidden" name="slot_start" value={selectedSlot?.slot_start} />
 							<input type="hidden" name="profile_id" value={professional.id} />
 							<input type="hidden" name="service_id" value={data.selectedServiceId} />

@@ -8,6 +8,63 @@
 	import AppointmentForm from '$lib/components/dashboard/appointment-form.svelte';
 	import { toast } from 'svelte-sonner';
 
+	import { goto } from '$app/navigation';
+    import { page } from '$app/state';
+
+	let touchStartX = 0;
+    let touchEndX = 0;
+    let touchStartY = 0; // Novo
+    let touchEndY = 0;   // Novo
+    const minSwipeDistance = 70;
+
+    function navigateDay(offset: number) {
+        const [y, m, d] = data.selectedDate.split('-').map(Number);
+        const date = new Date(y, m - 1, d);
+        date.setDate(date.getDate() + offset);
+
+        const newDate = date.toISOString().split('T')[0];
+        
+        const newUrl = new URL(page.url);
+        newUrl.searchParams.set('date', newDate);
+        
+        goto(newUrl.search, {
+            keepFocus: true,
+            noScroll: true,
+            replaceState: true
+        });
+    }
+
+    function handleTouchStart(e: TouchEvent) {
+        touchStartX = e.changedTouches[0].screenX;
+        touchStartY = e.changedTouches[0].screenY; // Captura o Y inicial
+    }
+
+    function handleTouchEnd(e: TouchEvent) {
+        touchEndX = e.changedTouches[0].screenX;
+        touchEndY = e.changedTouches[0].screenY;   // Captura o Y final
+        handleSwipe();
+    }
+
+    function handleSwipe() {
+        const diffX = touchStartX - touchEndX;
+        const diffY = touchStartY - touchEndY;
+
+        // PROTEÇÃO: Se a distância vertical for maior que a horizontal,
+        // o usuário está apenas rolando a página para baixo/cima. Abortar!
+        if (Math.abs(diffY) > Math.abs(diffX)) {
+            return;
+        }
+
+        // Swipe para a esquerda (próximo dia)
+        if (diffX > minSwipeDistance) {
+            navigateDay(1);
+        } 
+        // Swipe para a direita (dia anterior)
+        else if (diffX < -minSwipeDistance) {
+            navigateDay(-1);
+        }
+    }
+
 	let showAppointmentModal = $state(false);
 
 	import AppointmentCardAction from '$lib/components/dashboard/appointment-card-action.svelte';
@@ -47,7 +104,8 @@
 	});
 </script>
 
-<div class="mx-auto flex max-w-7xl flex-col gap-6 p-6">
+<div ontouchstart={handleTouchStart}
+    ontouchend={handleTouchEnd} role="region" aria-label="Agenda de atendimentos" class="mx-auto flex max-w-7xl flex-col gap-6 p-6">
 	<!-- Título -->
 	<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 		<div class={navigating.to ? 'opacity-50 transition-opacity' : ''}>

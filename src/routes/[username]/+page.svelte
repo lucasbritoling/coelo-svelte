@@ -57,7 +57,7 @@
 	}
 </script>
 
-<div class="mx-auto max-w-4xl p-6">
+<div class="mx-auto max-w-sm p-6">
 	<header class="mb-8 text-center">
 		<div class="mx-auto mb-4 size-24 overflow-hidden rounded-full border-2 bg-muted shadow-sm">
 			{#if professional.avatar_url}
@@ -244,7 +244,7 @@
 									inputmode="numeric"
 									minlength={11}
 									maxlength={11}
-									placeholder="DDD + 9 Dígitos"
+									placeholder="11 99999-9999"
 								/>
 							</div>
 

@@ -86,7 +86,7 @@
 	}
 </script>
 
-<div class="flex w-full max-w-md flex-col gap-6 p-3 sm:p-6">
+<div class="flex w-full max-w-xl flex-col gap-6 p-3 sm:p-6">
 	<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 		<div>
 			<h1 class="text-2xl font-bold tracking-tight">Clientes</h1>
@@ -99,7 +99,7 @@
 
 	<Card.Root>
 		<Card.Header class="pb-3">
-			<div class="relative max-w-sm">
+			<div class="relative max-w-full">
 				<Search class="absolute top-2 left-2.5 h-4 w-4 text-muted-foreground" />
 				<Input
 					type="search"

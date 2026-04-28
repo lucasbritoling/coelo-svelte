@@ -20,6 +20,12 @@
 	let isLoading = $state(false);
 	let isSuccess = $state(false);
 
+	let bookingSnapshot = $state<{
+		serviceName: string;
+		date: string;
+		time: string;
+	} | null>(null);
+
 	let selectedSlot = $state<any>(null);
 	let isConfirming = $state(false);
 	let customerName = $state('');
@@ -113,9 +119,9 @@
 		</Card.Root>
 
 		<Card.Root class="flex h-full flex-col lg:col-span-1">
-			{#if isSuccess}
+			{#if isSuccess && bookingSnapshot}
 				<div
-					class="flex flex-1 animate-in flex-col items-center justify-center p-6 text-center duration-500 zoom-in-95 fade-in"
+					class="flex flex-1 animate-in flex-col items-center justify-center p-6 px-4 text-center duration-500 zoom-in-95 fade-in"
 				>
 					<div
 						class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 shadow-sm"
@@ -136,7 +142,7 @@
 						<div class="flex justify-between text-sm">
 							<span class="text-muted-foreground">Serviço</span>
 							<span class="font-medium text-primary">
-								{data.services.find((s) => s.id === data.selectedServiceId)?.name}
+								{bookingSnapshot.serviceName}
 							</span>
 						</div>
 						<hr class="border-dashed" />
@@ -146,7 +152,7 @@
 									>Data e Hora</span
 								>
 								<span class="text-base font-semibold">
-									{calendarValue?.day}/{calendarValue?.month}/{calendarValue?.year} às {selectedSlot?.slot_start}
+									{bookingSnapshot.date} às {bookingSnapshot.time}
 								</span>
 							</div>
 							<CalendarCheck2 class="h-5 w-5 text-muted-foreground/50" />
@@ -211,6 +217,12 @@
 								isLoading = true;
 								return async ({ result, update }) => {
 									if (result.type === 'success') {
+										bookingSnapshot = {
+											serviceName:
+												services.find((s) => s.id === data.selectedServiceId)?.name ?? '',
+											date: `${calendarValue?.day}/${calendarValue?.month}/${calendarValue?.year}`,
+											time: selectedSlot?.slot_start
+										};
 										isLoading = false;
 										isSuccess = true;
 									} else if (result.type === 'failure') {

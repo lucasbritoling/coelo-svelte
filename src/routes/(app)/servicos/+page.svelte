@@ -44,15 +44,27 @@
 	}
 
 	function toggleActive(serviceId: string, newValue: boolean) {
-		const checkbox = document.getElementById(`check-${serviceId}`) as HTMLInputElement;
-		if (checkbox) {
-			checkbox.checked = newValue;
+		console.log(`--- DEBUG FRONTEND ---`);
+		console.log(`Tentando atualizar serviço ${serviceId} para ${newValue}`);
 
-			// Pequeno delay para garantir que o estado do Svelte 5 sincronizou
+		const input = document.getElementById(`check-${serviceId}`) as HTMLInputElement;
+
+		if (input) {
+			// Forçamos o valor para string "true"/"false" explicitamente
+			input.value = String(newValue);
+			console.log(`Valor do input hidden agora é: ${input.value}`);
+
 			setTimeout(() => {
 				const form = document.getElementById(`form-status-${serviceId}`) as HTMLFormElement;
-				form?.requestSubmit();
+				if (form) {
+					console.log('Disparando requestSubmit()...');
+					form.requestSubmit();
+				} else {
+					console.error('Formulário não encontrado!');
+				}
 			}, 50);
+		} else {
+			console.error('Input hidden não encontrado!');
 		}
 	}
 </script>

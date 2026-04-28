@@ -107,16 +107,22 @@ export const actions: Actions = {
 		const id = formData.get('id');
 		const is_active = formData.get('is_active') === 'true';
 
-		const { error } = await supabase
+		const { data, error } = await supabase
 			.from('services')
 			.update({ is_active })
 			.eq('id', id)
-			.eq('profile_id', user?.id);
+			.eq('profile_id', user?.id)
+			.select('id'); // Pedimos apenas o ID para confirmar que houve sucesso
 
 		if (error) {
-			console.error('Erro ao atualizar status:', error);
-			return fail(500, { message: 'Erro ao atualizar status' });
+			return fail(500, { message: 'Erro ao atualizar status.' });
 		}
+
+		// Se o array vier vazio, significa que o ID não existia ou não pertencia ao usuário
+		if (!data || data.length === 0) {
+			return fail(404, { message: 'Serviço não encontrado.' });
+		}
+
 		return { success: true };
 	}
 };

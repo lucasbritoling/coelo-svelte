@@ -14,7 +14,5 @@ export const serviceSchema = z.object({
 	duration: z.coerce
 		.number()
 		.int('A duração deve ser um número inteiro')
-		.min(1, 'Duração mínima de 1 minuto'),
-
-	
+		.min(1, 'Duração mínima de 1 minuto')
 });

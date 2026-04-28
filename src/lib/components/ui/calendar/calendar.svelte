@@ -63,8 +63,8 @@ get along, so we shut typescript up by casting `value` to `never`.
 	{#snippet children({ months, weekdays })}
 		<Calendar.Months>
 			<Calendar.Nav>
-				<Calendar.PrevButton variant={buttonVariant} class="cursor-pointer"/>
-				<Calendar.NextButton variant={buttonVariant} class="cursor-pointer"/>
+				<Calendar.PrevButton variant={buttonVariant} class="cursor-pointer" />
+				<Calendar.NextButton variant={buttonVariant} class="cursor-pointer" />
 			</Calendar.Nav>
 			{#each months as month, monthIndex (month)}
 				<Calendar.Month>

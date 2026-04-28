@@ -21,8 +21,6 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase } }
 
 	const effectiveServiceId = serviceId ?? autoServiceId;
 
-	
-
 	let availableSlots = [];
 
 	// --- LOG DE ENTRADA ---

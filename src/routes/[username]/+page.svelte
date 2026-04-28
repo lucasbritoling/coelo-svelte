@@ -26,9 +26,7 @@
 	let customerPhone = $state('');
 
 	// Sincroniza o componente de Calendário com a data que veio da URL
-	let calendarValue = $state<any>(
-        data.selectedDate ? parseDate(data.selectedDate) : null
-    );
+	let calendarValue = $state<any>(data.selectedDate ? parseDate(data.selectedDate) : null);
 
 	async function updateSelection(params: { date?: string; serviceId?: string }) {
 		// resetamos estados locais ao trocar data/serviço para evitar confusão
@@ -40,8 +38,8 @@
 		if (params.serviceId) newUrl.searchParams.set('serviceId', params.serviceId);
 
 		if (data.singleService && !newUrl.searchParams.get('serviceId')) {
-        newUrl.searchParams.set('serviceId', String(data.services[0].id));
-    }
+			newUrl.searchParams.set('serviceId', String(data.services[0].id));
+		}
 
 		await goto(newUrl.search, {
 			keepFocus: true,
@@ -73,30 +71,30 @@
 	</header>
 
 	<div class="grid gap-8 lg:grid-cols-{data.singleService ? '2' : '3'}">
-	{#if !data.singleService}
-		<Card.Root class="lg:col-span-1">
-			<Card.Header>
-				<Card.Title>Escolha o serviço</Card.Title>
-			</Card.Header>
-			<Card.Content>
-				<RadioGroup.Root
-					value={data.selectedServiceId}
-					onValueChange={(id) => updateSelection({ serviceId: id })}
-				>
-					{#each services as service (service.id)}
-						<div
-							class="flex items-center space-x-2 rounded-lg border p-3 transition-colors hover:bg-muted"
-						>
-							<RadioGroup.Item value={service.id} id={service.id} />
-							<Label for={service.id} class="flex flex-1 cursor-pointer flex-col">
-								<span class="font-bold">{service.name}</span>
-								<span class="text-xs text-muted-foreground">{service.duration} min</span>
-							</Label>
-						</div>
-					{/each}
-				</RadioGroup.Root>
-			</Card.Content>
-		</Card.Root>
+		{#if !data.singleService}
+			<Card.Root class="lg:col-span-1">
+				<Card.Header>
+					<Card.Title>Escolha o serviço</Card.Title>
+				</Card.Header>
+				<Card.Content>
+					<RadioGroup.Root
+						value={data.selectedServiceId}
+						onValueChange={(id) => updateSelection({ serviceId: id })}
+					>
+						{#each services as service (service.id)}
+							<div
+								class="flex items-center space-x-2 rounded-lg border p-3 transition-colors hover:bg-muted"
+							>
+								<RadioGroup.Item value={service.id} id={service.id} />
+								<Label for={service.id} class="flex flex-1 cursor-pointer flex-col">
+									<span class="font-bold">{service.name}</span>
+									<span class="text-xs text-muted-foreground">{service.duration} min</span>
+								</Label>
+							</div>
+						{/each}
+					</RadioGroup.Root>
+				</Card.Content>
+			</Card.Root>
 		{/if}
 
 		<Card.Root class="lg:col-span-1">
@@ -163,29 +161,29 @@
 				</div>
 			{:else}
 				<Card.Header>
-            <div class="flex h-8 items-center justify-between">
-                <div>
-                    <Card.Title>Horários</Card.Title>
-                    <Card.Description>
-                        {#if !data.selectedServiceId}
-                            Selecione um serviço primeiro
-                        {:else if !data.selectedDate}
-                            Selecione uma data primeiro
-                        {/if}
-                    </Card.Description>
-                </div>
+					<div class="flex h-8 items-center justify-between">
+						<div>
+							<Card.Title>Horários</Card.Title>
+							<Card.Description>
+								{#if !data.selectedServiceId}
+									Selecione um serviço primeiro
+								{:else if !data.selectedDate}
+									Selecione uma data primeiro
+								{/if}
+							</Card.Description>
+						</div>
 
-                {#if !isConfirming && selectedSlot}
-                    <Button 
-                        size="sm" 
-                        class="animate-in fade-in zoom-in w-20.5 h-7.5 cursor-pointer" 
-                        onclick={() => (isConfirming = true)}
-                    >
-                        Avançar
-                    </Button>
-                {/if}
-            </div>
-        </Card.Header>
+						{#if !isConfirming && selectedSlot}
+							<Button
+								size="sm"
+								class="h-7.5 w-20.5 animate-in cursor-pointer fade-in zoom-in"
+								onclick={() => (isConfirming = true)}
+							>
+								Avançar
+							</Button>
+						{/if}
+					</div>
+				</Card.Header>
 				<Card.Content class="flex flex-1 flex-col">
 					{#if !isConfirming}
 						{#if slots.length > 0}
@@ -193,7 +191,7 @@
 								{#each slots as slot (slot.slot_start)}
 									<Button
 										variant={selectedSlot?.slot_start === slot.slot_start ? 'default' : 'outline'}
-										class="font-mono transition-all cursor-pointer"
+										class="cursor-pointer font-mono transition-all"
 										onclick={() => (selectedSlot = slot)}
 									>
 										{formatSlotTime(slot.slot_start)}
@@ -237,10 +235,10 @@
 									bind:value={customerName}
 									required
 									oninput={(e) => {
-            // Remove números e mantém o trim interno de espaços
-            customerName = e.currentTarget.value.replace(/\d/g, '').replace(/\s{2,}/g, ' ');
-        }}
-        onblur={() => (customerName = customerName.trim())}
+										// Remove números e mantém o trim interno de espaços
+										customerName = e.currentTarget.value.replace(/\d/g, '').replace(/\s{2,}/g, ' ');
+									}}
+									onblur={() => (customerName = customerName.trim())}
 								/>
 							</div>
 
@@ -257,9 +255,9 @@
 									maxlength={11}
 									placeholder="11 99999-9999"
 									oninput={(e) => {
-            // Limpeza radical: mantém apenas dígitos 0-9
-            customerPhone = e.currentTarget.value.replace(/\D/g, '');
-        }}
+										// Limpeza radical: mantém apenas dígitos 0-9
+										customerPhone = e.currentTarget.value.replace(/\D/g, '');
+									}}
 								/>
 							</div>
 

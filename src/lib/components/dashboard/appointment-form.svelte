@@ -88,7 +88,7 @@
 						variant="outline"
 						role="combobox"
 						aria-expanded={openCustomer}
-						class="w-full justify-between font-normal cursor-pointer hover:shadow-sm"
+						class="w-full cursor-pointer justify-between font-normal hover:shadow-sm"
 					>
 						{selectedCustomerName}
 						<ChevronsUpDown class="ml-2 size-4 shrink-0 opacity-50" />
@@ -134,7 +134,7 @@
 						variant="outline"
 						role="combobox"
 						aria-expanded={openService}
-						class="w-full justify-between font-normal cursor-pointer hover:shadow-sm"
+						class="w-full cursor-pointer justify-between font-normal hover:shadow-sm"
 					>
 						{selectedServiceName}
 						<ChevronsUpDown class="ml-2 size-4 shrink-0 opacity-50" />
@@ -149,7 +149,7 @@
 						<Command.Group>
 							{#each services as service (service.id)}
 								<Command.Item
-								class="cursor-pointer"
+									class="cursor-pointer"
 									value={service.name}
 									onSelect={() => {
 										serviceId = service.id;
@@ -176,7 +176,14 @@
 	<div class="grid grid-cols-2 gap-4">
 		<div class="grid gap-2">
 			<Label for="start_at">Início</Label>
-			<Input id="start_at" class="cursor-pointer hover:shadow-sm" name="start_at" type="time" bind:value={startTime} required />
+			<Input
+				id="start_at"
+				class="cursor-pointer hover:shadow-sm"
+				name="start_at"
+				type="time"
+				bind:value={startTime}
+				required
+			/>
 		</div>
 		<div class="grid gap-2">
 			<Label for="end_at" class="opacity-80">Término (Auto)</Label>
@@ -191,7 +198,11 @@
 	</div>
 
 	<div class="pt-2">
-		<Button type="submit" disabled={isLoading || !customerId || !serviceId} class="w-full cursor-pointer hover:shadow-sm">
+		<Button
+			type="submit"
+			disabled={isLoading || !customerId || !serviceId}
+			class="w-full cursor-pointer hover:shadow-sm"
+		>
 			{#if isLoading}
 				<LoaderCircle class="mr-2 size-4 animate-spin" />
 				Salvando...

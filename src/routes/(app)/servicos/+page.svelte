@@ -56,7 +56,11 @@
 				Configure os procedimentos e tempos de atendimento.
 			</p>
 		</div>
-		<Button onclick={startCreate} size="sm" class="h-9 w-full sm:w-auto cursor-pointer hover:shadow-sm">
+		<Button
+			onclick={startCreate}
+			size="sm"
+			class="h-9 w-full cursor-pointer hover:shadow-sm sm:w-auto"
+		>
 			<Plus class="mr-2 h-4 w-4" /> Novo Serviço
 		</Button>
 	</div>
@@ -79,9 +83,9 @@
 					<thead>
 						<tr class="border-b bg-muted/50 text-left font-medium">
 							<th class="p-3">Nome</th>
-							<th class="p-3 w-[120px]">Duração</th>
-							
-							<th class="p-3 text-right w-[100px]">Ações</th>
+							<th class="w-[120px] p-3">Duração</th>
+
+							<th class="w-[100px] p-3 text-right">Ações</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -97,13 +101,18 @@
 
 								<td class="p-3 text-right">
 									<div class="flex justify-end gap-1">
-										<Button variant="ghost" size="icon" class="cursor-pointer hover:shadow-sm" onclick={() => startEdit(service)}>
+										<Button
+											variant="ghost"
+											size="icon"
+											class="cursor-pointer hover:shadow-sm"
+											onclick={() => startEdit(service)}
+										>
 											<Pencil class="h-4 w-4" />
 										</Button>
 										<Button
 											variant="ghost"
 											size="icon"
-											class="text-destructive cursor-pointer hover:shadow-sm hover:bg-destructive/10"
+											class="cursor-pointer text-destructive hover:bg-destructive/10 hover:shadow-sm"
 											onclick={() => confirmDelete(service)}
 										>
 											<Trash2 class="h-4 w-4" />
@@ -156,7 +165,12 @@
 				}}
 			>
 				<input type="hidden" name="id" value={serviceToDelete?.id} />
-				<Button type="submit" variant="destructive" disabled={isLoading} class="min-w-[140px] cursor-pointer">
+				<Button
+					type="submit"
+					variant="destructive"
+					disabled={isLoading}
+					class="min-w-[140px] cursor-pointer"
+				>
 					{#if isLoading}
 						<LoaderCircle class="mr-2 size-4 animate-spin" />
 						Removendo...

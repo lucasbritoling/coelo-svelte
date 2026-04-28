@@ -61,7 +61,7 @@
 			<button
 				type="submit"
 				disabled={isLoading}
-				class="flex w-full cursor-pointer hover:bg-accent items-center gap-2 rounded-sm px-2 py-1.5 text-sm transition-colors outline-none disabled:opacity-50
+				class="flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm transition-colors outline-none hover:bg-accent disabled:opacity-50
         "
 			>
 				{#if isLoading}
@@ -110,7 +110,7 @@
 		<DropdownMenu.Separator />
 
 		<DropdownMenu.Item
-			class="gap-2 cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive"
+			class="cursor-pointer gap-2 text-destructive focus:bg-destructive/10 focus:text-destructive"
 			onSelect={() => (showConfirmDialog = true)}
 		>
 			<Trash2 class="size-3.5" />
@@ -156,7 +156,12 @@
 				}}
 			>
 				<input type="hidden" name="id" value={appointmentId} />
-				<Button type="submit" variant="destructive" disabled={isDeleting} class="gap-2 cursor-pointer">
+				<Button
+					type="submit"
+					variant="destructive"
+					disabled={isDeleting}
+					class="cursor-pointer gap-2"
+				>
 					{#if isDeleting}
 						<LoaderCircle class="size-3.5 animate-spin" />
 						Aguarde...

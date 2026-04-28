@@ -9,61 +9,61 @@
 	import { toast } from 'svelte-sonner';
 
 	import { goto } from '$app/navigation';
-    import { page } from '$app/state';
+	import { page } from '$app/state';
 
 	let touchStartX = 0;
-    let touchEndX = 0;
-    let touchStartY = 0; // Novo
-    let touchEndY = 0;   // Novo
-    const minSwipeDistance = 70;
+	let touchEndX = 0;
+	let touchStartY = 0; // Novo
+	let touchEndY = 0; // Novo
+	const minSwipeDistance = 70;
 
-    function navigateDay(offset: number) {
-        const [y, m, d] = data.selectedDate.split('-').map(Number);
-        const date = new Date(y, m - 1, d);
-        date.setDate(date.getDate() + offset);
+	function navigateDay(offset: number) {
+		const [y, m, d] = data.selectedDate.split('-').map(Number);
+		const date = new Date(y, m - 1, d);
+		date.setDate(date.getDate() + offset);
 
-        const newDate = date.toISOString().split('T')[0];
-        
-        const newUrl = new URL(page.url);
-        newUrl.searchParams.set('date', newDate);
-        
-        goto(newUrl.search, {
-            keepFocus: true,
-            noScroll: true,
-            replaceState: true
-        });
-    }
+		const newDate = date.toISOString().split('T')[0];
 
-    function handleTouchStart(e: TouchEvent) {
-        touchStartX = e.changedTouches[0].screenX;
-        touchStartY = e.changedTouches[0].screenY; // Captura o Y inicial
-    }
+		const newUrl = new URL(page.url);
+		newUrl.searchParams.set('date', newDate);
 
-    function handleTouchEnd(e: TouchEvent) {
-        touchEndX = e.changedTouches[0].screenX;
-        touchEndY = e.changedTouches[0].screenY;   // Captura o Y final
-        handleSwipe();
-    }
+		goto(newUrl.search, {
+			keepFocus: true,
+			noScroll: true,
+			replaceState: true
+		});
+	}
 
-    function handleSwipe() {
-        const diffX = touchStartX - touchEndX;
-        const diffY = touchStartY - touchEndY;
+	function handleTouchStart(e: TouchEvent) {
+		touchStartX = e.changedTouches[0].screenX;
+		touchStartY = e.changedTouches[0].screenY; // Captura o Y inicial
+	}
 
-        // PROTEÇÃO: Se a distância vertical for maior que a horizontal,
-        // o usuário está apenas rolando a página para baixo/cima. Abortar!
-        if (Math.abs(diffY) > Math.abs(diffX)) {
-            return;
-        }
+	function handleTouchEnd(e: TouchEvent) {
+		touchEndX = e.changedTouches[0].screenX;
+		touchEndY = e.changedTouches[0].screenY; // Captura o Y final
+		handleSwipe();
+	}
 
-        // Swipe para a esquerda (próximo dia)
-        if (diffX > minSwipeDistance) {
-            navigateDay(1);
-        } 
-        // Swipe para a direita (dia anterior)
-        else if (diffX < -minSwipeDistance) {
-            navigateDay(-1);
-        }
-    }
+	function handleSwipe() {
+		const diffX = touchStartX - touchEndX;
+		const diffY = touchStartY - touchEndY;
+
+		// PROTEÇÃO: Se a distância vertical for maior que a horizontal,
+		// o usuário está apenas rolando a página para baixo/cima. Abortar!
+		if (Math.abs(diffY) > Math.abs(diffX)) {
+			return;
+		}
+
+		// Swipe para a esquerda (próximo dia)
+		if (diffX > minSwipeDistance) {
+			navigateDay(1);
+		}
+		// Swipe para a direita (dia anterior)
+		else if (diffX < -minSwipeDistance) {
+			navigateDay(-1);
+		}
+	}
 
 	let showAppointmentModal = $state(false);
 
@@ -104,8 +104,13 @@
 	});
 </script>
 
-<div ontouchstart={handleTouchStart}
-    ontouchend={handleTouchEnd} role="region" aria-label="Agenda de atendimentos" class="mx-auto flex max-w-7xl flex-col gap-6 p-6">
+<div
+	ontouchstart={handleTouchStart}
+	ontouchend={handleTouchEnd}
+	role="region"
+	aria-label="Agenda de atendimentos"
+	class="mx-auto flex max-w-7xl flex-col gap-6 p-6"
+>
 	<!-- Título -->
 	<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 		<div class={navigating.to ? 'opacity-50 transition-opacity' : ''}>
@@ -121,7 +126,7 @@
 			<Dialog.Root bind:open={showAppointmentModal}>
 				<Dialog.Trigger>
 					{#snippet child({ props })}
-						<Button {...props} size="sm" class="h-9 hover:shadow-sm cursor-pointer">
+						<Button {...props} size="sm" class="h-9 cursor-pointer hover:shadow-sm">
 							<Plus class="mr-2 h-4 w-4" /> Novo Horário
 						</Button>
 					{/snippet}
@@ -168,7 +173,7 @@
 				<div class="grid gap-3" class:opacity-50={navigating.to}>
 					{#each data.appointments as appointment (appointment.id)}
 						<Card.Root
-							class="group relative overflow-hidden border-sidebar-border/50 shadow-sm transition-all hover:shadow-md hover:border-primary/40"
+							class="group relative overflow-hidden border-sidebar-border/50 shadow-sm transition-all hover:border-primary/40 hover:shadow-md"
 						>
 							<div
 								class="absolute top-2 right-2 z-10 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100"
@@ -217,15 +222,12 @@
 
 									{#if appointment.customer_phone}
 										<a
-											href="https://wa.me/{appointment.customer_phone.replace(
-												/\D/g,
-												''
-											)}"
+											href="https://wa.me/{appointment.customer_phone.replace(/\D/g, '')}"
 											target="_blank"
 											class="group/wa flex items-center gap-2 font-mono text-[12px] text-green-600 transition-all hover:text-green-600 sm:text-muted-foreground/50"
 										>
 											<MessageCircle
-												class="h-4 w-4 mb-0.5 text-green-500 group-hover/wa:fill-green-500/15"
+												class="mb-0.5 h-4 w-4 text-green-500 group-hover/wa:fill-green-500/15"
 											/>
 											<span class="">{appointment.customer_phone}</span>
 										</a>
@@ -256,7 +258,7 @@
 						onclick={copyToClipboard}
 						variant={copied ? 'default' : 'secondary'}
 						size="sm"
-						class="w-full gap-2 text-xs hover:shadow-sm font-medium transition-all cursor-pointer border-sm"
+						class="border-sm w-full cursor-pointer gap-2 text-xs font-medium transition-all hover:shadow-sm"
 					>
 						{#if copied}
 							<Check class="h-3.5 w-3.5" />

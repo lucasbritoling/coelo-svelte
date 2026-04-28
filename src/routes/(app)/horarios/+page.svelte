@@ -70,7 +70,7 @@
 							await update({ invalidateAll: true });
 						};
 					}}
-					class="flex hover:shadow-sm flex-col gap-3 rounded-xl border bg-card p-4 sm:flex-row sm:items-center"
+					class="flex flex-col gap-3 rounded-xl border bg-card p-4 hover:shadow-sm sm:flex-row sm:items-center"
 				>
 					<input type="hidden" name="id" value={day.id} />
 
@@ -84,7 +84,7 @@
 
 					<div class="flex flex-1 items-center gap-4">
 						<Switch
-						class="cursor-pointer hover:shadow-sm"
+							class="cursor-pointer hover:shadow-sm"
 							checked={day.is_active}
 							onCheckedChange={(v) => {
 								//console.log(`SWITCH CLICK: Novo valor = ${v} para o dia ${day.day_of_week}`);
@@ -170,7 +170,7 @@
 							/>
 
 							<Switch
-							class="cursor-pointer hover:shadow-sm"
+								class="cursor-pointer hover:shadow-sm"
 								checked={isAvailableOverride}
 								onCheckedChange={(v) => (isAvailableOverride = v)}
 							/>
@@ -194,7 +194,11 @@
 							<Input name="note" placeholder="Ex: Feriado Municipal" />
 						</div>
 
-						<Button type="submit" disabled={isLoading} class="w-full cursor-pointer hover:shadow-sm">
+						<Button
+							type="submit"
+							disabled={isLoading}
+							class="w-full cursor-pointer hover:shadow-sm"
+						>
 							{#if isLoading}
 								<LoaderCircle class="animate-spin" />
 								Salvando...

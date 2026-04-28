@@ -113,7 +113,7 @@
 		</Card.Content>
 	</Card.Root>
 	<FieldDescription class="px-6 text-center">
-		Ao continuar, você concorda com os nossos <a href="##">Termos de Serviço</a>
+		Ao continuar, você concorda com os nossos <a href="/termos">Termos de Serviço</a>
 		e <a href="##">Política de Privacidade</a>.
 	</FieldDescription>
 </div>

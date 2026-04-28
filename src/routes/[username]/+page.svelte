@@ -236,6 +236,11 @@
 									placeholder="Maria Oliveira"
 									bind:value={customerName}
 									required
+									oninput={(e) => {
+            // Remove números e mantém o trim interno de espaços
+            customerName = e.currentTarget.value.replace(/\d/g, '').replace(/\s{2,}/g, ' ');
+        }}
+        onblur={() => (customerName = customerName.trim())}
 								/>
 							</div>
 
@@ -251,6 +256,10 @@
 									minlength={11}
 									maxlength={11}
 									placeholder="11 99999-9999"
+									oninput={(e) => {
+            // Limpeza radical: mantém apenas dígitos 0-9
+            customerPhone = e.currentTarget.value.replace(/\D/g, '');
+        }}
 								/>
 							</div>
 

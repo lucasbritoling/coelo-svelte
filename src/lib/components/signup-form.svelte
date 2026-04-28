@@ -131,6 +131,6 @@
 	</Card.Root>
 	<Field.Description class="px-6 text-center">
 		Ao continuar, você concorda com os nossos <a href="/termos">Termos de Serviço</a>
-		e <a href="#/">Política de Privacidade</a>.
+		e <a href="/privacidade">Política de Privacidade</a>.
 	</Field.Description>
 </div>

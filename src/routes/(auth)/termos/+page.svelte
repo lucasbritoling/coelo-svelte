@@ -13,7 +13,9 @@
 		<header class="mb-12 space-y-4">
 			<div class="flex items-center gap-3 text-primary">
 				<Scale class="size-8" />
-				<h1 class="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">Termos de Uso</h1>
+				<h1 class="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+					Termos de Serviço
+				</h1>
 			</div>
 			<p class="text-muted-foreground italic">
 				Última atualização: {new Date().toLocaleDateString('pt-BR')}
@@ -28,8 +30,8 @@
 				</div>
 				<p class="leading-relaxed text-muted-foreground">
 					Ao acessar e utilizar esta plataforma de agendamento, você concorda em cumprir e estar
-					vinculado a estes Termos de Uso. Se você não concordar com qualquer parte destes termos,
-					não deverá utilizar nossos serviços.
+					vinculado a estes Termos de Serviço. Se você não concordar com qualquer parte destes
+					termos, não deverá utilizar nossos serviços.
 				</p>
 			</section>
 

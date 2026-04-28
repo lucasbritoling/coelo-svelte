@@ -12,6 +12,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase } }
 		.from('profiles')
 		.select(`id, full_name, username, avatar_url, services (id, name, duration, price)`)
 		.eq('username', username)
+		.eq('services.is_active', true)
 		.single();
 
 	if (profileError || !profile) throw error(404, 'Profissional não encontrado');

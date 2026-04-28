@@ -100,5 +100,23 @@ export const actions: Actions = {
 		}
 
 		return { success: true };
+	},
+
+	updateStatus: async ({ request, locals: { supabase, user } }) => {
+		const formData = await request.formData();
+		const id = formData.get('id');
+		const is_active = formData.get('is_active') === 'true';
+
+		const { error } = await supabase
+			.from('services')
+			.update({ is_active })
+			.eq('id', id)
+			.eq('profile_id', user?.id);
+
+		if (error) {
+			console.error('Erro ao atualizar status:', error);
+			return fail(500, { message: 'Erro ao atualizar status' });
+		}
+		return { success: true };
 	}
 };

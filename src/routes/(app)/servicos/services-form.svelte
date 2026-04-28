@@ -74,7 +74,7 @@
 					id="name"
 					name="name"
 					bind:value={$form.name}
-					placeholder="Ex: Corte de Cabelo"
+					placeholder="Ex: Primeira Consulta"
 					{...$constraints.name}
 					aria-invalid={$errors.name ? 'true' : undefined}
 				/>
@@ -103,20 +103,7 @@
 				{/if}
 			</div>
 
-			<div class="grid gap-2">
-				<Label for="price" class={$errors.price ? 'text-destructive' : ''}>Preço (R$)</Label>
-				<Input
-					id="price"
-					name="price"
-					type="number"
-					step="0.01"
-					bind:value={$form.price}
-					{...$constraints.price}
-				/>
-				{#if $errors.price}
-					<span class="text-xs font-medium text-destructive">{$errors.price}</span>
-				{/if}
-			</div>
+			
 
 			<Dialog.Footer>
 				<Button type="submit" disabled={isLoading} class="cursor-pointer">

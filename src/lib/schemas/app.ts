@@ -16,8 +16,5 @@ export const serviceSchema = z.object({
 		.int('A duração deve ser um número inteiro')
 		.min(1, 'Duração mínima de 1 minuto'),
 
-	price: z.coerce
-		.number()
-		.min(0, 'Preço não pode ser negativo')
-		.transform((v) => Number(v.toFixed(2)))
+	
 });

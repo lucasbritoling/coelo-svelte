@@ -125,7 +125,7 @@
 								<td class="p-3 font-medium">{customer.name}</td>
 								<td class="p-3 font-mono text-muted-foreground">{customer.phone}</td>
 								<td class="p-3 text-right">
-									<div class="flex justify-end gap-2">
+									<div class="flex justify-end gap-1">
 										<Button variant="ghost" class="cursor-pointer hover:shadow-sm" size="icon" onclick={() => startEdit(customer)}>
 											<Pencil class="h-4 w-4" />
 										</Button>
@@ -171,7 +171,23 @@
 					id="name"
 					name="name"
 					bind:value={$form.name}
+					maxlength={60}
+					
 					aria-invalid={$errors.name ? 'true' : undefined}
+					oninput={(e) => {
+            let val = e.currentTarget.value;
+            
+            val = val.replace(/\d/g, '');
+            
+
+            val = val.replace(/\s{2,}/g, ' ');
+
+            $form.name = val;
+        }}
+		onblur={() => {
+
+            $form.name = $form.name.trim();
+        }}
 				/>
 				{#if $errors.name}
 					<small class="text-destructive">{$errors.name}</small>
@@ -179,14 +195,21 @@
 			</div>
 
 			<div class="grid gap-2">
-				<Label for="phone">WhatsApp (com DDD)</Label>
+				<Label for="phone">Telefone (com DDD)</Label>
 				<Input
 					id="phone"
 					name="phone"
 					bind:value={$form.phone}
 					inputmode="numeric"
-					placeholder="41999999999"
+					pattern="[0-9]+"
+					minlength={11}
+					maxlength={11}
+					placeholder="11 99999-9999"
 					aria-invalid={$errors.phone ? 'true' : undefined}
+					oninput={(e) => {
+        // Limpeza radical: só sobra o que for 0, 1, 2, 3, 4, 5, 6, 7, 8 ou 9
+        $form.phone = e.currentTarget.value.replace(/\D/g, '');
+    }}
 				/>
 				{#if $errors.phone}
 					<small class="text-destructive">{$errors.phone}</small>

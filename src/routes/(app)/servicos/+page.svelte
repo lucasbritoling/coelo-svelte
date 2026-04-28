@@ -79,9 +79,9 @@
 					<thead>
 						<tr class="border-b bg-muted/50 text-left font-medium">
 							<th class="p-3">Nome</th>
-							<th class="p-3">Duração</th>
-							<th class="p-3 text-right">Preço</th>
-							<th class="p-3 text-right">Ações</th>
+							<th class="p-3 w-[120px]">Duração</th>
+							
+							<th class="p-3 text-right w-[100px]">Ações</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -94,11 +94,9 @@
 										{service.duration} min
 									</div>
 								</td>
-								<td class="p-3 text-right font-medium">
-									{formatter.format(service.price)}
-								</td>
+
 								<td class="p-3 text-right">
-									<div class="flex justify-end gap-2">
+									<div class="flex justify-end gap-1">
 										<Button variant="ghost" size="icon" class="cursor-pointer hover:shadow-sm" onclick={() => startEdit(service)}>
 											<Pencil class="h-4 w-4" />
 										</Button>

@@ -61,7 +61,7 @@
 	}
 </script>
 
-<div class="mx-auto max-w-sm p-6 lg:max-w-5xl">
+<div class="mx-auto p-6 {data.singleService ? 'max-w-sm' : 'max-w-sm lg:max-w-5xl'}">
 	<header class="mb-8 text-center">
 		<div class="mx-auto mb-4 size-24 overflow-hidden rounded-full border-2 bg-muted shadow-sm">
 			{#if professional.avatar_url}

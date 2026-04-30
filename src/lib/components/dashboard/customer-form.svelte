@@ -20,49 +20,96 @@
 		onSuccess?: (newCustomer: any) => void;
 	}>();
 
-	const { form, errors, enhance, delayed } = superForm(formData, {
-		validators: zod4Client(customerSchema),
-		resetForm: true,
-		invalidateAll: true,
-		onUpdated: ({ form }) => {
-			if (form.valid) {
-				toast.success('Cliente cadastrado!');
-				open = false;
-				// O 'result.data' do SvelteKit costuma conter o que o backend retorna
-				onSuccess?.(form.data);
-			}
-		}
-	});
+	let isLoading = $state(false);
+
+	const { form, errors, enhance, message } = superForm(formData, {
+        validators: zod4Client(customerSchema),
+        resetForm: true,
+        invalidateAll: true,
+        
+        // Dispara no milissegundo que o form é enviado
+        onSubmit: () => {
+            isLoading = true;
+        },
+        
+        // Dispara assim que o servidor responde (sucesso ou erro)
+        onResult: () => {
+            isLoading = false;
+        },
+
+        onUpdated: ({ form }) => {
+            if (form.valid) {
+                toast.success('Cliente salvo com sucesso!');
+                open = false;
+                onSuccess?.(form.data);
+            } else if ($message) {
+                toast.error($message);
+            }
+        }
+    });
+
+	
 </script>
 
 <Dialog.Root bind:open>
-	<Dialog.Content class="sm:max-w-[425px]">
-		<Dialog.Header>
-			<Dialog.Title>Novo Cliente</Dialog.Title>
-		</Dialog.Header>
+    <Dialog.Content class="sm:max-w-[425px]">
+        <Dialog.Header>
+            <Dialog.Title>{$form.id ? 'Editar Cliente' : 'Novo Cliente'}</Dialog.Title>
+        </Dialog.Header>
 
-		<form method="POST" action="/clientes?/upsert" class="grid gap-4 pt-4" use:enhance>
-			<!-- Note o action apontando para a rota de clientes -->
-			<div class="grid gap-2">
-				<Label for="name">Nome completo</Label>
-				<Input id="name" name="name" bind:value={$form.name} />
-				{#if $errors.name}<small class="text-destructive">{$errors.name}</small>{/if}
-			</div>
+        <form method="POST" action="/clientes?/upsert" class="grid gap-4 pt-4" use:enhance>
+            {#if $form.id}
+                <input type="hidden" name="id" bind:value={$form.id} />
+            {/if}
 
-			<div class="grid gap-2">
-				<Label for="phone">Telefone</Label>
-				<Input id="phone" name="phone" bind:value={$form.phone} />
-				{#if $errors.phone}<small class="text-destructive">{$errors.phone}</small>{/if}
-			</div>
+            <div class="grid gap-2">
+                <Label for="name">Nome completo</Label>
+                <Input
+                    id="name"
+                    name="name"
+                    bind:value={$form.name}
+                    maxlength={60}
+                    oninput={(e) => {
+                        let val = e.currentTarget.value;
+                        val = val.replace(/\d/g, ''); 
+                        val = val.replace(/\s{2,}/g, ' '); 
+                        $form.name = val;
+                    }}
+                    onblur={() => {
+                        $form.name = $form.name.trim();
+                    }}
+                />
+                {#if $errors.name}<small class="text-destructive">{$errors.name}</small>{/if}
+            </div>
 
-			<Dialog.Footer>
-				<Button type="submit" disabled={$delayed}>
-					{#if $delayed}
-						<LoaderCircle class="mr-2 h-4 w-4 animate-spin" />
-					{/if}
-					Salvar Cliente
-				</Button>
-			</Dialog.Footer>
-		</form>
-	</Dialog.Content>
+            <div class="grid gap-2">
+                <Label for="phone">Telefone (com DDD)</Label>
+                <Input
+                    id="phone"
+                    name="phone"
+                    bind:value={$form.phone}
+                    inputmode="numeric"
+                    placeholder="11 99999-9999"
+					pattern="[0-9]+"
+					minlength={11}
+                    maxlength={11}
+                    oninput={(e) => {
+                        $form.phone = e.currentTarget.value.replace(/\D/g, '');
+                    }}
+                />
+                {#if $errors.phone}<small class="text-destructive">{$errors.phone}</small>{/if}
+            </div>
+
+            <Dialog.Footer>
+                <Button type="submit" disabled={isLoading}>
+                    {#if isLoading}
+                        <LoaderCircle class="mr-2 h-4 w-4 animate-spin" />
+                        Salvando...
+                    {:else}
+                        Salvar Cliente
+                    {/if}
+                </Button>
+            </Dialog.Footer>
+        </form>
+    </Dialog.Content>
 </Dialog.Root>

@@ -115,10 +115,24 @@
 								class="border-b transition-colors hover:bg-muted/30"
 								class:opacity-50={!service.is_active}
 							>
-								<td class="p-3 font-medium">{service.name}</td>
+								<td class="p-3 font-medium"
+									>{service.name}
+									{#if service.min_notice_hours}
+										<p class="text-[11px] font-normal text-muted-foreground">
+											{service.min_notice_hours}h de antecedência
+										</p>
+									{/if}
+								</td>
 								<td class="p-3">
 									<div class="flex items-center gap-2 text-muted-foreground">
 										{service.duration} min
+										{#if service.buffer_after_min > 0}
+											<span
+												class="rounded bg-amber-100 px-1 text-[10px] font-medium text-amber-700"
+											>
+												+{service.buffer_after_min} min intervalo
+											</span>
+										{/if}
 									</div>
 								</td>
 

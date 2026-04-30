@@ -14,5 +14,9 @@ export const serviceSchema = z.object({
 	duration: z.coerce
 		.number()
 		.int('A duração deve ser um número inteiro')
-		.min(1, 'Duração mínima de 1 minuto')
+		.min(1, 'Duração mínima de 1 minuto'),
+
+	min_notice_hours: z.number().min(0).default(2),
+	buffer_after_min: z.number().min(0).default(0),
+	is_active: z.boolean().default(true)
 });

@@ -2,7 +2,7 @@ import { fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
-	// 1. Busca Working Hours
+	// 1. Load paralelo: workinghours & overrides
 	const [workingHoursResponse, overridesResponse] = await Promise.all([
 		supabase.from('working_hours').select('*').eq('profile_id', user?.id).order('day_of_week'),
 

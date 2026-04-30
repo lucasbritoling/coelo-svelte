@@ -1,7 +1,8 @@
-import { fail } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
+	if (!user) throw redirect(303, '/login');
 	// 1. Load paralelo: workinghours & overrides
 	const [workingHoursResponse, overridesResponse] = await Promise.all([
 		supabase.from('working_hours').select('*').eq('profile_id', user?.id).order('day_of_week'),
@@ -34,84 +35,75 @@ export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
 
 export const actions: Actions = {
 	updateWorkingDay: async ({ request, locals: { supabase, user } }) => {
+		if (!user?.id) return fail(401);
+
 		const formData = await request.formData();
 		const id = formData.get('id');
-		const is_active = formData.has('is_active'); // Verifica presença da chave
-		const start_time = formData.get('start_time')?.toString();
-		const end_time = formData.get('end_time')?.toString();
 
-		// --- DEBUG SERVER ---
-		//console.log('--- ACTION: updateWorkingDay ---');
-		//console.log('Form Data Bruto:', { id, is_active, start_time, end_time });
+		// Como a tabela é NOT NULL, precisamos de valores padrão caso venham vazios
+		// ou validar para impedir o envio de nulos.
+		const start_time = formData.get('start_time')?.toString() || '09:00';
+		const end_time = formData.get('end_time')?.toString() || '18:00';
 
-		const updateData: any = { is_active };
-		if (start_time && start_time !== '') updateData.start_time = start_time;
-		if (end_time && end_time !== '') updateData.end_time = end_time;
-
-		//console.log('Objeto enviado para o Supabase:', updateData);
-
-		const { data, error, status } = await supabase
+		const { error } = await supabase
 			.from('working_hours')
-			.update(updateData)
+			.update({
+				is_active: formData.has('is_active'),
+				start_time,
+				end_time
+			})
 			.eq('id', id)
-			.eq('profile_id', user?.id)
-			.select(); // Forçamos o select para ver o que mudou
+			.eq('profile_id', user.id); // Segurança: impede editar horário de outro perfil
 
 		if (error) {
-			//console.error('ERRO SUPABASE:', error.message);
+			// Erro 23514 é o código do Postgres para violação de CHECK constraint (end_time > start_time)
+			if (error.code === '23514') {
+				return fail(400, { message: 'O horário de término deve ser maior que o de início.' });
+			}
 			return fail(400, { message: error.message });
 		}
 
-		//console.log('SUCESSO NO BANCO. Novo estado:', data?.[0]);
-		//console.log('Status HTTP:', status);
-
 		return { success: true };
 	},
-
 	upsertOverride: async ({ request, locals: { supabase, user } }) => {
+		if (!user?.id) return fail(401);
+
 		const formData = await request.formData();
-
-		// Coleta de dados para o log
-		const date = formData.get('date');
 		const is_available = formData.has('is_available');
-		const start_time = formData.get('start_time')?.toString() || null;
-		const end_time = formData.get('end_time')?.toString() || null;
-		const note = formData.get('note')?.toString() || null;
-
-		//console.log('--- DEBUG: upsertOverride ---');
-		//console.log('Recebido do Form:', { date, is_available, start_time, end_time, note });
 
 		const payload = {
-			profile_id: user?.id,
-			date,
+			profile_id: user.id, // Forçamos o ID do usuário logado
+			date: formData.get('date'),
 			is_available,
-			start_time: is_available ? start_time : null,
-			end_time: is_available ? end_time : null,
-			note: note || null
+			start_time: is_available ? formData.get('start_time') : null,
+			end_time: is_available ? formData.get('end_time') : null,
+			note: formData.get('note')?.toString() || null
 		};
 
-		//console.log('Payload para o Supabase:', payload);
-
-		const { data, error } = await supabase.from('availability_overrides').upsert(payload).select();
+		const { error } = await supabase.from('availability_overrides').upsert(payload, {
+			// O PostgREST usa o nome da constraint ou as colunas para resolver o conflito
+			onConflict: 'profile_id, date'
+		});
 
 		if (error) {
-			//console.error('ERRO SUPABASE OVERRIDE:', error.message, error.details);
+			// Se o erro for da constraint 'valid_override_range', você pode tratar aqui
+			if (error.code === '23514') {
+				return fail(400, { message: 'O horário de término deve ser após o início.' });
+			}
 			return fail(400, { message: error.message });
 		}
 
-		//console.log('SUCESSO OVERRIDE:', data?.[0]);
 		return { success: true };
 	},
-
 	deleteOverride: async ({ request, locals: { supabase, user } }) => {
+		if (!user?.id) return fail(401);
 		const formData = await request.formData();
-		const id = formData.get('id');
 
 		const { error } = await supabase
 			.from('availability_overrides')
 			.delete()
-			.eq('id', id)
-			.eq('profile_id', user?.id);
+			.eq('id', formData.get('id'))
+			.eq('profile_id', user.id);
 
 		if (error) return fail(500, { message: 'Erro ao remover exceção.' });
 		return { success: true };

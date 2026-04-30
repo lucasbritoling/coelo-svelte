@@ -80,10 +80,17 @@
 		showCustomerModal = false; // Fecha o modal de criação
 	}
 
-	function handleServiceCreated(newId: string) {
-		serviceId = newId;
-		showServiceModal = false;
-		serviceSearch = ''; // Limpa a busca
+	function handleServiceCreated(service: any) {
+		// Extraímos o ID do objeto ou da string
+		const id = service?.id || service;
+
+		if (id) {
+			serviceId = id; // Seleciona automaticamente
+			serviceSearch = ''; // Limpa a busca do Command
+			openService = false; // Fecha o popover da agenda
+		}
+
+		showServiceModal = false; // Fecha o modal de criação
 	}
 </script>
 

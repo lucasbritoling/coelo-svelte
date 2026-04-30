@@ -1,6 +1,6 @@
 import { fail, error } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import { superValidate } from 'sveltekit-superforms';
+import { superValidate, message } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 import { serviceSchema } from '$lib/schemas/app';
 
@@ -54,21 +54,19 @@ export const actions: Actions = {
 				.from('services')
 				.update(serviceData)
 				.eq('id', id)
-				.eq('profile_id', user?.id); // Garantia extra de posse
+				.eq('profile_id', user?.id) // Garantia extra de posse
+				.select()
+				.single();
 		} else {
 			// Caso não tenha ID, insere um novo
-			result = await supabase.from('services').insert([serviceData]);
+			result = await supabase.from('services').insert([serviceData]).select().single();
 		}
 
 		if (result.error) {
-			//console.error('Erro no Supabase:', result.error);
-			return fail(500, {
-				form,
-				message: 'Erro ao salvar no banco de dados.'
-			});
+			return message(form, 'Erro ao salvar no banco de dados.', { status: 500 });
 		}
 
-		return { form };
+		return message(form, { id: result.data.id, name: result.data.name });
 	},
 
 	/**

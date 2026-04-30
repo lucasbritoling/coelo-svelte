@@ -11,15 +11,20 @@
 	let {
 		formData,
 		service = null,
-		open = $bindable()
+		open = $bindable(),
+		initialName = '',
+		onSuccess
 	} = $props<{
 		formData: any;
 		service?: any;
 		open: boolean;
+		initialName?: string;
+		onSuccess?: (newService: any) => void;
 	}>();
+
 	let isLoading = $state(false);
 
-	const { form, errors, enhance, constraints } = superForm(formData, {
+	const { form, errors, enhance, constraints, message } = superForm(formData, {
 		resetForm: true,
 		invalidateAll: true,
 		onSubmit: () => {
@@ -30,8 +35,13 @@
 		},
 		onUpdated: ({ form }) => {
 			if (form.valid) {
-				open = false;
 				toast.success('Serviço guardado com sucesso!');
+				const resultData = form.message?.id ? form.message : form.data;
+				onSuccess?.(resultData);
+
+				open = false;
+			} else if (typeof $message === 'string') {
+				toast.error($message);
 			}
 		},
 		onError: () => {
@@ -50,7 +60,7 @@
 				$form.buffer_after_min = service.buffer_after_min ?? 0;
 			} else {
 				$form.id = '';
-				$form.name = '';
+				$form.name = initialName || '';
 				$form.duration = 30;
 				$form.min_notice_hours = 2;
 				$form.buffer_after_min = 0;

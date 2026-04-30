@@ -89,9 +89,24 @@ export const actions: Actions = {
 	finishSelfBooking: async ({ request, locals: { supabase } }) => {
 		const formData = await request.formData();
 
+		const profile_id = formData.get('profile_id') as string;
+		const service_id = formData.get('service_id') as string;
+
+		const { data: serviceMatch } = await supabase
+			.from('services')
+			.select('id')
+			.eq('id', service_id)
+			.eq('profile_id', profile_id)
+			.eq('is_active', true)
+			.single();
+
+		if (!serviceMatch) {
+			return fail(400, { message: 'Dados de serviço inválidos para este profissional.' });
+		}
+
 		const payload = {
-			p_profile_id: formData.get('profile_id') as string,
-			p_service_id: formData.get('service_id') as string,
+			p_profile_id: profile_id,
+			p_service_id: service_id,
 			p_customer_name: formData.get('customer_name') as string,
 			p_customer_phone: formData.get('customer_phone') as string,
 			p_selected_date: formData.get('selected_date') as string, // 'YYYY-MM-DD'

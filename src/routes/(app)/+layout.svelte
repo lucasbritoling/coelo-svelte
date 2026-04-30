@@ -10,7 +10,7 @@
 <Toaster
 	richColors
 	closeButton
-	position="bottom-right"
+	position="bottom-center"
 	toastOptions={{
 		class: 'border-border/50 bg-background shadow-lg font-sans'
 	}}
@@ -35,3 +35,38 @@
 		</main>
 	</Sidebar.Inset>
 </Sidebar.Provider>
+
+<style>
+	@media (max-width: 479px) {
+		:global([data-sonner-toaster]) {
+			/* Forçamos o container a ocupar o topo, mas com um padding generoso */
+			top: 0 !important;
+			bottom: auto !important;
+			left: 0 !important;
+			right: 0 !important;
+
+			/* Adicionamos o recuo para ele descer da "zona morta" do navegador */
+			padding-top: calc(env(safe-area-inset-top) + 24px) !important;
+
+			/* Inverte a ordem de empilhamento para os novos aparecerem embaixo dos antigos */
+			display: flex !important;
+			flex-direction: column !important;
+			align-items: center !important;
+		}
+
+		:global([data-sonner-toast]) {
+			/* Remove transformações que o JS tenta usar para "subir" o toast */
+			--y: 0px !important;
+			position: relative !important;
+		}
+
+		/* Mantemos o seu deslize lateral para a direita */
+		:global([data-sonner-toast][data-removed='true']) {
+			transform: translateX(100%) !important;
+			opacity: 0;
+			transition:
+				transform 0.4s ease-in,
+				opacity 0.2s ease-in !important;
+		}
+	}
+</style>

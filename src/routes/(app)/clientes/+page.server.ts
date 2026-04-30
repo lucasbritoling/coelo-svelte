@@ -1,14 +1,17 @@
 import { superValidate, message } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 import { customerSchema } from '$lib/schemas/app';
-import { fail } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
+	// 1. Defesa em profundidade: Bloqueio precoce
+	if (!user) throw redirect(303, '/login');
+
 	// Dispara a validação e a query ao mesmo tempo
 	const [form, { data: customers, error }] = await Promise.all([
 		superValidate(zod4(customerSchema)),
-		locals.supabase.from('customers').select('*').eq('profile_id', locals.user?.id).order('name')
+		supabase.from('customers').select('*').eq('profile_id', user?.id).order('name')
 	]);
 
 	if (error) {
@@ -19,7 +22,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions: Actions = {
-	upsert: async ({ request, locals }) => {
+	upsert: async ({ request, locals: { supabase, user } }) => {
+		if (!user?.id) return fail(401);
+
 		// 1. Valida o formulário inteiro de uma vez
 		const form = await superValidate(request, zod4(customerSchema));
 
@@ -34,19 +39,19 @@ export const actions: Actions = {
 		const customerData = {
 			name,
 			phone,
-			profile_id: locals.user?.id
+			profile_id: user?.id
 		};
 
 		// 4. Supabase
 		const query = id
-			? locals.supabase
+			? supabase
 					.from('customers')
 					.update(customerData)
 					.eq('id', id)
-					.eq('profile_id', locals.user?.id)
+					.eq('profile_id', user?.id) // Proteção contra edição de terceiros
 					.select()
 					.single()
-			: locals.supabase.from('customers').insert([customerData]).select().single();
+			: supabase.from('customers').insert([customerData]).select().single();
 
 		const { data, error } = await query;
 
@@ -59,15 +64,19 @@ export const actions: Actions = {
 		return message(form, { id: data.id, name: data.name });
 	},
 
-	delete: async ({ request, locals }) => {
+	delete: async ({ request, locals: { supabase, user } }) => {
+		if (!user?.id) return fail(401);
+
 		const formData = await request.formData();
 		const id = formData.get('id');
 
-		const { error } = await locals.supabase
+		if (!id) return fail(400, { message: 'ID não fornecido.' });
+
+		const { error } = await supabase
 			.from('customers')
 			.delete()
 			.eq('id', id)
-			.eq('profile_id', locals.user?.id);
+			.eq('profile_id', user?.id); // Proteção: impede deletar cliente de outro user
 
 		if (error?.code === '23503') {
 			return fail(400, {

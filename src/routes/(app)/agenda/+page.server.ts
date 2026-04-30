@@ -1,14 +1,16 @@
 import type { PageServerLoad, Actions } from './$types';
 import { today, getLocalTimeZone } from '@internationalized/date';
-import { fail } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import { superValidate } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 import { customerSchema, serviceSchema } from '$lib/schemas/app'; // Certifique-se que o caminho está correto
 
-export const load: PageServerLoad = async ({ url, locals }) => {
-	const userId = locals.user?.id;
-	const dateParam = url.searchParams.get('date') ?? today(getLocalTimeZone()).toString();
+export const load: PageServerLoad = async ({ url, locals: { supabase, user } }) => {
+	if (!user) throw redirect(303, '/login');
 
+	const userId = user?.id;
+
+	const dateParam = url.searchParams.get('date') ?? today(getLocalTimeZone()).toString();
 	const from = `${dateParam} 00:00:00`;
 	const to = `${dateParam} 23:59:59`;
 
@@ -17,19 +19,19 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 		await Promise.all([
 			superValidate(zod4(customerSchema)),
 			superValidate(zod4(serviceSchema)),
-			locals.supabase.rpc('get_appointments', {
+			supabase.rpc('get_appointments', {
 				p_profile_id: userId,
 				p_from: from,
 				p_to: to
 			}),
-			locals.supabase.from('customers').select('id, name').eq('profile_id', userId).order('name'),
-			locals.supabase
+			supabase.from('customers').select('id, name').eq('profile_id', userId).order('name'),
+			supabase
 				.from('services')
 				.select('id, name, duration')
 				.eq('profile_id', userId)
 				.eq('is_active', true)
 				.order('name'),
-			locals.supabase.from('profiles').select('username').eq('id', userId).single()
+			supabase.from('profiles').select('username').eq('id', userId).single()
 		]);
 
 	const commonData = {
@@ -57,7 +59,9 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 };
 
 export const actions: Actions = {
-	create: async ({ request, locals }) => {
+	create: async ({ request, locals: { supabase, user } }) => {
+		if (!user?.id) return fail(401);
+
 		const formData = await request.formData();
 		const customer_id = formData.get('customer_id');
 		const service_id = formData.get('service_id');
@@ -69,12 +73,12 @@ export const actions: Actions = {
 		const slot = `[${date} ${start_at}:00, ${date} ${end_at}:00)`;
 
 		// 2. Inserimos usando a coluna 'slot'
-		const { error } = await locals.supabase.from('appointments').insert([
+		const { error } = await supabase.from('appointments').insert([
 			{
 				customer_id,
 				service_id,
 				slot, // Enviando o tstzrange aqui
-				profile_id: locals.user?.id,
+				profile_id: user?.id,
 				status: 'pending'
 			}
 		]);
@@ -96,15 +100,18 @@ export const actions: Actions = {
 		return { success: true };
 	},
 
-	toggleConfirmation: async ({ request, locals }) => {
+	toggleConfirmation: async ({ request, locals: { supabase, user } }) => {
+		if (!user?.id) return fail(401);
+
 		const formData = await request.formData();
 		const id = formData.get('id');
 
 		// 1. Primeiro, buscamos o status atual do agendamento
-		const { data: appointment, error: fetchError } = await locals.supabase
+		const { data: appointment, error: fetchError } = await supabase
 			.from('appointments')
 			.select('status')
 			.eq('id', id)
+			.eq('profile_id', user.id)
 			.single();
 
 		if (fetchError || !appointment) {
@@ -116,10 +123,11 @@ export const actions: Actions = {
 		const newStatus = appointment.status === 'confirmed' ? 'pending' : 'confirmed';
 
 		// 3. Update no banco com o novo status
-		const { error: updateError } = await locals.supabase
+		const { error: updateError } = await supabase
 			.from('appointments')
 			.update({ status: newStatus })
-			.eq('id', id);
+			.eq('id', id)
+			.eq('profile_id', user.id);
 
 		if (updateError) {
 			return fail(500, { message: updateError.message });
@@ -128,24 +136,33 @@ export const actions: Actions = {
 		return { success: true };
 	},
 
-	cancel: async ({ request, locals }) => {
+	cancel: async ({ request, locals: { supabase, user } }) => {
+		if (!user?.id) return fail(401);
+
 		const formData = await request.formData();
 		const id = formData.get('id');
 
-		const { error } = await locals.supabase
+		const { error } = await supabase
 			.from('appointments')
 			.update({ status: 'cancelled' })
-			.eq('id', id);
+			.eq('id', id)
+			.eq('profile_id', user.id);
 
 		if (error) return fail(500, { message: error.message });
 		return { success: true };
 	},
 
-	delete: async ({ request, locals }) => {
+	delete: async ({ request, locals: { supabase, user } }) => {
+		if (!user?.id) return fail(401);
+
 		const formData = await request.formData();
 		const id = formData.get('id');
 
-		const { error } = await locals.supabase.from('appointments').delete().eq('id', id);
+		const { error } = await supabase
+			.from('appointments')
+			.delete()
+			.eq('id', id)
+			.eq('profile_id', user.id);
 
 		if (error) {
 			// Tratamento opcional do erro 23503 se você quiser aqui também

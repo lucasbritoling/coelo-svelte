@@ -12,6 +12,11 @@
 	// Svelte 5: Recebendo as props (data vem do +page.server.ts)
 	let { data } = $props();
 
+	let services = $state<any[]>(data.services);
+	$effect(() => {
+		services = data.services;
+	});
+
 	// Estados de Controle (Runes)
 	let openForm = $state(false);
 	let openDelete = $state(false);
@@ -24,7 +29,7 @@
 	// Filtro Reativo usando $derived
 	let searchQuery = $state('');
 	let filteredServices = $derived(
-		data.services.filter((s: any) => s.name.toLowerCase().includes(searchQuery.toLowerCase()))
+		services.filter((s: any) => s.name.toLowerCase().includes(searchQuery.toLowerCase()))
 	);
 
 	// Funções de Ação
@@ -66,6 +71,52 @@
 		} else {
 			console.error('Input hidden não encontrado!');
 		}
+	}
+
+	let servicePendingToggle = $state<any>(null);
+	let openConfirmToggle = $state(false);
+
+	function handleToggleAttempt(service: any, newValue: boolean) {
+		const activeServices = services.filter((s: any) => s.is_active);
+
+		if (!newValue && activeServices.length === 1 && activeServices[0].id === service.id) {
+			servicePendingToggle = service;
+			openConfirmToggle = true;
+
+			// Reatribui para forçar reatividade
+			const idx = services.findIndex((s: any) => s.id === service.id);
+			if (idx !== -1) {
+				services[idx] = { ...services[idx], is_active: false };
+			}
+			return;
+		}
+
+		const idx = services.findIndex((s: any) => s.id === service.id);
+		if (idx !== -1) {
+			services[idx] = { ...services[idx], is_active: newValue };
+		}
+		toggleActive(service.id, newValue);
+	}
+
+	function confirmToggle() {
+		if (servicePendingToggle) {
+			// O estado visual já está false, agora só sincronizamos com o banco
+			toggleActive(servicePendingToggle.id, false);
+			servicePendingToggle = null;
+			openConfirmToggle = false;
+		}
+	}
+
+	function cancelToggle() {
+		if (servicePendingToggle) {
+			// Encontra e reatribui o item no array para disparar reatividade
+			const idx = services.findIndex((s: any) => s.id === servicePendingToggle.id);
+			if (idx !== -1) {
+				services[idx] = { ...services[idx], is_active: true };
+			}
+			servicePendingToggle = null;
+		}
+		openConfirmToggle = false;
 	}
 </script>
 
@@ -162,10 +213,7 @@
 										<Switch
 											class="cursor-pointer"
 											checked={service.is_active}
-											onCheckedChange={(v) => {
-												service.is_active = v; // Efeito visual imediato
-												toggleActive(service.id, v); // Dispara o auto-save
-											}}
+											onCheckedChange={(v) => handleToggleAttempt(service, v)}
 										/>
 									</form>
 								</td>
@@ -207,12 +255,44 @@
 
 <ServicesForm formData={data.form} service={selectedService} bind:open={openForm} />
 
+<AlertDialog.Root
+	bind:open={openConfirmToggle}
+	onOpenChange={(open) => {
+		if (!open && servicePendingToggle) cancelToggle();
+	}}
+>
+	<AlertDialog.Content>
+		<AlertDialog.Header>
+			<AlertDialog.Title>Desativar último serviço?</AlertDialog.Title>
+			<AlertDialog.Description>
+				Se você desativar <strong>{servicePendingToggle?.name}</strong>, sua agenda pública ficará
+				offline e ninguém poderá agendar horários.
+			</AlertDialog.Description>
+		</AlertDialog.Header>
+		<AlertDialog.Footer>
+			<!-- Alterado aqui: de uma arrow function simples para cancelToggle -->
+			<AlertDialog.Cancel onclick={cancelToggle} class="cursor-pointer">
+				Manter Ativo
+			</AlertDialog.Cancel>
+			<Button variant="destructive" onclick={confirmToggle} class="cursor-pointer">
+				Confirmar e Desativar
+			</Button>
+		</AlertDialog.Footer>
+	</AlertDialog.Content>
+</AlertDialog.Root>
+
 <AlertDialog.Root bind:open={openDelete}>
 	<AlertDialog.Content>
 		<AlertDialog.Header>
 			<AlertDialog.Title>Excluir serviço?</AlertDialog.Title>
 			<AlertDialog.Description>
 				Esta ação não pode ser desfeita. Remover <strong>{serviceToDelete?.name}</strong>?
+
+				{#if services.length === 1}
+					<div class="mt-2 flex items-center gap-1 font-bold text-destructive">
+						Atenção: Este é seu último serviço. Sua agenda pública ficará indisponível.
+					</div>
+				{/if}
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>

@@ -21,6 +21,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 			.from('services')
 			.select('id, name, duration')
 			.eq('profile_id', userId)
+			.eq('is_active', true)
 			.order('name'),
 		locals.supabase.from('profiles').select('username').eq('id', userId).single()
 	]);

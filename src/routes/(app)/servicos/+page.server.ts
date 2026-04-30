@@ -5,20 +5,17 @@ import { zod4 } from 'sveltekit-superforms/adapters';
 import { serviceSchema } from '$lib/schemas/app';
 
 export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
-	// 1. Busca os serviços apenas do profissional logado
-	const { data: services, error: dbError } = await supabase
-		.from('services')
-		.select('*')
-		.eq('profile_id', user?.id) // Segurança: Filtra pelo dono
-		.order('name');
+	const [servicesResponse, form] = await Promise.all([
+		supabase.from('services').select('*').eq('profile_id', user?.id).order('name'),
+
+		superValidate(zod4(serviceSchema))
+	]);
+
+	const { data: services, error: dbError } = servicesResponse;
 
 	if (dbError) {
 		throw error(500, 'Erro ao carregar serviços: ' + dbError.message);
 	}
-
-	// 2. Inicializa o formulário do Superforms com o schema Zod
-	// Importante: Isso evita o erro de "No form data sent to superForm" no frontend
-	const form = await superValidate(zod4(serviceSchema));
 
 	return {
 		services: services ?? [],

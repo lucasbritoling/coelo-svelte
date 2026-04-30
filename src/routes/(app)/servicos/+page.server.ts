@@ -1,10 +1,11 @@
-import { fail, error } from '@sveltejs/kit';
+import { fail, error, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { superValidate, message } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 import { serviceSchema } from '$lib/schemas/app';
 
 export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
+	if (!user) throw redirect(303, '/login');
 	const [servicesResponse, form] = await Promise.all([
 		supabase.from('services').select('*').eq('profile_id', user?.id).order('name'),
 
@@ -28,6 +29,7 @@ export const actions: Actions = {
 	 * UPSERT: Cria ou Atualiza um serviço
 	 */
 	upsert: async ({ request, locals: { supabase, user } }) => {
+		if (!user?.id) return fail(401);
 		const form = await superValidate(request, zod4(serviceSchema));
 
 		// Validação do Zod (lado do servidor)
@@ -51,7 +53,7 @@ export const actions: Actions = {
 				.from('services')
 				.update(serviceData)
 				.eq('id', id)
-				.eq('profile_id', user?.id) // Garantia extra de posse
+				.eq('profile_id', user?.id) // Proteção contra edição de serviços alheios
 				.select()
 				.single();
 		} else {
@@ -70,6 +72,8 @@ export const actions: Actions = {
 	 * DELETE: Remove um serviço
 	 */
 	delete: async ({ request, locals: { supabase, user } }) => {
+		if (!user?.id) return fail(401);
+
 		const formData = await request.formData();
 		const id = formData.get('id');
 
@@ -98,6 +102,8 @@ export const actions: Actions = {
 	},
 
 	updateStatus: async ({ request, locals: { supabase, user } }) => {
+		if (!user?.id) return fail(401);
+
 		const formData = await request.formData();
 		const id = formData.get('id');
 		const is_active = formData.get('is_active') === 'true';

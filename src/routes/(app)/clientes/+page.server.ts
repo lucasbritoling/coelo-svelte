@@ -39,7 +39,13 @@ export const actions: Actions = {
 
 		// 4. Supabase
 		const query = id
-			? locals.supabase.from('customers').update(customerData).eq('id', id).select().single()
+			? locals.supabase
+					.from('customers')
+					.update(customerData)
+					.eq('id', id)
+					.eq('profile_id', locals.user?.id)
+					.select()
+					.single()
 			: locals.supabase.from('customers').insert([customerData]).select().single();
 
 		const { data, error } = await query;

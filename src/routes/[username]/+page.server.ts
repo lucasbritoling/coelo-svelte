@@ -10,7 +10,9 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase } }
 	// 1. Busca perfil e serviços
 	const { data: profile, error: profileError } = await supabase
 		.from('profiles')
-		.select(`id, full_name, username, avatar_url, services (id, name, duration, price)`)
+		.select(
+			`id, full_name, username, avatar_url, services (id, name, duration, price, min_notice_hours, buffer_after_min)`
+		)
 		.eq('username', username)
 		.eq('services.is_active', true)
 		.single();
@@ -28,7 +30,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase } }
 	//console.log('--- DEBUG AGENDAMENTO ---');
 	//console.log('Parâmetros da URL:', { date, serviceId });
 
-	if (date && serviceId) {
+	if (date && effectiveServiceId) {
 		// 2. TENTATIVA DE ENCONTRAR O SERVIÇO
 		// Usamos == (dois iguais) caso o ID no banco seja número e na URL string
 		const selectedService = profile.services.find((s) => s.id == effectiveServiceId);
@@ -44,6 +46,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase } }
 
 			const { data: slots, error: rpcError } = await supabase.rpc('get_available_slots', {
 				p_profile_id: profile.id,
+				p_service_id: selectedService.id,
 				p_date: date,
 				p_service_duration_min: selectedService.duration
 			});

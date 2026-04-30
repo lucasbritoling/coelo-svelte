@@ -36,18 +36,18 @@ export const actions: Actions = {
 
 		// 4. Supabase
 		const query = id
-			? locals.supabase.from('customers').update(customerData).eq('id', id)
-			: locals.supabase.from('customers').insert([customerData]);
+			? locals.supabase.from('customers').update(customerData).eq('id', id).select().single()
+			: locals.supabase.from('customers').insert([customerData]).select().single();
 
-		const { error } = await query;
+		const { data, error } = await query;
 
 		if (error) {
-			// O 'message' do Superforms é ótimo para erros globais do banco
 			return message(form, `Erro no banco: ${error.message}`, { status: 500 });
 		}
 
-		// 5. Retorna o form limpo ou com os dados salvos
-		return { form };
+		// 2. Usamos o 'message' para devolver o ID e o Nome para o frontend
+		// Isso é o que o seu CustomerForm.svelte vai ler no 'onUpdated'
+		return message(form, { id: data.id, name: data.name });
 	},
 
 	delete: async ({ request, locals }) => {

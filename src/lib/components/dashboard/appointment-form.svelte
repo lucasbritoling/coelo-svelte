@@ -19,7 +19,7 @@
 		customers = [],
 		services = [],
 		selectedDate,
-		data, // Contém customerForm e serviceForm enviados pelo +page.server.ts
+		data,
 		onSuccess
 	} = $props<{
 		customers: any[];
@@ -65,6 +65,26 @@
 			return '';
 		}
 	});
+
+	// Funções de callback para quando o sub-recurso for criado
+	function handleCustomerCreated(customer: any) {
+		// Extraímos o ID do objeto que o CustomerForm enviou
+		const id = customer?.id || customer;
+
+		if (id) {
+			customerId = id; // Agora sim, atribuindo a string ao estado
+			customerSearch = ''; // Limpa o campo de busca
+			openCustomer = false; // Fecha o popover de seleção (se estiver aberto)
+		}
+
+		showCustomerModal = false; // Fecha o modal de criação
+	}
+
+	function handleServiceCreated(newId: string) {
+		serviceId = newId;
+		showServiceModal = false;
+		serviceSearch = ''; // Limpa a busca
+	}
 </script>
 
 <form
@@ -260,6 +280,16 @@
 </form>
 
 <!-- Componentes de criação rápida -->
-<ServiceForm bind:open={showServiceModal} formData={data.serviceForm} />
+<ServiceForm
+	bind:open={showServiceModal}
+	formData={data.serviceForm}
+	initialName={serviceSearch}
+	onSuccess={handleServiceCreated}
+/>
 
-<CustomerForm bind:open={showCustomerModal} formData={data.customerForm} />
+<CustomerForm
+	bind:open={showCustomerModal}
+	formData={data.customerForm}
+	initialName={customerSearch}
+	onSuccess={handleCustomerCreated}
+/>

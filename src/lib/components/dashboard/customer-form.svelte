@@ -13,10 +13,12 @@
 	let {
 		open = $bindable(false),
 		formData,
+		initialName = '',
 		onSuccess
 	} = $props<{
 		open: boolean;
 		formData: any; // O form vindo do servidor
+		initialName?: string;
 		onSuccess?: (newCustomer: any) => void;
 	}>();
 
@@ -39,12 +41,25 @@
 
 		onUpdated: ({ form }) => {
 			if (form.valid) {
+				// Tenta pegar o ID que veio do banco (via message)
+				// ou usa o data caso seja uma edição (onde o ID já existia)
+				const resultData = form.message?.id ? form.message : form.data;
+
 				toast.success('Cliente salvo com sucesso!');
+
+				// Passe o resultData, que tem mais chances de conter o ID novo
+				onSuccess?.(resultData);
 				open = false;
-				onSuccess?.(form.data);
-			} else if ($message) {
+			} else if (typeof $message === 'string') {
 				toast.error($message);
 			}
+		}
+	});
+
+	// 2. Lógica de "Auto-preenchimento" ao abrir o modal
+	$effect(() => {
+		if (open && initialName && !$form.name && !$form.id) {
+			$form.name = initialName;
 		}
 	});
 </script>

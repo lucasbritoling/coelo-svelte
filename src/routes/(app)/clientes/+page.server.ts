@@ -5,13 +5,16 @@ import { fail } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
-	const form = await superValidate(zod4(customerSchema));
-	const { data: customers, error } = await locals.supabase
-		.from('customers')
-		.select('*')
-		.order('name');
+	// Dispara a validação e a query ao mesmo tempo
+	const [form, { data: customers, error }] = await Promise.all([
+		superValidate(zod4(customerSchema)),
+		locals.supabase.from('customers').select('*').order('name')
+	]);
 
-	if (error) return { form, customers: [], error: error.message };
+	if (error) {
+		return { form, customers: [], error: error.message };
+	}
+
 	return { form, customers: customers ?? [] };
 };
 

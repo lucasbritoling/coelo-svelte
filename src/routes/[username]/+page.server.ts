@@ -97,7 +97,10 @@ export const actions: Actions = {
 			if (rpcError.code === '23P01' || rpcError.message.includes('ocupado')) {
 				return fail(400, { message: 'Este horário acabou de ser ocupado.' });
 			}
-			return fail(500, { message: 'Erro ao processar agendamento.' });
+			if (rpcError.message) {
+				return fail(400, { message: rpcError.message });
+			}
+			return fail(500, { message: 'Erro interno ao processar agendamento.' });
 		}
 
 		return { success: true };

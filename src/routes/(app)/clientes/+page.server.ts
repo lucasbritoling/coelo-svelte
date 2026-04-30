@@ -8,7 +8,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	// Dispara a validação e a query ao mesmo tempo
 	const [form, { data: customers, error }] = await Promise.all([
 		superValidate(zod4(customerSchema)),
-		locals.supabase.from('customers').select('*').order('name')
+		locals.supabase.from('customers').select('*').eq('profile_id', locals.user?.id).order('name')
 	]);
 
 	if (error) {
@@ -57,7 +57,11 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const id = formData.get('id');
 
-		const { error } = await locals.supabase.from('customers').delete().eq('id', id);
+		const { error } = await locals.supabase
+			.from('customers')
+			.delete()
+			.eq('id', id)
+			.eq('profile_id', locals.user?.id);
 
 		if (error?.code === '23503') {
 			return fail(400, {

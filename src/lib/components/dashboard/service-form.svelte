@@ -8,7 +8,15 @@
 	import { superForm } from 'sveltekit-superforms';
 	import { toast } from 'svelte-sonner';
 
-	let { formData, service, open = $bindable() } = $props();
+	let {
+		formData,
+		service = null,
+		open = $bindable()
+	} = $props<{
+		formData: any;
+		service?: any;
+		open: boolean;
+	}>();
 	let isLoading = $state(false);
 
 	const { form, errors, enhance, constraints } = superForm(formData, {
@@ -57,7 +65,12 @@
 			<Dialog.Title>{$form.id ? 'Editar Serviço' : 'Novo Serviço'}</Dialog.Title>
 		</Dialog.Header>
 
-		<form method="POST" action="?/upsert" class="flex flex-col gap-5 py-4 pb-0" use:enhance>
+		<form
+			method="POST"
+			action="/servicos?/upsert"
+			class="flex flex-col gap-5 py-4 pb-0"
+			use:enhance
+		>
 			<input type="hidden" name="id" bind:value={$form.id} />
 
 			<!-- Dados Principais -->

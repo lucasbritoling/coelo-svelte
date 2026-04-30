@@ -1,6 +1,9 @@
 import type { PageServerLoad, Actions } from './$types';
 import { today, getLocalTimeZone } from '@internationalized/date';
 import { fail } from '@sveltejs/kit';
+import { superValidate } from 'sveltekit-superforms';
+import { zod4 } from 'sveltekit-superforms/adapters';
+import { customerSchema, serviceSchema } from '$lib/schemas/app'; // Certifique-se que o caminho está correto
 
 export const load: PageServerLoad = async ({ url, locals }) => {
 	const userId = locals.user?.id;
@@ -9,42 +12,47 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 	const from = `${dateParam} 00:00:00`;
 	const to = `${dateParam} 23:59:59`;
 
-	// Buscamos os 3 conjuntos de dados em paralelo para não travar o carregamento
-	const [appointmentsRes, customersRes, servicesRes, profileRes] = await Promise.all([
-		locals.supabase.rpc('get_appointments', {
-			p_profile_id: userId,
-			p_from: from,
-			p_to: to
-		}),
-		locals.supabase.from('customers').select('id, name').eq('profile_id', userId).order('name'),
-		locals.supabase
-			.from('services')
-			.select('id, name, duration')
-			.eq('profile_id', userId)
-			.eq('is_active', true)
-			.order('name'),
-		locals.supabase.from('profiles').select('username').eq('id', userId).single()
-	]);
+	// 2. Instanciação do superValidate e Busca de dados em paralelo
+	const [customerForm, serviceForm, appointmentsRes, customersRes, servicesRes, profileRes] =
+		await Promise.all([
+			superValidate(zod4(customerSchema)),
+			superValidate(zod4(serviceSchema)),
+			locals.supabase.rpc('get_appointments', {
+				p_profile_id: userId,
+				p_from: from,
+				p_to: to
+			}),
+			locals.supabase.from('customers').select('id, name').eq('profile_id', userId).order('name'),
+			locals.supabase
+				.from('services')
+				.select('id, name, duration')
+				.eq('profile_id', userId)
+				.eq('is_active', true)
+				.order('name'),
+			locals.supabase.from('profiles').select('username').eq('id', userId).single()
+		]);
 
-	// Se a RPC falhar, ainda retornamos as listas vazias para o TS não reclamar
+	const commonData = {
+		customers: customersRes.data ?? [],
+		services: servicesRes.data ?? [],
+		username: profileRes.data?.username ?? 'user',
+		selectedDate: dateParam,
+		customerForm,
+		serviceForm
+	};
+
+	// 4. Tratamento de erro da RPC
 	if (appointmentsRes.error) {
-		//console.error('Erro na RPC:', appointmentsRes.error.message);
 		return {
+			...commonData,
 			appointments: [],
-			customers: customersRes.data ?? [],
-			services: servicesRes.data ?? [],
-			username: profileRes.data?.username ?? 'user',
-			selectedDate: dateParam,
 			error: 'Falha ao carregar agendamentos.'
 		};
 	}
 
 	return {
-		appointments: appointmentsRes.data ?? [],
-		customers: customersRes.data ?? [],
-		services: servicesRes.data ?? [],
-		username: profileRes.data?.username ?? 'user',
-		selectedDate: dateParam
+		...commonData,
+		appointments: appointmentsRes.data ?? []
 	};
 };
 

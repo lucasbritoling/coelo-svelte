@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Check, ChevronsUpDown, LoaderCircle } from '@lucide/svelte';
+	import { Check, ChevronsUpDown, LoaderCircle, Plus } from '@lucide/svelte';
 	import * as Command from '$lib/components/ui/command/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
@@ -10,23 +10,37 @@
 	import { toast } from 'svelte-sonner';
 	import { parseTime } from '@internationalized/date';
 
+	// Importação dos componentes de formulário
+	import ServiceForm from './service-form.svelte';
+	import CustomerForm from './customer-form.svelte';
+
 	// 1. Props (Svelte 5)
 	let {
 		customers = [],
 		services = [],
 		selectedDate,
+		data, // Contém customerForm e serviceForm enviados pelo +page.server.ts
 		onSuccess
 	} = $props<{
 		customers: any[];
 		services: any[];
 		selectedDate: string;
+		data: any;
 		onSuccess?: () => void;
 	}>();
 
-	// 2. Estados com Runas
+	// 2. Estados
 	let openCustomer = $state(false);
 	let openService = $state(false);
 	let isLoading = $state(false);
+
+	// Estados para os Modais
+	let showServiceModal = $state(false);
+	let showCustomerModal = $state(false);
+
+	// Estados para capturar o que o usuário digita na busca
+	let serviceSearch = $state('');
+	let customerSearch = $state('');
 
 	let customerId = $state('');
 	let serviceId = $state('');
@@ -97,9 +111,25 @@
 			</Popover.Trigger>
 			<Popover.Content class="w-[--bits-popover-anchor-width] p-0" align="start">
 				<Command.Root>
-					<Command.Input placeholder="Buscar cliente..." />
+					<Command.Input placeholder="Buscar cliente..." bind:value={customerSearch} />
 					<Command.List>
-						<Command.Empty>Nenhum cliente encontrado.</Command.Empty>
+						<Command.Empty>
+							<div class="flex flex-col items-center gap-2 px-2 py-4 text-center">
+								<p class="text-sm text-muted-foreground">Cliente não encontrado.</p>
+								<Button
+									variant="secondary"
+									size="sm"
+									class="h-8 w-full"
+									onclick={() => {
+										openCustomer = false;
+										showCustomerModal = true;
+									}}
+								>
+									<Plus class="mr-2 size-3" />
+									Criar "{customerSearch}"
+								</Button>
+							</div>
+						</Command.Empty>
 						<Command.Group>
 							{#each customers as customer (customer.id)}
 								<Command.Item
@@ -143,9 +173,25 @@
 			</Popover.Trigger>
 			<Popover.Content class="w-[--bits-popover-anchor-width] p-0" align="start">
 				<Command.Root>
-					<Command.Input placeholder="Buscar serviço..." />
+					<Command.Input placeholder="Buscar serviço..." bind:value={serviceSearch} />
 					<Command.List>
-						<Command.Empty>Nenhum serviço disponível.</Command.Empty>
+						<Command.Empty>
+							<div class="flex flex-col items-center gap-2 px-2 py-4 text-center">
+								<p class="text-sm text-muted-foreground">Serviço não encontrado.</p>
+								<Button
+									variant="secondary"
+									size="sm"
+									class="h-8 w-full"
+									onclick={() => {
+										openService = false;
+										showServiceModal = true;
+									}}
+								>
+									<Plus class="mr-2 size-3" />
+									Criar "{serviceSearch}"
+								</Button>
+							</div>
+						</Command.Empty>
 						<Command.Group>
 							{#each services as service (service.id)}
 								<Command.Item
@@ -212,3 +258,8 @@
 		</Button>
 	</div>
 </form>
+
+<!-- Componentes de criação rápida -->
+<ServiceForm bind:open={showServiceModal} formData={data.serviceForm} />
+
+<CustomerForm bind:open={showCustomerModal} formData={data.customerForm} />

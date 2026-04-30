@@ -144,6 +144,7 @@
 						customers={data.customers}
 						services={data.services}
 						selectedDate={data.selectedDate}
+						{data}
 						onSuccess={() => (showAppointmentModal = false)}
 					/>
 				</Dialog.Content>

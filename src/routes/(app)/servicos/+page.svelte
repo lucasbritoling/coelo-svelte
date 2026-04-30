@@ -7,7 +7,7 @@
 	import Switch from '$lib/components/ui/switch/switch.svelte';
 	import { toast } from 'svelte-sonner';
 	import { enhance } from '$app/forms';
-	import ServicesForm from './services-form.svelte';
+	import ServiceForm from '$lib/components/dashboard/service-form.svelte';
 
 	// Svelte 5: Recebendo as props (data vem do +page.server.ts)
 	let { data } = $props();
@@ -253,7 +253,7 @@
 	</Card.Root>
 </div>
 
-<ServicesForm formData={data.form} service={selectedService} bind:open={openForm} />
+<ServiceForm formData={data.form} service={selectedService} bind:open={openForm} />
 
 <AlertDialog.Root
 	bind:open={openConfirmToggle}

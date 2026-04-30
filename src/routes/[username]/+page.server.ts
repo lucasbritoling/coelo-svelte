@@ -19,9 +19,19 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase } }
 
 	if (profileError || !profile) throw error(404, 'Profissional não encontrado');
 
-	const services = profile?.services;
-	const autoServiceId = services?.length === 1 ? String(services[0].id) : null;
+	const services = profile.services ?? [];
+	const hasActiveServices = services.length > 0;
 
+	if (!hasActiveServices) {
+		return {
+			professional: profile,
+			services: [],
+			slots: [],
+			hasActiveServices: false // Avisa o frontend para mostrar a "tela vazia"
+		};
+	}
+
+	const autoServiceId = services?.length === 1 ? String(services[0].id) : null;
 	const effectiveServiceId = serviceId ?? autoServiceId;
 
 	let availableSlots = [];
@@ -66,11 +76,12 @@ export const load: PageServerLoad = async ({ params, url, locals: { supabase } }
 
 	return {
 		professional: profile,
-		services: profile.services,
+		services: services,
 		slots: availableSlots,
 		selectedDate: date,
 		selectedServiceId: effectiveServiceId,
-		singleService: services.length === 1
+		singleService: services.length === 1,
+		hasActiveServices: true
 	};
 };
 

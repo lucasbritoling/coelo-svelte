@@ -3,21 +3,19 @@ import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
 	// 1. Busca Working Hours
-	const { data: workingHours } = await supabase
-		.from('working_hours')
-		.select('*')
-		.eq('profile_id', user?.id)
-		.order('day_of_week');
+	const [workingHoursResponse, overridesResponse] = await Promise.all([
+		supabase.from('working_hours').select('*').eq('profile_id', user?.id).order('day_of_week'),
 
-	//if (whError) console.error('Erro ao buscar Working Hours:', whError);
+		supabase
+			.from('availability_overrides')
+			.select('*')
+			.eq('profile_id', user?.id)
+			.gte('date', new Date().toISOString().split('T')[0])
+			.order('date')
+	]);
 
-	// 2. Busca Exceções (Overrides)
-	const { data: overrides } = await supabase
-		.from('availability_overrides')
-		.select('*')
-		.eq('profile_id', user?.id)
-		.gte('date', new Date().toISOString().split('T')[0])
-		.order('date');
+	const { data: workingHours } = workingHoursResponse;
+	const { data: overrides } = overridesResponse;
 
 	//console.log('LOAD - Working Hours enviadas para UI:', workingHours?.length);
 

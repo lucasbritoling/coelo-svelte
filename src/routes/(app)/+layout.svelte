@@ -35,7 +35,7 @@
 			>
 				<!-- 1. Trigger: Primeiro no HTML para ficar no topo no modo Rail (xs) -->
 				<!-- No mobile (<480px), o 'order-last' joga ele para a direita na bottom-bar -->
-				<Sidebar.Trigger class="order-last cursor-pointer xs:order-none xs:ms-0 xs:mb-2" />
+				<Sidebar.Trigger class="order-last cursor-pointer xs:order-0 xs:ms-0 xs:mb-2" />
 
 				<!-- 2. Nav: Segundo no HTML -->
 				<nav class="flex flex-1 items-center justify-around xs:flex-col xs:justify-start xs:gap-6">
@@ -55,7 +55,7 @@
 
 			<!-- HEADER DESKTOP -->
 			<header class="hidden h-16 shrink-0 items-center gap-2 border-b px-4 md:flex">
-				<Sidebar.Trigger class="-ms-1 cursor-pointer hover:bg-zinc-100" />
+				<Sidebar.Trigger class="-ms-1 cursor-pointer hover:bg-zinc-100 [&_svg]:size-6" />
 			</header>
 
 			<main

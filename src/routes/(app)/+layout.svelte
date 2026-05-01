@@ -2,6 +2,8 @@
 	import AppSidebar from '$lib/components/app-sidebar.svelte';
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+	import { page } from '$app/state';
+	import { Calendar, Clock, Users, BriefcaseBusiness } from '@lucide/svelte';
 
 	import { Toaster } from 'svelte-sonner';
 	let { children } = $props();

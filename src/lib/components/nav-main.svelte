@@ -1,13 +1,13 @@
 <script lang="ts">
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { page } from '$app/state';
-	import { Calendar as CalendarIcon, Users, Briefcase, Clock } from '@lucide/svelte';
+	import { Calendar as CalendarIcon, UsersRound, BriefcaseBusiness, Clock } from '@lucide/svelte';
 
 	const navItems = [
 		{ title: 'Agenda', url: '/agenda', icon: CalendarIcon },
 		{ title: 'Horários', url: '/horarios', icon: Clock },
-		{ title: 'Clientes', url: '/clientes', icon: Users },
-		{ title: 'Serviços', url: '/servicos', icon: Briefcase }
+		{ title: 'Clientes', url: '/clientes', icon: UsersRound },
+		{ title: 'Serviços', url: '/servicos', icon: BriefcaseBusiness }
 	];
 </script>
 

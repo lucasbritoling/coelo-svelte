@@ -26,11 +26,6 @@
 <Sidebar.Provider>
 	<AppSidebar />
 	<Sidebar.Inset class="flex h-svh flex-col overflow-hidden">
-		<!-- 
-            O Wrapper flex-row só deve existir entre 480px e 767px.
-            Em md (>=768px), voltamos para flex-col para o header de desktop (se houver) 
-            ficar no topo e o main ocupar o resto.
-        -->
 		<div class="flex flex-1 flex-col overflow-hidden xs:flex-row md:flex-col">
 			<header
 				class="sticky! bottom-0! z-20 order-last flex h-16 shrink-0 items-center gap-2 border-t bg-zinc-50! px-4 shadow-[0_-4px_12px_rgba(0,0,0,0.1)]
@@ -38,6 +33,11 @@
                 md:hidden!
                 dark:shadow-[0_-4px_12px_rgba(0,0,0,0.3)]"
 			>
+				<!-- 1. Trigger: Primeiro no HTML para ficar no topo no modo Rail (xs) -->
+				<!-- No mobile (<480px), o 'order-last' joga ele para a direita na bottom-bar -->
+				<Sidebar.Trigger class="order-last cursor-pointer xs:order-none xs:ms-0 xs:mb-2" />
+
+				<!-- 2. Nav: Segundo no HTML -->
 				<nav class="flex flex-1 items-center justify-around xs:flex-col xs:justify-start xs:gap-6">
 					{#each navItems as item}
 						<a
@@ -51,18 +51,11 @@
 						</a>
 					{/each}
 				</nav>
-
-				<!-- Trigger para MOBILE (Bottom bar e Side Rail) -->
-				<Sidebar.Trigger class="order-last -me-1 cursor-pointer  xs:order-none xs:ms-0 xs:mb-5" />
 			</header>
 
-			<!-- 
-                HEADER PARA DESKTOP (>= 768px)
-                Este header só aparece quando o anterior (mobile) é ocultado pelo md:hidden!
-            -->
+			<!-- HEADER DESKTOP -->
 			<header class="hidden h-16 shrink-0 items-center gap-2 border-b px-4 md:flex">
 				<Sidebar.Trigger class="-ms-1 cursor-pointer hover:bg-zinc-100" />
-				<!-- Aqui você pode colocar o título da página ou breadcrumbs se desejar -->
 			</header>
 
 			<main

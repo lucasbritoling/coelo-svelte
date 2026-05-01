@@ -124,9 +124,7 @@
 	<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 		<div>
 			<h1 class="text-2xl font-bold tracking-tight">Serviços</h1>
-			<p class="text-sm text-muted-foreground">
-				Regras e tempos de atendimento.
-			</p>
+			<p class="text-sm text-muted-foreground">Regras e tempos de atendimento.</p>
 		</div>
 		<Button
 			onclick={startCreate}

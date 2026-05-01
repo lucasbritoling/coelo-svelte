@@ -117,9 +117,7 @@
 			<h1 class="text-2xl font-bold tracking-tight capitalize">
 				{formattedTitle}
 			</h1>
-			<p class="text-sm text-muted-foreground">
-				Visualize e controle seus atendimentos.
-			</p>
+			<p class="text-sm text-muted-foreground">Visualize e controle seus atendimentos.</p>
 		</div>
 
 		<div class="flex items-center">

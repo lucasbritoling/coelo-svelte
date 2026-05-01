@@ -145,7 +145,6 @@
 			</div>
 		</Card.Header>
 		<Card.Content class="p-0 sm:p-6 sm:pt-0">
-
 			<!-- MOBILE: lista de cards (oculto em sm+) -->
 			<div class="flex flex-col divide-y sm:hidden">
 				{#each filteredServices as service (service.id)}
@@ -185,7 +184,12 @@
 								}}
 							>
 								<input type="hidden" name="id" value={service.id} />
-								<input type="hidden" name="is_active" id="check-{service.id}" value={service.is_active} />
+								<input
+									type="hidden"
+									name="is_active"
+									id="check-{service.id}"
+									value={service.is_active}
+								/>
 								<Switch
 									class="cursor-pointer"
 									checked={service.is_active}
@@ -246,7 +250,9 @@
 									<div class="flex items-center gap-2 text-muted-foreground">
 										{service.duration} min
 										{#if service.buffer_after_min > 0}
-											<span class="rounded bg-amber-100 px-1 text-[10px] font-medium text-amber-700">
+											<span
+												class="rounded bg-amber-100 px-1 text-[10px] font-medium text-amber-700"
+											>
 												+{service.buffer_after_min} min intervalo
 											</span>
 										{/if}
@@ -268,7 +274,12 @@
 										class="flex justify-center"
 									>
 										<input type="hidden" name="id" value={service.id} />
-										<input type="hidden" name="is_active" id="check-{service.id}" value={service.is_active} />
+										<input
+											type="hidden"
+											name="is_active"
+											id="check-{service.id}"
+											value={service.is_active}
+										/>
 										<Switch
 											class="cursor-pointer"
 											checked={service.is_active}
@@ -307,7 +318,6 @@
 					</tbody>
 				</table>
 			</div>
-
 		</Card.Content>
 	</Card.Root>
 </div>
@@ -327,12 +337,11 @@
 				offline e ninguém poderá agendar horários.
 			</AlertDialog.Description>
 		</AlertDialog.Header>
-		<AlertDialog.Footer>
-			<!-- Alterado aqui: de uma arrow function simples para cancelToggle -->
-			<AlertDialog.Cancel onclick={cancelToggle} class="cursor-pointer">
+		<AlertDialog.Footer class="flex-col-reverse gap-2 sm:flex-row">
+			<AlertDialog.Cancel onclick={cancelToggle} class="w-full cursor-pointer sm:w-auto">
 				Manter Ativo
 			</AlertDialog.Cancel>
-			<Button variant="destructive" onclick={confirmToggle} class="cursor-pointer">
+			<Button variant="destructive" onclick={confirmToggle} class="w-full cursor-pointer sm:w-auto">
 				Confirmar e Desativar
 			</Button>
 		</AlertDialog.Footer>
@@ -353,11 +362,14 @@
 				{/if}
 			</AlertDialog.Description>
 		</AlertDialog.Header>
-		<AlertDialog.Footer>
-			<AlertDialog.Cancel disabled={isLoading} class="cursor-pointer">Cancelar</AlertDialog.Cancel>
+		<AlertDialog.Footer class="flex-col-reverse gap-2 sm:flex-row">
+			<AlertDialog.Cancel disabled={isLoading} class="w-full cursor-pointer sm:w-auto">
+				Cancelar
+			</AlertDialog.Cancel>
 			<form
 				method="POST"
 				action="?/delete"
+				class="w-full sm:w-auto"
 				use:enhance={() => {
 					isLoading = true;
 					return async ({ result, update }) => {
@@ -378,7 +390,7 @@
 					type="submit"
 					variant="destructive"
 					disabled={isLoading}
-					class="min-w-[140px] cursor-pointer"
+					class="w-full cursor-pointer sm:min-w-35"
 				>
 					{#if isLoading}
 						<LoaderCircle class="mr-2 size-4 animate-spin" />

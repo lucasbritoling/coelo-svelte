@@ -125,7 +125,7 @@
 		<div>
 			<h1 class="text-2xl font-bold tracking-tight">Serviços</h1>
 			<p class="text-sm text-muted-foreground">
-				Configure os procedimentos e tempos de atendimento.
+				Regras e tempos de atendimento.
 			</p>
 		</div>
 		<Button

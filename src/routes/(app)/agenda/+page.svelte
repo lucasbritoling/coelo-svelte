@@ -118,7 +118,7 @@
 				{formattedTitle}
 			</h1>
 			<p class="text-sm text-muted-foreground">
-				Visualize e controle seus atendimentos profissionais.
+				Visualize e controle seus atendimentos.
 			</p>
 		</div>
 

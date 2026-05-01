@@ -392,9 +392,10 @@
 					{@render formFields()}
 				</div>
 				<Drawer.Footer class="border-t">
-					{@render submitButton()}
-					<Drawer.Close asChild>
-						<Button variant="outline" class="w-full cursor-pointer">Cancelar</Button>
+					<Drawer.Close>
+						{#snippet child({ props })}
+							<Button {...props} variant="outline" class="w-full">Cancelar</Button>
+						{/snippet}
 					</Drawer.Close>
 				</Drawer.Footer>
 			</form>

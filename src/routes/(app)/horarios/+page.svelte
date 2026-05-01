@@ -428,6 +428,7 @@
 
 		<div class="flex items-center justify-between rounded-lg border bg-muted/20 p-3">
 			<Label class="text-sm">Estará disponível?</Label>
+			<!-- Mantenha o input hidden para o FormData do POST -->
 			<input type="checkbox" name="is_available" checked={isAvailableOverride} class="hidden" />
 			<Switch checked={isAvailableOverride} onCheckedChange={(v) => (isAvailableOverride = v)} />
 		</div>
@@ -459,8 +460,10 @@
 		</Button>
 
 		{#if context === 'mobile'}
-			<Drawer.Close asChild>
-				<Button variant="outline" class="w-full cursor-pointer">Cancelar</Button>
+			<Drawer.Close>
+				{#snippet child({ props })}
+					<Button {...props} variant="outline" class="w-full cursor-pointer">Cancelar</Button>
+				{/snippet}
 			</Drawer.Close>
 		{/if}
 	</form>

@@ -10,7 +10,7 @@ export const load: PageServerLoad = async () => {
 };
 
 export const actions: Actions = {
-	default: async ({ request, locals, url }) => {
+	default: async ({ request, locals: { supabase }, url }) => {
 		const form = await superValidate(request, zod4(forgotPasswordSchema));
 
 		if (!form.valid) {
@@ -20,7 +20,7 @@ export const actions: Actions = {
 		const { email } = form.data;
 
 		// O Supabase enviará um e-mail com um link de retorno
-		const { error } = await locals.supabase.auth.resetPasswordForEmail(email, {
+		const { error } = await supabase.auth.resetPasswordForEmail(email, {
 			redirectTo: `${url.origin}/callback?next=/confirm-reset`
 		});
 

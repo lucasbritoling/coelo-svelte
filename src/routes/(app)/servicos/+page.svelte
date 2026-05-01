@@ -11,7 +11,9 @@
 	let { data } = $props();
 
 	let services = $state<any[]>(data.services);
-	$effect(() => { services = data.services; });
+	$effect(() => {
+		services = data.services;
+	});
 
 	let openForm = $state(false);
 	let openDelete = $state(false);
@@ -34,7 +36,10 @@
 	const SWIPE_THRESHOLD = 52;
 
 	function onTouchStart(e: TouchEvent, id: string) {
-		if (swipedId && swipedId !== id) { swipedId = null; return; }
+		if (swipedId && swipedId !== id) {
+			swipedId = null;
+			return;
+		}
 		touchStartX = e.touches[0].clientX;
 		touchStartY = e.touches[0].clientY;
 		lockAxis = null;
@@ -60,7 +65,9 @@
 		lockAxis = null;
 	}
 
-	function closeSwipe() { swipedId = null; }
+	function closeSwipe() {
+		swipedId = null;
+	}
 
 	// ── Actions ────────────────────────────────────────────────────
 	function startCreate() {
@@ -69,7 +76,10 @@
 	}
 
 	function startEdit(service: any) {
-		if (swipedId === service.id) { swipedId = null; return; }
+		if (swipedId === service.id) {
+			swipedId = null;
+			return;
+		}
 		selectedService = service;
 		openForm = true;
 	}
@@ -136,7 +146,6 @@
 
 <!-- ───────────────────────── MOBILE ───────────────────────────── -->
 <div class="flex w-full flex-col gap-4 p-4 pb-28 sm:hidden">
-
 	<!-- Header -->
 	<div>
 		<h1 class="text-2xl font-bold tracking-tight">Serviços</h1>
@@ -146,12 +155,7 @@
 	<!-- Search -->
 	<div class="relative">
 		<Search class="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
-		<Input
-			type="search"
-			placeholder="Procurar serviço..."
-			class="pl-9"
-			bind:value={searchQuery}
-		/>
+		<Input type="search" placeholder="Procurar serviço..." class="pl-9" bind:value={searchQuery} />
 	</div>
 
 	<!-- Hint de swipe (some depois da primeira interação) -->
@@ -165,9 +169,10 @@
 	<div class="overflow-hidden rounded-2xl border bg-background shadow-sm">
 		{#each filteredServices as service (service.id)}
 			<div class="relative overflow-hidden border-b last:border-b-0">
-
 				<!-- Fundo vermelho (ação de deletar) -->
-				<div class="absolute inset-y-0 right-0 flex w-20 items-center justify-center bg-destructive">
+				<div
+					class="absolute inset-y-0 right-0 flex w-20 items-center justify-center bg-destructive"
+				>
 					<button
 						class="flex h-full w-full flex-col items-center justify-center gap-1 text-white active:opacity-70"
 						onclick={() => confirmDelete(service)}
@@ -193,11 +198,13 @@
 				>
 					<!-- Info -->
 					<div class="min-w-0 flex-1">
-						<p class="truncate font-semibold leading-snug">{service.name}</p>
+						<p class="truncate leading-snug font-semibold">{service.name}</p>
 						<div class="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
 							<span>{service.duration} min</span>
 							{#if service.buffer_after_min > 0}
-								<span class="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+								<span
+									class="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+								>
 									+{service.buffer_after_min} min
 								</span>
 							{/if}
@@ -214,17 +221,24 @@
 						id="form-status-{service.id}"
 						method="POST"
 						action="?/updateStatus"
-						use:enhance={() => async ({ result }) => {
-							if (result.type === 'failure') {
-								toast.error('Erro ao atualizar status.');
-								const idx = services.findIndex((s) => s.id === service.id);
-								if (idx !== -1) services[idx] = { ...services[idx], is_active: !services[idx].is_active };
-							}
-						}}
+						use:enhance={() =>
+							async ({ result }) => {
+								if (result.type === 'failure') {
+									toast.error('Erro ao atualizar status.');
+									const idx = services.findIndex((s) => s.id === service.id);
+									if (idx !== -1)
+										services[idx] = { ...services[idx], is_active: !services[idx].is_active };
+								}
+							}}
 						onclick={(e) => e.stopPropagation()}
 					>
 						<input type="hidden" name="id" value={service.id} />
-						<input type="hidden" name="is_active" id="check-{service.id}" value={service.is_active} />
+						<input
+							type="hidden"
+							name="is_active"
+							id="check-{service.id}"
+							value={service.is_active}
+						/>
 						<Switch
 							checked={service.is_active}
 							onCheckedChange={(v) => handleToggleAttempt(service, v)}
@@ -248,8 +262,8 @@
 	class="
 		fixed right-4 z-30 flex items-center gap-2
 		rounded-full bg-primary px-5 py-3.5 text-sm font-semibold text-primary-foreground
-		shadow-[0_4px_20px_rgba(0,0,0,0.25)] active:scale-95 active:shadow-sm
-		transition-all duration-150 sm:hidden
+		shadow-[0_4px_20px_rgba(0,0,0,0.25)] transition-all duration-150
+		active:scale-95 active:shadow-sm sm:hidden
 	"
 	style="bottom: calc(4rem + 1rem + env(safe-area-inset-bottom))"
 	aria-label="Novo Serviço"
@@ -287,18 +301,25 @@
 			</thead>
 			<tbody>
 				{#each filteredServices as service (service.id)}
-					<tr class="border-b transition-colors hover:bg-muted/30" class:opacity-50={!service.is_active}>
+					<tr
+						class="border-b transition-colors hover:bg-muted/30"
+						class:opacity-50={!service.is_active}
+					>
 						<td class="p-3 font-medium">
 							{service.name}
 							{#if service.min_notice_hours}
-								<p class="text-[11px] font-normal text-muted-foreground">{service.min_notice_hours}h de antecedência</p>
+								<p class="text-[11px] font-normal text-muted-foreground">
+									{service.min_notice_hours}h de antecedência
+								</p>
 							{/if}
 						</td>
 						<td class="p-3">
 							<div class="flex items-center gap-2 text-muted-foreground">
 								{service.duration} min
 								{#if service.buffer_after_min > 0}
-									<span class="rounded bg-amber-100 px-1 text-[10px] font-medium text-amber-700">+{service.buffer_after_min} min</span>
+									<span class="rounded bg-amber-100 px-1 text-[10px] font-medium text-amber-700"
+										>+{service.buffer_after_min} min</span
+									>
 								{/if}
 							</div>
 						</td>
@@ -307,26 +328,57 @@
 								id="form-status-{service.id}"
 								method="POST"
 								action="?/updateStatus"
-								use:enhance={() => async ({ result }) => {
-									if (result.type === 'failure') {
-										toast.error('Erro ao atualizar status.');
-										const idx = services.findIndex((s) => s.id === service.id);
-										if (idx !== -1) services[idx] = { ...services[idx], is_active: !services[idx].is_active };
-									}
-								}}
+								use:enhance={() =>
+									async ({ result }) => {
+										if (result.type === 'failure') {
+											toast.error('Erro ao atualizar status.');
+											const idx = services.findIndex((s) => s.id === service.id);
+											if (idx !== -1)
+												services[idx] = { ...services[idx], is_active: !services[idx].is_active };
+										}
+									}}
 								class="flex justify-center"
 							>
 								<input type="hidden" name="id" value={service.id} />
-								<input type="hidden" name="is_active" id="check-{service.id}" value={service.is_active} />
-								<Switch checked={service.is_active} onCheckedChange={(v) => handleToggleAttempt(service, v)} />
+								<input
+									type="hidden"
+									name="is_active"
+									id="check-{service.id}"
+									value={service.is_active}
+								/>
+								<Switch
+									checked={service.is_active}
+									onCheckedChange={(v) => handleToggleAttempt(service, v)}
+								/>
 							</form>
 						</td>
 						<td class="p-3 text-right">
 							<div class="flex justify-end gap-1">
-								<Button variant="ghost" size="icon" class="cursor-pointer" onclick={() => startEdit(service)}>
-									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+								<Button
+									variant="ghost"
+									size="icon"
+									class="cursor-pointer"
+									onclick={() => startEdit(service)}
+								>
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										width="16"
+										height="16"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" /></svg
+									>
 								</Button>
-								<Button variant="ghost" size="icon" class="cursor-pointer text-destructive hover:bg-destructive/10" onclick={() => confirmDelete(service)}>
+								<Button
+									variant="ghost"
+									size="icon"
+									class="cursor-pointer text-destructive hover:bg-destructive/10"
+									onclick={() => confirmDelete(service)}
+								>
 									<Trash2 class="h-4 w-4" />
 								</Button>
 							</div>
@@ -334,7 +386,9 @@
 					</tr>
 				{:else}
 					<tr>
-						<td colspan="4" class="p-8 text-center italic text-muted-foreground">Nenhum serviço encontrado.</td>
+						<td colspan="4" class="p-8 text-center italic text-muted-foreground"
+							>Nenhum serviço encontrado.</td
+						>
 					</tr>
 				{/each}
 			</tbody>
@@ -347,13 +401,16 @@
 
 <AlertDialog.Root
 	bind:open={openConfirmToggle}
-	onOpenChange={(open) => { if (!open && servicePendingToggle) cancelToggle(); }}
+	onOpenChange={(open) => {
+		if (!open && servicePendingToggle) cancelToggle();
+	}}
 >
 	<AlertDialog.Content>
 		<AlertDialog.Header>
 			<AlertDialog.Title>Desativar último serviço?</AlertDialog.Title>
 			<AlertDialog.Description>
-				Se você desativar <strong>{servicePendingToggle?.name}</strong>, sua agenda pública ficará offline.
+				Se você desativar <strong>{servicePendingToggle?.name}</strong>, sua agenda pública ficará
+				offline.
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer class="flex-col-reverse gap-2 sm:flex-row">
@@ -381,7 +438,9 @@
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer class="flex-col-reverse gap-2 sm:flex-row">
-			<AlertDialog.Cancel disabled={isLoading} class="w-full cursor-pointer sm:w-auto">Cancelar</AlertDialog.Cancel>
+			<AlertDialog.Cancel disabled={isLoading} class="w-full cursor-pointer sm:w-auto"
+				>Cancelar</AlertDialog.Cancel
+			>
 			<form
 				method="POST"
 				action="?/delete"
@@ -402,7 +461,12 @@
 				}}
 			>
 				<input type="hidden" name="id" value={serviceToDelete?.id} />
-				<Button type="submit" variant="destructive" disabled={isLoading} class="w-full cursor-pointer sm:min-w-36">
+				<Button
+					type="submit"
+					variant="destructive"
+					disabled={isLoading}
+					class="w-full cursor-pointer sm:min-w-36"
+				>
 					{#if isLoading}
 						<LoaderCircle class="mr-2 size-4 animate-spin" /> Removendo...
 					{:else}

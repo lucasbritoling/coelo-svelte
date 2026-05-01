@@ -3,10 +3,10 @@
 	import { Calendar, Clock, UsersRound, BriefcaseBusiness } from '@lucide/svelte';
 
 	const navItems = [
-		{ title: 'Agenda',    href: '/agenda',   icon: Calendar },
-		{ title: 'Horários',  href: '/horarios', icon: Clock },
-		{ title: 'Clientes',  href: '/clientes', icon: UsersRound },
-		{ title: 'Serviços',  href: '/servicos', icon: BriefcaseBusiness },
+		{ title: 'Agenda', href: '/agenda', icon: Calendar },
+		{ title: 'Horários', href: '/horarios', icon: Clock },
+		{ title: 'Clientes', href: '/clientes', icon: UsersRound },
+		{ title: 'Serviços', href: '/servicos', icon: BriefcaseBusiness }
 	];
 </script>
 

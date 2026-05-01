@@ -120,8 +120,8 @@
 	}
 </script>
 
-<div class="flex max-w-2xl min-w-0! flex-col gap-6 p-3 sm:p-6">
-	<div class="flex min-w-0! flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+<div class="flex w-full max-w-xl flex-col gap-6 p-3 sm:p-6">
+	<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 		<div>
 			<h1 class="text-2xl font-bold tracking-tight">Serviços</h1>
 			<p class="text-sm text-muted-foreground">
@@ -137,9 +137,9 @@
 		</Button>
 	</div>
 
-	<Card.Root class="min-w-0!">
+	<Card.Root>
 		<Card.Header class="pb-3">
-			<div class="relative max-w-full min-w-0">
+			<div class="relative max-w-full">
 				<Search class="absolute top-2 left-2.5 h-4 w-4 text-muted-foreground" />
 				<Input
 					type="search"
@@ -150,14 +150,14 @@
 			</div>
 		</Card.Header>
 		<Card.Content>
-			<div class="overflow-x-auto rounded-md border">
+			<div class="w-full overflow-x-auto rounded-md border">
 				<table class="w-full text-sm">
 					<thead>
 						<tr class="border-b bg-muted/50 text-left font-medium">
 							<th class="p-3">Nome</th>
-							<th class="w-[120px] p-3">Duração</th>
-							<th class="w-[80px] p-3 text-center">Visível</th>
-							<th class="w-[100px] p-3 text-right">Ações</th>
+							<th class="p-3">Duração</th>
+							<th class="p-3 text-center">Visível</th>
+							<th class="p-3 text-right">Ações</th>
 						</tr>
 					</thead>
 					<tbody>

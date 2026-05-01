@@ -3,10 +3,16 @@
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { page } from '$app/state';
-	import { Calendar, Clock, Users, BriefcaseBusiness } from '@lucide/svelte';
+	import { Calendar, Clock, UsersRound, BriefcaseBusiness } from '@lucide/svelte';
 
 	import { Toaster } from 'svelte-sonner';
 	let { children } = $props();
+	const navItems = [
+		{ href: '/agenda', icon: Calendar, label: 'Agenda' },
+		{ href: '/horarios', icon: Clock, label: 'Horários' },
+		{ href: '/clientes', icon: UsersRound, label: 'Clientes' },
+		{ href: '/servicos', icon: BriefcaseBusiness, label: 'Serviços' }
+	];
 </script>
 
 <Toaster
@@ -24,11 +30,24 @@
 		<header
 			class="sticky! bottom-0! z-20 order-last flex h-16 shrink-0 items-center gap-2 border-t bg-zinc-50! px-4 shadow-[0_-4px_12px_rgba(0,0,0,0.1)] xs:top-0! xs:bottom-auto! xs:order-0 xs:border-t-0 xs:border-b xs:bg-background xs:shadow-none dark:shadow-[0_-4px_12px_rgba(0,0,0,0.3)]"
 		>
-			<Sidebar.Trigger class="order-last -me-1 cursor-pointer xs:order-0 xs:-ms-1 xs:me-0" />
+			<nav class="flex flex-1 items-center justify-around xs:hidden">
+				{#each navItems as item}
+					<a
+						href={item.href}
+						class="flex flex-col items-center gap-1 p-2 transition-all duration-75 active:scale-95 active:opacity-70 {page
+							.url.pathname === item.href
+							? 'text-primary'
+							: 'text-muted-foreground'}"
+					>
+						<item.icon class="size-6" />
+					</a>
+				{/each}
+			</nav>
 			<Separator
 				orientation="vertical"
 				class="me-2 hidden data-[orientation=vertical]:h-4 xs:block"
 			/>
+			<Sidebar.Trigger class="order-last -me-1 cursor-pointer xs:order-0 xs:-ms-1 xs:me-0" />
 		</header>
 		<main
 			class="order-first flex min-w-0! flex-1 flex-col gap-4 overflow-y-auto bg-zinc-50! p-4 xs:order-0 xs:items-center"

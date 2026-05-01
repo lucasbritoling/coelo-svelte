@@ -1,7 +1,20 @@
 <script lang="ts">
 	import LoginForm from '$lib/components/login-form.svelte';
+	import { toast } from 'svelte-sonner';
 
-	let { form } = $props();
+	let { data, form } = $props();
+
+	$effect(() => {
+		// Captura a mensagem vinda do load (data.successMessage)
+		if (data.successMessage) {
+			toast.success(data.successMessage);
+
+			// Limpa o parâmetro da URL sem recarregar a página
+			const url = new URL(window.location.href);
+			url.searchParams.delete('message');
+			window.history.replaceState({}, '', url.toString());
+		}
+	});
 </script>
 
 <div class="flex min-h-svh flex-col items-center justify-center gap-6 bg-muted p-6 md:p-10">

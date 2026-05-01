@@ -1,6 +1,16 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { loginSchema } from '$lib/schemas/auth';
-import type { Actions } from './$types';
+import type { Actions, PageServerLoad } from './$types';
+
+export const load: PageServerLoad = async ({ url, locals }) => {
+	// Se o usuário já estiver logado, manda pra agenda (opcional, mas bom)
+	if (locals.session) throw redirect(303, '/agenda');
+
+	return {
+		// Captura o parâmetro 'message' da URL
+		successMessage: url.searchParams.get('message')
+	};
+};
 
 export const actions: Actions = {
 	default: async ({ request, locals: { supabase } }) => {

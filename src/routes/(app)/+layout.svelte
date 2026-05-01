@@ -1,6 +1,5 @@
 <script lang="ts">
 	import AppSidebar from '$lib/components/app-sidebar.svelte';
-	import { Separator } from '$lib/components/ui/separator/index.js';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { page } from '$app/state';
 	import { Calendar, Clock, UsersRound, BriefcaseBusiness } from '@lucide/svelte';
@@ -27,33 +26,51 @@
 <Sidebar.Provider>
 	<AppSidebar />
 	<Sidebar.Inset class="flex h-svh flex-col overflow-hidden">
-		<header
-			class="sticky! bottom-0! z-20 order-last flex h-16 shrink-0 items-center gap-2 border-t bg-zinc-50! px-4 shadow-[0_-4px_12px_rgba(0,0,0,0.1)] xs:top-0! xs:bottom-auto! xs:order-0 xs:border-t-0 xs:border-b xs:bg-background xs:shadow-none dark:shadow-[0_-4px_12px_rgba(0,0,0,0.3)]"
-		>
-			<nav class="flex flex-1 items-center justify-around xs:hidden">
-				{#each navItems as item}
-					<a
-						href={item.href}
-						class="flex flex-col items-center gap-1 p-2 transition-all duration-75 active:scale-95 active:opacity-70 {page
-							.url.pathname === item.href
-							? 'text-primary'
-							: 'text-muted-foreground'}"
-					>
-						<item.icon class="size-6" />
-					</a>
-				{/each}
-			</nav>
-			<Separator
-				orientation="vertical"
-				class="me-2 hidden data-[orientation=vertical]:h-4 xs:block"
-			/>
-			<Sidebar.Trigger class="order-last -me-1 cursor-pointer xs:order-0 xs:-ms-1 xs:me-0" />
-		</header>
-		<main
-			class="order-first flex min-w-0! flex-1 flex-col gap-4 overflow-y-auto bg-zinc-50! p-4 xs:order-0 xs:items-center"
-		>
-			{@render children()}
-		</main>
+		<!-- 
+            O Wrapper flex-row só deve existir entre 480px e 767px.
+            Em md (>=768px), voltamos para flex-col para o header de desktop (se houver) 
+            ficar no topo e o main ocupar o resto.
+        -->
+		<div class="flex flex-1 flex-col overflow-hidden xs:flex-row md:flex-col">
+			<header
+				class="sticky! bottom-0! z-20 order-last flex h-16 shrink-0 items-center gap-2 border-t bg-zinc-50! px-4 shadow-[0_-4px_12px_rgba(0,0,0,0.1)]
+                xs:relative! xs:order-first! xs:h-full xs:w-16 xs:flex-col xs:justify-start xs:gap-4 xs:border-t-0 xs:border-r xs:bg-background xs:pt-4 xs:shadow-none
+                md:hidden!
+                dark:shadow-[0_-4px_12px_rgba(0,0,0,0.3)]"
+			>
+				<nav class="flex flex-1 items-center justify-around xs:flex-col xs:justify-start xs:gap-6">
+					{#each navItems as item}
+						<a
+							href={item.href}
+							class="flex flex-col items-center gap-1 p-2 transition-all duration-75 active:scale-95 active:opacity-70 {page
+								.url.pathname === item.href
+								? 'text-primary'
+								: 'text-muted-foreground'}"
+						>
+							<item.icon class="size-6" />
+						</a>
+					{/each}
+				</nav>
+
+				<!-- Trigger para MOBILE (Bottom bar e Side Rail) -->
+				<Sidebar.Trigger class="order-last -me-1 cursor-pointer  xs:order-none xs:ms-0 xs:mb-5" />
+			</header>
+
+			<!-- 
+                HEADER PARA DESKTOP (>= 768px)
+                Este header só aparece quando o anterior (mobile) é ocultado pelo md:hidden!
+            -->
+			<header class="hidden h-16 shrink-0 items-center gap-2 border-b px-4 md:flex">
+				<Sidebar.Trigger class="-ms-1 cursor-pointer hover:bg-zinc-100" />
+				<!-- Aqui você pode colocar o título da página ou breadcrumbs se desejar -->
+			</header>
+
+			<main
+				class="order-first flex min-w-0! flex-1 flex-col gap-4 overflow-y-auto bg-zinc-50! p-4 pb-24 xs:order-last xs:items-center xs:pb-4 md:order-none"
+			>
+				{@render children()}
+			</main>
+		</div>
 	</Sidebar.Inset>
 </Sidebar.Provider>
 

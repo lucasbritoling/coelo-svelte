@@ -3,6 +3,7 @@
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { page } from '$app/state';
 	import { Calendar, Clock, UsersRound, BriefcaseBusiness } from '@lucide/svelte';
+	import BottomNav from '$lib/components/bottom-nav.svelte';
 
 	import { Toaster } from 'svelte-sonner';
 	let { children } = $props();
@@ -23,49 +24,27 @@
 	}}
 />
 
-<Sidebar.Provider>
-	<AppSidebar />
-	<Sidebar.Inset class="flex h-svh flex-col overflow-hidden">
-		<div class="flex flex-1 flex-col overflow-hidden xs:flex-row md:flex-col">
-			<header
-				class="sticky! bottom-0! z-20 order-last flex h-16 shrink-0 items-center gap-2 border-t bg-zinc-50! px-4 shadow-[0_-4px_12px_rgba(0,0,0,0.1)]
-                xs:relative! xs:order-first! xs:h-full xs:w-16 xs:flex-col xs:justify-start xs:gap-4 xs:border-t-0 xs:border-r xs:bg-background xs:pt-4 xs:shadow-none
-                md:hidden!
-                dark:shadow-[0_-4px_12px_rgba(0,0,0,0.3)]"
-			>
-				<!-- 1. Trigger: Primeiro no HTML para ficar no topo no modo Rail (xs) -->
-				<!-- No mobile (<480px), o 'order-last' joga ele para a direita na bottom-bar -->
-				<Sidebar.Trigger class="order-last cursor-pointer xs:order-0 xs:ms-0 xs:mb-2" />
-
-				<!-- 2. Nav: Segundo no HTML -->
-				<nav class="flex flex-1 items-center justify-around xs:flex-col xs:justify-start xs:gap-6">
-					{#each navItems as item}
-						<a
-							href={item.href}
-							class="flex flex-col items-center gap-1 p-2 transition-all duration-75 active:scale-95 active:opacity-70 {page
-								.url.pathname === item.href
-								? 'text-primary'
-								: 'text-muted-foreground'}"
-						>
-							<item.icon class="size-6" />
-						</a>
-					{/each}
-				</nav>
+<div class="hidden md:contents">
+	<Sidebar.Provider>
+		<AppSidebar />
+		<Sidebar.Inset class="flex h-svh flex-col overflow-hidden">
+			<header class="flex h-16 shrink-0 items-center gap-2 border-b px-4">
+				<Sidebar.Trigger class="-ms-1 cursor-pointer [&_svg]:size-5" />
 			</header>
-
-			<!-- HEADER DESKTOP -->
-			<header class="hidden h-16 shrink-0 items-center gap-2 border-b px-4 md:flex">
-				<Sidebar.Trigger class="-ms-1 cursor-pointer hover:bg-zinc-100 [&_svg]:size-6" />
-			</header>
-
-			<main
-				class="order-first flex min-w-0! flex-1 flex-col gap-4 overflow-y-auto bg-zinc-50! p-4 pb-24 xs:order-last xs:items-center xs:pb-4 md:order-none"
-			>
+			<main class="flex flex-1 flex-col overflow-y-auto p-6">
 				{@render children()}
 			</main>
-		</div>
-	</Sidebar.Inset>
-</Sidebar.Provider>
+		</Sidebar.Inset>
+	</Sidebar.Provider>
+</div>
+
+<!-- MOBILE: layout fullscreen + bottom nav -->
+<div class="flex h-svh flex-col md:hidden">
+	<main class="flex-1 overflow-y-auto bg-zinc-50 p-4">
+		{@render children()}
+	</main>
+	<BottomNav />
+</div>
 
 <style>
 	@media (max-width: 479px) {

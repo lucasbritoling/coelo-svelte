@@ -15,8 +15,11 @@
 	import DatePicker from './date-picker.svelte';
 	import NavUser from './nav-user.svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar';
+	import { useSidebar } from '$lib/components/ui/sidebar';
 	import type { ComponentProps } from 'svelte';
 	import NavMain from './nav-main.svelte';
+
+	const sidebar = useSidebar();
 
 	let { ref = $bindable(null), ...restProps }: ComponentProps<typeof Sidebar.Root> = $props();
 
@@ -29,6 +32,12 @@
 		}
 	});
 
+	function closeSidebar() {
+		if (sidebar.isMobile) {
+			sidebar.setOpenMobile(false);
+		}
+	}
+
 	function handleDateChange(date: any) {
 		if (!date) return;
 
@@ -39,20 +48,32 @@
 		}
 
 		newUrl.searchParams.set('date', date.toString());
+		closeSidebar();
 
 		// eslint-disable-next-line svelte/no-navigation-without-resolve
 		goto(newUrl.toString(), { keepFocus: true, noScroll: true, replaceState: true });
 	}
 </script>
 
-<Sidebar.Root bind:ref {...restProps}>
+<Sidebar.Root bind:ref {...restProps} class="will-change-transform">
 	<Sidebar.Header class="h-16 border-b border-sidebar-border">
 		<NavUser {user} />
 	</Sidebar.Header>
-	<Sidebar.Content>
+	<Sidebar.Content onclickcapture={closeSidebar}>
 		<DatePicker value={selectedDate} onValueChange={handleDateChange} />
 		<Sidebar.Separator class="mx-0" />
 		<NavMain />
 	</Sidebar.Content>
 	<Sidebar.Rail />
 </Sidebar.Root>
+
+<style>
+	/* 3. Forçando Smoothness via GPU */
+	:global([data-sidebar='sidebar']) {
+		will-change: transform;
+		/* Melhora a suavidade e evita "flicker" em navegadores mobile */
+		backface-visibility: hidden;
+		/* Substitui a transição padrão por uma mais agressiva/linear para parecer mais rápido */
+		transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+	}
+</style>

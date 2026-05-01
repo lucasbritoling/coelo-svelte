@@ -1,18 +1,16 @@
-import type { Actions } from './$types';
+import type { Actions, PageServerLoad } from './$types';
 import { zod4 } from 'sveltekit-superforms/adapters';
 import { superValidate, message } from 'sveltekit-superforms';
 import { signupSchema } from '$lib/schemas/auth';
 import { fail, redirect } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {
 	const form = await superValidate(zod4(signupSchema));
-
 	return { form };
 };
 
 export const actions: Actions = {
-	default: async ({ request, locals }) => {
+	default: async ({ request, locals: { supabase } }) => {
 		const form = await superValidate(request, zod4(signupSchema));
 
 		if (!form.valid) {
@@ -21,7 +19,7 @@ export const actions: Actions = {
 
 		const { email, password, full_name, username } = form.data;
 
-		const { error } = await locals.supabase.auth.signUp({
+		const { error } = await supabase.auth.signUp({
 			email,
 			password,
 			options: {

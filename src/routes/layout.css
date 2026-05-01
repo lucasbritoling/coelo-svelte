@@ -376,3 +376,7 @@
 		display: none;
 	}
 }
+
+@utility touch-pan-y {
+	touch-action: pan-y;
+}

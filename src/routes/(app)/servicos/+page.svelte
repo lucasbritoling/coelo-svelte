@@ -120,24 +120,21 @@
 	}
 </script>
 
-<div class="flex w-full max-w-xl flex-col gap-6 p-3 sm:p-6">
-	<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+<div class="flex w-full max-w-xl flex-col gap-4 p-3 sm:gap-6 sm:p-6">
+	<!-- Header -->
+	<div class="flex items-center justify-between gap-4">
 		<div>
 			<h1 class="text-2xl font-bold tracking-tight">Serviços</h1>
 			<p class="text-sm text-muted-foreground">Regras e tempos de atendimento.</p>
 		</div>
-		<Button
-			onclick={startCreate}
-			size="sm"
-			class="h-9 w-full cursor-pointer hover:shadow-sm sm:w-auto"
-		>
+		<Button onclick={startCreate} size="sm" class="h-9 shrink-0 cursor-pointer hover:shadow-sm">
 			<Plus class="mr-2 h-4 w-4" /> Novo Serviço
 		</Button>
 	</div>
 
 	<Card.Root>
 		<Card.Header class="pb-3">
-			<div class="relative max-w-full">
+			<div class="relative">
 				<Search class="absolute top-2 left-2.5 h-4 w-4 text-muted-foreground" />
 				<Input
 					type="search"
@@ -147,8 +144,81 @@
 				/>
 			</div>
 		</Card.Header>
-		<Card.Content>
-			<div class="w-full overflow-x-auto rounded-md border">
+		<Card.Content class="p-0 sm:p-6 sm:pt-0">
+
+			<!-- MOBILE: lista de cards (oculto em sm+) -->
+			<div class="flex flex-col divide-y sm:hidden">
+				{#each filteredServices as service (service.id)}
+					<div
+						class="flex items-center justify-between gap-3 px-4 py-3 transition-colors hover:bg-muted/30"
+						class:opacity-50={!service.is_active}
+					>
+						<!-- Info -->
+						<div class="min-w-0 flex-1">
+							<p class="truncate font-medium">{service.name}</p>
+							<div class="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+								<span>{service.duration} min</span>
+								{#if service.buffer_after_min > 0}
+									<span class="rounded bg-amber-100 px-1 font-medium text-amber-700">
+										+{service.buffer_after_min} min intervalo
+									</span>
+								{/if}
+								{#if service.min_notice_hours}
+									<span>{service.min_notice_hours}h de antecedência</span>
+								{/if}
+							</div>
+						</div>
+
+						<!-- Switch + Ações -->
+						<div class="flex shrink-0 items-center gap-1">
+							<form
+								id="form-status-{service.id}"
+								method="POST"
+								action="?/updateStatus"
+								use:enhance={() => {
+									return async ({ result }) => {
+										if (result.type === 'failure') {
+											toast.error('Erro ao atualizar status.');
+											service.is_active = !service.is_active;
+										}
+									};
+								}}
+							>
+								<input type="hidden" name="id" value={service.id} />
+								<input type="hidden" name="is_active" id="check-{service.id}" value={service.is_active} />
+								<Switch
+									class="cursor-pointer"
+									checked={service.is_active}
+									onCheckedChange={(v) => handleToggleAttempt(service, v)}
+								/>
+							</form>
+							<Button
+								variant="ghost"
+								size="icon"
+								class="cursor-pointer hover:shadow-sm"
+								onclick={() => startEdit(service)}
+							>
+								<Pencil class="h-4 w-4" />
+							</Button>
+							<Button
+								variant="ghost"
+								size="icon"
+								class="cursor-pointer text-destructive hover:bg-destructive/10 hover:shadow-sm"
+								onclick={() => confirmDelete(service)}
+							>
+								<Trash2 class="h-4 w-4" />
+							</Button>
+						</div>
+					</div>
+				{:else}
+					<p class="p-8 text-center text-sm text-muted-foreground italic">
+						Nenhum serviço encontrado.
+					</p>
+				{/each}
+			</div>
+
+			<!-- DESKTOP: tabela (oculta em mobile) -->
+			<div class="hidden overflow-x-auto rounded-md border sm:block">
 				<table class="w-full text-sm">
 					<thead>
 						<tr class="border-b bg-muted/50 text-left font-medium">
@@ -164,8 +234,8 @@
 								class="border-b transition-colors hover:bg-muted/30"
 								class:opacity-50={!service.is_active}
 							>
-								<td class="p-3 font-medium"
-									>{service.name}
+								<td class="p-3 font-medium">
+									{service.name}
 									{#if service.min_notice_hours}
 										<p class="text-[11px] font-normal text-muted-foreground">
 											{service.min_notice_hours}h de antecedência
@@ -176,15 +246,12 @@
 									<div class="flex items-center gap-2 text-muted-foreground">
 										{service.duration} min
 										{#if service.buffer_after_min > 0}
-											<span
-												class="rounded bg-amber-100 px-1 text-[10px] font-medium text-amber-700"
-											>
+											<span class="rounded bg-amber-100 px-1 text-[10px] font-medium text-amber-700">
 												+{service.buffer_after_min} min intervalo
 											</span>
 										{/if}
 									</div>
 								</td>
-
 								<td class="p-3">
 									<form
 										id="form-status-{service.id}"
@@ -194,20 +261,14 @@
 											return async ({ result }) => {
 												if (result.type === 'failure') {
 													toast.error('Erro ao atualizar status.');
-													service.is_active = !service.is_active; // Reverte o switch
+													service.is_active = !service.is_active;
 												}
 											};
 										}}
 										class="flex justify-center"
 									>
 										<input type="hidden" name="id" value={service.id} />
-										<input
-											type="hidden"
-											name="is_active"
-											id="check-{service.id}"
-											value={service.is_active}
-										/>
-
+										<input type="hidden" name="is_active" id="check-{service.id}" value={service.is_active} />
 										<Switch
 											class="cursor-pointer"
 											checked={service.is_active}
@@ -215,7 +276,6 @@
 										/>
 									</form>
 								</td>
-
 								<td class="p-3 text-right">
 									<div class="flex justify-end gap-1">
 										<Button
@@ -247,10 +307,10 @@
 					</tbody>
 				</table>
 			</div>
+
 		</Card.Content>
 	</Card.Root>
 </div>
-
 <ServiceForm formData={data.form} service={selectedService} bind:open={openForm} />
 
 <AlertDialog.Root

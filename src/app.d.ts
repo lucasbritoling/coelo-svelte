@@ -1,11 +1,16 @@
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
 import { SupabaseClient, Session } from '@supabase/supabase-js';
+import type { Sql } from 'postgres'; // Importe o tipo Sql aqui
 
 declare global {
 	namespace App {
 		interface Platform {
-			env: Env;
+			env: {
+				HYPERDRIVE: {
+					connectionString: string;
+				};
+			};
 			ctx: ExecutionContext;
 			caches: CacheStorage;
 			cf?: IncomingRequestCfProperties;

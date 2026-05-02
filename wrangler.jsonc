@@ -14,5 +14,6 @@
 			"id": "9204a5d3a936454e83b4fac77425a3f6",
 			"localConnectionString": "postgresql://postgres:f4eaDMravwtrr2Ww@db.ftuqhtdwptawwbctpfgh.supabase.co:5432/postgres"
 		}
-	]
+	],
+	"placement": { "mode": "smart" }
 }

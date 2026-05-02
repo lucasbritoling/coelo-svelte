@@ -4,126 +4,128 @@ import { superValidate, message } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 import { serviceSchema } from '$lib/schemas/app';
 
-export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
+export const load: PageServerLoad = async ({ locals: { sql, user } }) => {
 	if (!user) throw redirect(303, '/login');
-	const [servicesResponse, form] = await Promise.all([
-		supabase.from('services').select('*').eq('profile_id', user?.id).order('name'),
 
-		superValidate(zod4(serviceSchema))
-	]);
+	try {
+		// Consultas paralelas: SQL nativo + Validação do form
+		const [services, form] = await Promise.all([
+			sql`
+                SELECT * FROM services 
+                WHERE profile_id = ${user.id} 
+                ORDER BY name ASC
+            `,
+			superValidate(zod4(serviceSchema))
+		]);
 
-	const { data: services, error: dbError } = servicesResponse;
-
-	if (dbError) {
-		throw error(500, 'Erro ao carregar serviços: ' + dbError.message);
+		return { services, form };
+	} catch (err) {
+		console.error('Erro ao carregar serviços:', err);
+		throw error(500, 'Erro ao carregar dados do banco.');
 	}
-
-	return {
-		services: services ?? [],
-		form
-	};
 };
 
 export const actions: Actions = {
 	/**
-	 * UPSERT: Cria ou Atualiza um serviço
+	 * UPSERT: A mágica do SQL nativo.
+	 * Se o ID existir, ele atualiza. Se não, insere.
 	 */
-	upsert: async ({ request, locals: { supabase, user } }) => {
-		if (!user?.id) return fail(401);
+	upsert: async ({ request, locals: { sql, user } }) => {
+		if (!user) return fail(401);
+
 		const form = await superValidate(request, zod4(serviceSchema));
+		if (!form.valid) return fail(400, { form });
 
-		// Validação do Zod (lado do servidor)
-		if (!form.valid) {
-			return fail(400, { form });
+		try {
+			const { id, ...data } = form.data;
+
+			// Criamos o objeto removendo undefineds e garantindo tipos corretos
+			const payload: Record<string, any> = {
+				name: data.name,
+				duration: data.duration,
+				profile_id: user.id,
+				price: data.price ?? 0,
+				is_active: data.is_active ?? true,
+				min_notice_hours: data.min_notice_hours ?? 2,
+				buffer_after_min: data.buffer_after_min ?? 0
+			};
+
+			// Fail Fast: Só incluímos o ID se ele realmente existir (Update)
+			// Se for string vazia ou undefined, deixamos o gen_random_uuid() agir
+			if (id && id.trim() !== '') {
+				payload.id = id;
+			}
+
+			const [row] = await sql`
+                INSERT INTO services ${sql(payload)}
+                ON CONFLICT (id) DO UPDATE SET
+                    name = EXCLUDED.name,
+                    duration = EXCLUDED.duration,
+                    price = EXCLUDED.price,
+                    is_active = EXCLUDED.is_active,
+                    min_notice_hours = EXCLUDED.min_notice_hours,
+                    buffer_after_min = EXCLUDED.buffer_after_min
+                RETURNING id, name
+            `;
+
+			return message(form, { id: row.id, name: row.name });
+		} catch (err) {
+			console.error('Erro no upsert:', err);
+			return message(form, 'Erro técnico ao salvar serviço.', { status: 500 });
 		}
-
-		const { id, ...data } = form.data;
-
-		// Dados formatados para o Supabase
-		const serviceData = {
-			...data,
-			profile_id: user?.id
-		};
-
-		let result;
-
-		if (id && id !== '') {
-			// Caso tenha ID, atualiza o registro existente
-			result = await supabase
-				.from('services')
-				.update(serviceData)
-				.eq('id', id)
-				.eq('profile_id', user?.id) // Proteção contra edição de serviços alheios
-				.select()
-				.single();
-		} else {
-			// Caso não tenha ID, insere um novo
-			result = await supabase.from('services').insert([serviceData]).select().single();
-		}
-
-		if (result.error) {
-			return message(form, 'Erro ao salvar no banco de dados.', { status: 500 });
-		}
-
-		return message(form, { id: result.data.id, name: result.data.name });
 	},
 
 	/**
-	 * DELETE: Remove um serviço
+	 * DELETE: Direto ao ponto
 	 */
-	delete: async ({ request, locals: { supabase, user } }) => {
-		if (!user?.id) return fail(401);
+	delete: async ({ request, locals: { sql, user } }) => {
+		if (!user) return fail(401);
 
 		const formData = await request.formData();
-		const id = formData.get('id');
+		const id = formData.get('id')?.toString();
 
-		if (!id) {
-			return fail(400, { message: 'ID do serviço não fornecido.' });
-		}
+		if (!id) return fail(400, { message: 'ID ausente' });
 
-		const { error: dbError } = await supabase
-			.from('services')
-			.delete()
-			.eq('id', id)
-			.eq('profile_id', user?.id); // Segurança: Só deleta se for o dono
-
-		if (dbError) {
-			// Código 23503: foreign_key_violation (Serviço vinculado a agendamentos)
-			if (dbError.code === '23503') {
-				return fail(400, {
-					message: 'Não é possível excluir: este serviço possui agendamentos vinculados.'
-				});
+		try {
+			await sql`
+                DELETE FROM services 
+                WHERE id = ${id} AND profile_id = ${user.id}
+            `;
+			return { success: true };
+		} catch (err: any) {
+			// Tratamento de Foreign Key (ex: serviço em uso em agendamentos)
+			if (err.code === '23503') {
+				return fail(400, { message: 'Serviço vinculado a agendamentos existentes.' });
 			}
-
-			return fail(500, { message: 'Erro ao tentar excluir o serviço.' });
+			return fail(500, { message: 'Erro ao excluir serviço.' });
 		}
-
-		return { success: true };
 	},
 
-	updateStatus: async ({ request, locals: { supabase, user } }) => {
-		if (!user?.id) return fail(401);
+	/**
+	 * UPDATE STATUS: Toggle rápido
+	 */
+	updateStatus: async ({ request, locals: { sql, user } }) => {
+		if (!user) return fail(401);
 
 		const formData = await request.formData();
-		const id = formData.get('id');
+		const id = formData.get('id')?.toString();
 		const is_active = formData.get('is_active') === 'true';
 
-		const { data, error } = await supabase
-			.from('services')
-			.update({ is_active })
-			.eq('id', id)
-			.eq('profile_id', user?.id)
-			.select('id'); // Pedimos apenas o ID para confirmar que houve sucesso
+		if (!id) return fail(400);
 
-		if (error) {
+		try {
+			const result = await sql`
+                UPDATE services 
+                SET is_active = ${is_active}
+                WHERE id = ${id} AND profile_id = ${user.id}
+                RETURNING id
+            `;
+
+			if (result.count === 0) return fail(404, { message: 'Não encontrado.' });
+
+			return { success: true };
+		} catch (err) {
 			return fail(500, { message: 'Erro ao atualizar status.' });
 		}
-
-		// Se o array vier vazio, significa que o ID não existia ou não pertencia ao usuário
-		if (!data || data.length === 0) {
-			return fail(404, { message: 'Serviço não encontrado.' });
-		}
-
-		return { success: true };
 	}
 };

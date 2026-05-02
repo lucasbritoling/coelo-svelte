@@ -4,10 +4,9 @@
 	"version": "0.0.1",
 	"type": "module",
 	"scripts": {
+		"preview": "vite build && wrangler pages dev .svelte-kit/output --compatibility-flag=nodejs_compat_v2",
 		"dev": "vite dev",
 		"build": "vite build",
-		"preview": "wrangler pages dev .svelte-kit/cloudflare --port 4173",
-		"host": "wrangler pages dev ./.svelte-kit/cloudflare --ip 0.0.0.0 --port 4173",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",

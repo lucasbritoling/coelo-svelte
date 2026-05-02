@@ -1,107 +1,108 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
-import { CalendarDateTime } from '@internationalized/date';
 
-export const load: PageServerLoad = async ({ params, url, locals: { supabase } }) => {
+export const load: PageServerLoad = async ({ params, url, locals: { sql, supabase } }) => {
 	const { username } = params;
 	const date = url.searchParams.get('date');
 	const serviceId = url.searchParams.get('serviceId');
 
-	// 1. Busca perfil e serviços
-	const { data: profile, error: profileError } = await supabase
-		.from('profiles')
-		.select(
-			`id, full_name, username, avatar_url, services (id, name, duration, price, min_notice_hours, buffer_after_min)`
-		)
-		.eq('username', username)
-		.eq('services.is_active', true)
-		.single();
+	try {
+		// 1. Busca perfil e serviços usando SQL nativo para velocidade máxima na borda
+		const rows = await sql`
+            SELECT 
+                p.id, p.full_name, p.username, p.avatar_url,
+                json_agg(
+                    json_build_object(
+                        'id', s.id,
+                        'name', s.name,
+                        'duration', s.duration,
+                        'price', s.price,
+                        'min_notice_hours', s.min_notice_hours,
+                        'buffer_after_min', s.buffer_after_min
+                    )
+                ) FILTER (WHERE s.id IS NOT NULL) as services
+            FROM profiles p
+            LEFT JOIN services s ON s.profile_id = p.id AND s.is_active = true
+            WHERE p.username = ${username}
+            GROUP BY p.id
+        `;
 
-	if (profileError || !profile) throw error(404, 'Profissional não encontrado');
+		const profile = rows[0];
 
-	const services = profile.services ?? [];
-	const hasActiveServices = services.length > 0;
+		if (!profile) throw error(404, 'Profissional não encontrado');
 
-	if (!hasActiveServices) {
-		return {
-			professional: profile,
-			services: [],
-			slots: [],
-			hasActiveServices: false // Avisa o frontend para mostrar a "tela vazia"
-		};
-	}
+		const services = profile.services ?? [];
+		const hasActiveServices = services.length > 0;
 
-	const autoServiceId = services?.length === 1 ? String(services[0].id) : null;
-	const effectiveServiceId = serviceId ?? autoServiceId;
-
-	let availableSlots = [];
-
-	// --- LOG DE ENTRADA ---
-	//console.log('--- DEBUG AGENDAMENTO ---');
-	//console.log('Parâmetros da URL:', { date, serviceId });
-
-	if (date && effectiveServiceId) {
-		// 2. TENTATIVA DE ENCONTRAR O SERVIÇO
-		// Usamos == (dois iguais) caso o ID no banco seja número e na URL string
-		const selectedService = profile.services.find((s) => s.id == effectiveServiceId);
-
-		//console.log('Serviço selecionado encontrado?', !!selectedService);
-
-		if (date && selectedService) {
-			/*console.log('Chamando RPC get_available_slots com:', {
-				p_profile_id: profile.id,
-				p_date: date,
-				p_service_duration_min: selectedService.duration
-			}); */
-
-			const { data: slots, error: rpcError } = await supabase.rpc('get_available_slots', {
-				p_profile_id: profile.id,
-				p_service_id: selectedService.id,
-				p_date: date,
-				p_service_duration_min: selectedService.duration
-			});
-
-			//console.log(slots);
-
-			if (rpcError) {
-				//console.error('❌ ERRO NA RPC:', rpcError.message);
-			} else {
-				availableSlots = slots ?? [];
-				//console.log('✅ Slots encontrados:', availableSlots.length);
-			}
-		} else {
-			console.warn('⚠️ ID do serviço não coincide com nenhum serviço do perfil.');
+		if (!hasActiveServices) {
+			return {
+				professional: profile,
+				services: [],
+				slots: [],
+				hasActiveServices: false
+			};
 		}
-	}
 
-	return {
-		professional: profile,
-		services: services,
-		slots: availableSlots,
-		selectedDate: date,
-		selectedServiceId: effectiveServiceId,
-		singleService: services.length === 1,
-		hasActiveServices: true
-	};
+		// Lógica de ID de serviço efetivo
+		const autoServiceId = services.length === 1 ? String(services[0].id) : null;
+		const effectiveServiceId = serviceId ?? autoServiceId;
+
+		let availableSlots = [];
+
+		if (date && effectiveServiceId) {
+			const selectedService = services.find((s: any) => s.id == effectiveServiceId);
+
+			if (selectedService) {
+				// Chamamos a RPC via SDK do Supabase (que é um wrapper para POST /rpc/...)
+				// Mas note: como você já tem a conexão sql (Hyperdrive),
+				// você PODERIA chamar sql`SELECT * FROM get_available_slots(...)`.
+				// Vamos manter o SDK aqui para não quebrar a lógica interna da sua função PL/pgSQL.
+				const { data: slots, error: rpcError } = await supabase.rpc('get_available_slots', {
+					p_profile_id: profile.id,
+					p_service_id: selectedService.id,
+					p_date: date,
+					p_service_duration_min: selectedService.duration
+				});
+
+				if (!rpcError) {
+					availableSlots = slots ?? [];
+				}
+			}
+		}
+
+		return {
+			professional: {
+				...profile,
+				services: undefined // Removemos para não duplicar dados no retorno
+			},
+			services,
+			slots: availableSlots,
+			selectedDate: date,
+			selectedServiceId: effectiveServiceId,
+			singleService: services.length === 1,
+			hasActiveServices: true
+		};
+	} catch (err: any) {
+		if (err.status === 404) throw err;
+		console.error('Erro na página pública:', err);
+		throw error(500, 'Erro ao carregar agendamentos.');
+	}
 };
 
 export const actions: Actions = {
-	finishSelfBooking: async ({ request, locals: { supabase } }) => {
+	finishSelfBooking: async ({ request, locals: { sql, supabase } }) => {
 		const formData = await request.formData();
-
 		const profile_id = formData.get('profile_id') as string;
 		const service_id = formData.get('service_id') as string;
 
-		const { data: serviceMatch } = await supabase
-			.from('services')
-			.select('id')
-			.eq('id', service_id)
-			.eq('profile_id', profile_id)
-			.eq('is_active', true)
-			.single();
+		// Validação rápida via SQL
+		const [serviceMatch] = await sql`
+            SELECT id FROM services 
+            WHERE id = ${service_id} AND profile_id = ${profile_id} AND is_active = true
+        `;
 
 		if (!serviceMatch) {
-			return fail(400, { message: 'Dados de serviço inválidos para este profissional.' });
+			return fail(400, { message: 'Serviço inválido.' });
 		}
 
 		const payload = {
@@ -109,27 +110,22 @@ export const actions: Actions = {
 			p_service_id: service_id,
 			p_customer_name: formData.get('customer_name') as string,
 			p_customer_phone: formData.get('customer_phone') as string,
-			p_selected_date: formData.get('selected_date') as string, // 'YYYY-MM-DD'
-			p_slot_start_time: formData.get('slot_start') as string // 'HH:mm'
+			p_selected_date: formData.get('selected_date') as string,
+			p_slot_start_time: formData.get('slot_start') as string
 		};
 
-		// Validação básica
 		if (Object.values(payload).some((v) => !v)) {
-			return fail(400, { message: 'Preencha todos os campos obrigatórios.' });
+			return fail(400, { message: 'Preencha todos os campos.' });
 		}
 
-		// Chama a RPC que agora contém toda a inteligência
+		// Executa a transação de agendamento via RPC
 		const { error: rpcError } = await supabase.rpc('finish_self_booking', payload);
 
 		if (rpcError) {
-			console.error('Erro no agendamento:', rpcError.message);
 			if (rpcError.code === '23P01' || rpcError.message.includes('ocupado')) {
 				return fail(400, { message: 'Este horário acabou de ser ocupado.' });
 			}
-			if (rpcError.message) {
-				return fail(400, { message: rpcError.message });
-			}
-			return fail(500, { message: 'Erro interno ao processar agendamento.' });
+			return fail(400, { message: rpcError.message || 'Erro ao processar.' });
 		}
 
 		return { success: true };

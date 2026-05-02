@@ -1,7 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { type Handle, redirect } from '@sveltejs/kit';
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY } from '$env/static/public';
-import { DATABASE_URL } from '$env/static/private';
 import postgres from 'postgres';
 
 const PUBLIC_ROUTES = new Set(['/login', '/signup']);
@@ -18,7 +17,6 @@ const SECURITY_HEADERS: [string, string][] = [
 
 export const handle: Handle = async ({ event, resolve }) => {
 	// ── 1. CONFIGURAÇÃO DO BANCO DE DADOS ────────────────────────────────────
-	// Prioriza a string do Hyperdrive em produção, usa DATABASE_URL localmente.
 	const connectionString = event.platform?.env?.HYPERDRIVE?.connectionString;
 
 	const sql = postgres(connectionString, {

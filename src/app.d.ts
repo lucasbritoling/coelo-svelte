@@ -14,6 +14,7 @@ declare global {
 		interface Locals {
 			supabase: SupabaseClient;
 			session: Session | null;
+			sql: Sql;
 			user: {
 				id: string;
 				email: string | undefined;

@@ -1,15 +1,34 @@
 import { createServerClient } from '@supabase/ssr';
 import { type Handle, redirect } from '@sveltejs/kit';
 import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY } from '$env/static/public';
+import postgres from 'postgres';
+
+let sql: ReturnType<typeof postgres>;
 
 const PUBLIC_ROUTES = new Set(['/login', '/signup']);
 const PRIVATE_ROUTES = new Set(['/agenda', '/clientes', '/servicos', '/horarios']);
 
 export const handle: Handle = async ({ event, resolve }) => {
-	// instanciação única (singleton) do objeto de conexão com o supabase
-	// guardado no baúzinho 'locals', que sobrevive durante todo o ciclo
-	// de vida da requisição. é capaz de ler e setar cookies e é restrito pela
-	// RLS. seus cookies são válidos para todas as rotas do app.
+	// --- INICIALIZAÇÃO DO POSTGRES (HYPERDRIVE) ---
+	// Tentamos pegar a string do Hyperdrive, com fallback para DATABASE_URL
+	const connectionString =
+		event.platform?.env.HYPERDRIVE?.connectionString || event.platform?.env.DATABASE_URL;
+
+	if (!sql && connectionString) {
+		try {
+			sql = postgres(connectionString, {
+				prepare: false, // Obrigatório para Hyperdrive/PgBouncer
+				max: 1, // No Edge, o ideal é 1 conexão por instância do Worker
+				idle_timeout: 20,
+				connect_timeout: 10
+			});
+		} catch (err) {
+			console.error('Erro ao conectar ao Postgres:', err);
+		}
+	}
+
+	// Disponibilizamos o sql no locals para as rotas (+page.server.ts)
+	event.locals.sql = sql;
 
 	event.locals.supabase = createServerClient(
 		PUBLIC_SUPABASE_URL,
@@ -19,7 +38,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 				getAll: () => event.cookies.getAll(),
 				setAll: (cookiesToSet) => {
 					cookiesToSet.forEach(({ name, value, options }) => {
-						event.cookies.set(name, value, { ...options, path: '/' });
+						event.cookies.set(name, value, { ...options, path: '/', maxAge: 60 * 60 * 24 * 400 });
 					});
 				}
 			}

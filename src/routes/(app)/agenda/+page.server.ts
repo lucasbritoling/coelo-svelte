@@ -1,174 +1,156 @@
+import { fail, redirect, error } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { today, getLocalTimeZone } from '@internationalized/date';
-import { fail, redirect } from '@sveltejs/kit';
 import { superValidate } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
-import { customerSchema, serviceSchema } from '$lib/schemas/app'; // Certifique-se que o caminho está correto
+import { customerSchema, serviceSchema } from '$lib/schemas/app';
 
-export const load: PageServerLoad = async ({ url, locals: { supabase, user } }) => {
-	if (!user) throw redirect(303, '/login');
+export const load: PageServerLoad = async ({ url, locals: { sql, user } }) => {
+    if (!user) throw redirect(303, '/login');
 
-	const userId = user?.id;
+    const dateParam = url.searchParams.get('date') ?? today(getLocalTimeZone()).toString();
+    const startOfDay = `${dateParam} 00:00:00`;
+    const endOfDay = `${dateParam} 23:59:59`;
 
-	const dateParam = url.searchParams.get('date') ?? today(getLocalTimeZone()).toString();
-	const from = `${dateParam} 00:00:00`;
-	const to = `${dateParam} 23:59:59`;
+    try {
+        const [customerForm, serviceForm, rawAppointments, customers, services, profile] = await Promise.all([
+            superValidate(zod4(customerSchema)),
+            superValidate(zod4(serviceSchema)),
+            // TO_CHAR é o segredo para ignorar problemas de Timezone do driver
+            sql`
+                SELECT 
+                    a.id, 
+                    a.status, 
+                    to_char(lower(a.slot), 'HH24:MI') as start_at,
+                    to_char(upper(a.slot), 'HH24:MI') as end_at,
+                    c.name as customer_name,
+                    s.name as service_name,
+                    s.duration as service_duration
+                FROM appointments a
+                JOIN customers c ON a.customer_id = c.id
+                JOIN services s ON a.service_id = s.id
+                WHERE a.profile_id = ${user.id}
+                  AND a.slot && tsrange(${startOfDay}, ${endOfDay})
+                ORDER BY lower(a.slot) ASC
+            `,
+            sql`SELECT id, name FROM customers WHERE profile_id = ${user.id} ORDER BY name`,
+            sql`SELECT id, name, duration FROM services WHERE profile_id = ${user.id} AND is_active = true ORDER BY name`,
+            sql`SELECT username FROM profiles WHERE id = ${user.id}`.then(r => r[0])
+        ]);
 
-	// 2. Instanciação do superValidate e Busca de dados em paralelo
-	const [customerForm, serviceForm, appointmentsRes, customersRes, servicesRes, profileRes] =
-		await Promise.all([
-			superValidate(zod4(customerSchema)),
-			superValidate(zod4(serviceSchema)),
-			supabase.rpc('get_appointments', {
-				p_profile_id: userId,
-				p_from: from,
-				p_to: to
-			}),
-			supabase.from('customers').select('id, name').eq('profile_id', userId).order('name'),
-			supabase
-				.from('services')
-				.select('id, name, duration')
-				.eq('profile_id', userId)
-				.eq('is_active', true)
-				.order('name'),
-			supabase.from('profiles').select('username').eq('id', userId).single()
-		]);
-
-	const commonData = {
-		customers: customersRes.data ?? [],
-		services: servicesRes.data ?? [],
-		username: profileRes.data?.username ?? 'user',
-		selectedDate: dateParam,
-		customerForm,
-		serviceForm
-	};
-
-	// 4. Tratamento de erro da RPC
-	if (appointmentsRes.error) {
-		return {
-			...commonData,
-			appointments: [],
-			error: 'Falha ao carregar agendamentos.'
-		};
-	}
-
-	return {
-		...commonData,
-		appointments: appointmentsRes.data ?? []
-	};
+        return {
+            appointments: rawAppointments, // Agora já vem como "09:00" do SQL
+            customers,
+            services,
+            username: profile?.username ?? 'user',
+            selectedDate: dateParam,
+            customerForm,
+            serviceForm
+        };
+    } catch (err) {
+        console.error('Erro ao carregar agenda:', err);
+        throw error(500, 'Erro ao carregar dados da agenda.');
+    }
 };
 
+function formatarHora(val: any): string {
+    if (!val) return '';
+    // Se o Postgres devolver objeto Date
+    if (val instanceof Date) {
+        return val.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    }
+    // Se devolver string (ex: "2024-05-20 09:00:00")
+    if (typeof val === 'string') {
+        const match = val.match(/(\d{2}:\d{2})/);
+        return match ? match[1] : val;
+    }
+    return String(val);
+}
+
 export const actions: Actions = {
-	create: async ({ request, locals: { supabase, user } }) => {
-		if (!user?.id) return fail(401);
+    create: async ({ request, locals: { sql, user } }) => {
+        if (!user) return fail(401);
 
-		const formData = await request.formData();
-		const customer_id = formData.get('customer_id');
-		const service_id = formData.get('service_id');
-		const date = formData.get('date');
-		const start_at = formData.get('start_at');
-		const end_at = formData.get('end_at');
+        const formData = await request.formData();
+        const customer_id = formData.get('customer_id')?.toString();
+        const service_id = formData.get('service_id')?.toString();
+        const date = formData.get('date')?.toString();
+        const start_at = formData.get('start_at')?.toString();
+        const end_at = formData.get('end_at')?.toString();
 
-		// 1. Montamos o range no formato do Postgres: [inicio, fim)
-		const slot = `[${date} ${start_at}:00, ${date} ${end_at}:00)`;
+        if (!customer_id || !service_id || !date || !start_at || !end_at) {
+            return fail(400, { message: 'Dados incompletos.' });
+        }
 
-		// 2. Inserimos usando a coluna 'slot'
-		const { error } = await supabase.from('appointments').insert([
-			{
-				customer_id,
-				service_id,
-				slot, // Enviando o tstzrange aqui
-				profile_id: user?.id,
-				status: 'pending'
-			}
-		]);
+        // Formato tsrange: '[YYYY-MM-DD HH:MM:SS, YYYY-MM-DD HH:MM:SS)'
+        const slotValue = `[${date} ${start_at}:00, ${date} ${end_at}:00)`;
 
-		if (error) {
-			//console.error(error);
+        try {
+            await sql`
+                INSERT INTO appointments (customer_id, service_id, profile_id, slot, status)
+                VALUES (${customer_id}, ${service_id}, ${user.id}, ${slotValue}, 'pending')
+            `;
+            return { success: true };
+        } catch (err: any) {
+            // Erro 23P01: exclusion_violation (GIST EXCLUDE disparou)
+            if (err.code === '23P01') {
+                return fail(400, {
+                    message: 'Horário indisponível: coincide com outro agendamento.'
+                });
+            }
+            console.error('Erro ao criar agendamento:', err);
+            return fail(500, { message: 'Erro interno ao salvar.' });
+        }
+    },
 
-			// 3. Captura o erro da constraint EXCLUDE (código 23P01 no Postgres)
-			// Isso acontece quando o slot && outro_slot (sobreposição)
-			if (error.code === '23P01') {
-				return fail(400, {
-					message: 'Horário indisponível: este horário coincide com outro agendamento.'
-				});
-			}
+    toggleConfirmation: async ({ request, locals: { sql, user } }) => {
+        if (!user) return fail(401);
+        const id = (await request.formData()).get('id')?.toString();
 
-			return fail(500, { message: 'Erro ao salvar agendamento.' });
-		}
+        try {
+            // Toggle atômico em uma única query
+            const result = await sql`
+                UPDATE appointments
+                SET status = CASE 
+                    WHEN status = 'confirmed' THEN 'pending'::appointment_status 
+                    ELSE 'confirmed'::appointment_status 
+                END
+                WHERE id = ${id} AND profile_id = ${user.id}
+                RETURNING status
+            `;
 
-		return { success: true };
-	},
+            if (result.count === 0) return fail(404, { message: 'Não encontrado.' });
+            return { success: true };
+        } catch (err) {
+            return fail(500, { message: 'Erro ao alterar status.' });
+        }
+    },
 
-	toggleConfirmation: async ({ request, locals: { supabase, user } }) => {
-		if (!user?.id) return fail(401);
+    cancel: async ({ request, locals: { sql, user } }) => {
+        if (!user) return fail(401);
+        const id = (await request.formData()).get('id')?.toString();
 
-		const formData = await request.formData();
-		const id = formData.get('id');
+        try {
+            await sql`
+                UPDATE appointments 
+                SET status = 'cancelled' 
+                WHERE id = ${id} AND profile_id = ${user.id}
+            `;
+            return { success: true };
+        } catch (err) {
+            return fail(500, { message: 'Erro ao cancelar.' });
+        }
+    },
 
-		// 1. Primeiro, buscamos o status atual do agendamento
-		const { data: appointment, error: fetchError } = await supabase
-			.from('appointments')
-			.select('status')
-			.eq('id', id)
-			.eq('profile_id', user.id)
-			.single();
+    delete: async ({ request, locals: { sql, user } }) => {
+        if (!user) return fail(401);
+        const id = (await request.formData()).get('id')?.toString();
 
-		if (fetchError || !appointment) {
-			return fail(404, { message: 'Agendamento não encontrado.' });
-		}
-
-		// 2. Lógica de inversão (Toggle)
-		// Se estiver confirmado, volta para pending. Caso contrário, vira confirmed.
-		const newStatus = appointment.status === 'confirmed' ? 'pending' : 'confirmed';
-
-		// 3. Update no banco com o novo status
-		const { error: updateError } = await supabase
-			.from('appointments')
-			.update({ status: newStatus })
-			.eq('id', id)
-			.eq('profile_id', user.id);
-
-		if (updateError) {
-			return fail(500, { message: updateError.message });
-		}
-
-		return { success: true };
-	},
-
-	cancel: async ({ request, locals: { supabase, user } }) => {
-		if (!user?.id) return fail(401);
-
-		const formData = await request.formData();
-		const id = formData.get('id');
-
-		const { error } = await supabase
-			.from('appointments')
-			.update({ status: 'cancelled' })
-			.eq('id', id)
-			.eq('profile_id', user.id);
-
-		if (error) return fail(500, { message: error.message });
-		return { success: true };
-	},
-
-	delete: async ({ request, locals: { supabase, user } }) => {
-		if (!user?.id) return fail(401);
-
-		const formData = await request.formData();
-		const id = formData.get('id');
-
-		const { error } = await supabase
-			.from('appointments')
-			.delete()
-			.eq('id', id)
-			.eq('profile_id', user.id);
-
-		if (error) {
-			// Tratamento opcional do erro 23503 se você quiser aqui também
-			return fail(500, { message: error.message });
-		}
-
-		return { success: true };
-	}
+        try {
+            await sql`DELETE FROM appointments WHERE id = ${id} AND profile_id = ${user.id}`;
+            return { success: true };
+        } catch (err) {
+            return fail(500, { message: 'Erro ao excluir.' });
+        }
+    }
 };

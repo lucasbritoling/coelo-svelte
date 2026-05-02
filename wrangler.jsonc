@@ -7,5 +7,12 @@
 	"vars": {
 		"PUBLIC_SUPABASE_URL": "https://ftuqhtdwptawwbctpfgh.supabase.co",
 		"PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY": "sb_publishable_yAstaAnmOsf03OMgi4P4WQ_tkd8NCtr"
-	}
+	},
+	"hyperdrive": [
+		{
+			"binding": "HYPERDRIVE",
+			"id": "9204a5d3a936454e83b4fac77425a3f6",
+			"localConnectionString": "postgresql://postgres:f4eaDMravwtrr2Ww@db.ftuqhtdwptawwbctpfgh.supabase.co:5432/postgres"
+		}
+	]
 }

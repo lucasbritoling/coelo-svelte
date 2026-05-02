@@ -4,88 +4,96 @@ import { customerSchema } from '$lib/schemas/app';
 import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 
-export const load: PageServerLoad = async ({ locals: { supabase, user } }) => {
-	// 1. Defesa em profundidade: Bloqueio precoce
+export const load: PageServerLoad = async ({ locals: { sql, user } }) => {
 	if (!user) throw redirect(303, '/login');
 
-	// Dispara a validação e a query ao mesmo tempo
-	const [form, { data: customers, error }] = await Promise.all([
+	// O Promise.all continua sendo útil para performance
+	const [form, customers] = await Promise.all([
 		superValidate(zod4(customerSchema)),
-		supabase.from('customers').select('*').eq('profile_id', user?.id).order('name')
+		sql`
+            SELECT id, name, phone 
+            FROM customers 
+            WHERE profile_id = ${user.id} 
+            ORDER BY name ASC
+        `
 	]);
 
-	if (error) {
-		return { form, customers: [], error: error.message };
-	}
-
-	return { form, customers: customers ?? [] };
+	return { form, customers };
 };
 
 export const actions: Actions = {
-	upsert: async ({ request, locals: { supabase, user } }) => {
+	upsert: async ({ request, locals: { sql, user } }) => {
 		if (!user?.id) return fail(401);
 
-		// 1. Valida o formulário inteiro de uma vez
 		const form = await superValidate(request, zod4(customerSchema));
 
-		// 2. Se o Zod encontrar erros (nome curto, tel inválido, etc),
-		// ele já retorna os erros formatados para o componente
 		if (!form.valid) {
 			return fail(400, { form });
 		}
 
-		// 3. Monta o objeto de dados usando form.data (que já está tipado!)
 		const { id, name, phone } = form.data;
-		const customerData = {
-			name,
-			phone,
-			profile_id: user?.id
-		};
 
-		// 4. Supabase
-		const query = id
-			? supabase
-					.from('customers')
-					.update(customerData)
-					.eq('id', id)
-					.eq('profile_id', user?.id) // Proteção contra edição de terceiros
-					.select()
-					.single()
-			: supabase.from('customers').insert([customerData]).select().single();
+		try {
+			let result;
 
-		const { data, error } = await query;
+			if (id) {
+				// UPDATE com proteção de dono (profile_id)
+				[result] = await sql`
+                    UPDATE customers 
+                    SET name = ${name}, phone = ${phone}
+                    WHERE id = ${id} AND profile_id = ${user.id}
+                    RETURNING id, name
+                `;
+			} else {
+				// INSERT
+				[result] = await sql`
+                    INSERT INTO customers (name, phone, profile_id)
+                    VALUES (${name}, ${phone}, ${user.id})
+                    RETURNING id, name
+                `;
+			}
 
-		if (error) {
+			if (!result) {
+				return message(form, 'Cliente não encontrado ou sem permissão.', { status: 404 });
+			}
+
+			return message(form, { id: result.id, name: result.name });
+		} catch (error: any) {
+			console.error('Erro no Postgres:', error);
 			return message(form, `Erro no banco: ${error.message}`, { status: 500 });
 		}
-
-		// 2. Usamos o 'message' para devolver o ID e o Nome para o frontend
-		// Isso é o que o seu CustomerForm.svelte vai ler no 'onUpdated'
-		return message(form, { id: data.id, name: data.name });
 	},
 
-	delete: async ({ request, locals: { supabase, user } }) => {
+	delete: async ({ request, locals: { sql, user } }) => {
 		if (!user?.id) return fail(401);
 
 		const formData = await request.formData();
-		const id = formData.get('id');
+		const id = formData.get('id') as string;
 
 		if (!id) return fail(400, { message: 'ID não fornecido.' });
 
-		const { error } = await supabase
-			.from('customers')
-			.delete()
-			.eq('id', id)
-			.eq('profile_id', user?.id); // Proteção: impede deletar cliente de outro user
+		try {
+			const result = await sql`
+                DELETE FROM customers 
+                WHERE id = ${id} AND profile_id = ${user.id}
+                RETURNING id
+            `;
 
-		if (error?.code === '23503') {
-			return fail(400, {
-				message: 'Não é possível excluir: este cliente possui agendamentos vinculados'
-			});
-		} else if (error) {
-			return fail(400, { message: 'Não foi possível excluir.' });
+			if (result.count === 0) {
+				return fail(404, { message: 'Cliente não encontrado.' });
+			}
+
+			return { success: true };
+		} catch (error: any) {
+			// Código 23503 é Foreign Key Violation no Postgres
+			if (error.code === '23503') {
+				return fail(400, {
+					message: 'Não é possível excluir: este cliente possui agendamentos vinculados'
+				});
+			}
+
+			console.error('Erro ao deletar:', error);
+			return fail(500, { message: 'Não foi possível excluir o cliente.' });
 		}
-
-		return { success: true };
 	}
 };

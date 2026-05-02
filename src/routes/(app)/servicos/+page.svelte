@@ -171,7 +171,10 @@
 			<div class="relative overflow-hidden border-b last:border-b-0">
 				<!-- Fundo vermelho (ação de deletar) -->
 				<div
-					class="absolute inset-y-0 right-0 flex w-20 items-center justify-center bg-destructive"
+					class="absolute inset-y-0 right-0 flex w-20 items-center justify-center bg-destructive transition-opacity"
+					class:pointer-events-none={swipedId !== service.id}
+					class:opacity-0={swipedId !== service.id}
+					class:opacity-100={swipedId === service.id}
 				>
 					<button
 						class="flex h-full w-full flex-col items-center justify-center gap-1 text-white active:opacity-70"
@@ -184,10 +187,12 @@
 
 				<!-- Conteúdo deslizável -->
 				<div
-					class="relative z-10 flex items-center gap-3 bg-background px-4 py-3.5 will-change-transform"
+					class="relative z-20 flex items-center gap-3 bg-background px-4 py-3.5 will-change-transform"
 					class:opacity-40={!service.is_active}
 					class:transition-transform={!touching}
-					style="transform: translateX({swipedId === service.id ? SWIPE_OPEN_X : 0}px)"
+					style="transform: translateX({swipedId === service.id
+						? SWIPE_OPEN_X
+						: 0}px); touch-action: pan-y;"
 					ontouchstart={(e) => onTouchStart(e, service.id)}
 					ontouchmove={(e) => onTouchMove(e, service.id)}
 					ontouchend={(e) => onTouchEnd(e, service.id)}
@@ -216,7 +221,6 @@
 						</div>
 					</div>
 
-					<!-- Toggle (stopPropagation para não abrir o form ao clicar) -->
 					<form
 						id="form-status-{service.id}"
 						method="POST"
@@ -231,6 +235,9 @@
 								}
 							}}
 						onclick={(e) => e.stopPropagation()}
+						ontouchstart={(e) => e.stopPropagation()}
+						ontouchmove={(e) => e.stopPropagation()}
+						ontouchend={(e) => e.stopPropagation()}
 					>
 						<input type="hidden" name="id" value={service.id} />
 						<input

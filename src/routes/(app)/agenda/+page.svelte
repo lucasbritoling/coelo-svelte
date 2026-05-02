@@ -95,8 +95,6 @@
 		const dy = touchStartY - e.changedTouches[0].screenY;
 		if (Math.abs(dy) > Math.abs(dx)) return;
 		if (Math.abs(dx) > 70) {
-			// IMPORTANTE: Previne o comportamento padrão do navegador
-			// (como o "swipe to back" do iOS ou scrolls acidentais)
 			if (e.cancelable) e.preventDefault();
 
 			if (dx > 70) navigateDay(1);

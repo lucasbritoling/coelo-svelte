@@ -20,7 +20,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 				prepare: false, // Obrigatório para Hyperdrive/PgBouncer
 				max: 1, // No Edge, o ideal é 1 conexão por instância do Worker
 				idle_timeout: 20,
-				connect_timeout: 10
+				connect_timeout: 10,
+				onnotice: () => {}
 			});
 		} catch (err) {
 			console.error('Erro ao conectar ao Postgres:', err);

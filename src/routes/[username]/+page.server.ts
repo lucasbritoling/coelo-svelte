@@ -16,7 +16,6 @@ export const load: PageServerLoad = async ({ params, url, locals: { sql } }) => 
                         'id', s.id,
                         'name', s.name,
                         'duration', s.duration,
-                        'price', s.price,
                         'min_notice_hours', s.min_notice_hours,
                         'buffer_after_min', s.buffer_after_min
                     )

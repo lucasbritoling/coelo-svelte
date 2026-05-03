@@ -79,31 +79,30 @@ const authHandle: Handle = async ({ event, resolve }) => {
 		}
 	);
 
+	// 1. SEMPRE tenta obter a sessão (necessário para o /logout funcionar)
+	const { data: { session } } = await event.locals.supabase.auth.getSession();
+	event.locals.session = session;
+	event.locals.user = session?.user
+		? {
+				id: session.user.id,
+				email: session.user.email ?? '',
+				full_name: session.user.user_metadata?.full_name ?? 'Usuário'
+			}
+		: null;
+
+	// 2. Lógica de proteção de rotas (Redirecionamentos)
 	const isPrivate = PRIVATE_ROUTES.has(event.url.pathname);
 	const isPublic = PUBLIC_ROUTES.has(event.url.pathname);
 
-	if (isPrivate || isPublic) {
-		const {
-			data: { session }
-		} = await event.locals.supabase.auth.getSession();
-		event.locals.session = session;
-		event.locals.user = session?.user
-			? {
-					id: session.user.id,
-					email: session.user.email ?? '',
-					full_name: session.user.user_metadata?.full_name ?? 'Usuário'
-				}
-			: null;
-
-		if (!session && isPrivate) throw redirect(303, '/login');
-		if (session && isPublic) throw redirect(303, '/agenda');
-	}
+	if (!session && isPrivate) throw redirect(303, '/login');
+	if (session && isPublic) throw redirect(303, '/agenda');
 
 	return resolve(event, {
 		filterSerializedResponseHeaders: (name) =>
 			name === 'content-range' || name === 'x-supabase-api-version'
 	});
 };
+
 
 /**
  * 3. HOOK DE SEGURANÇA

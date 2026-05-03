@@ -217,7 +217,7 @@
 </button>
 
 <!-- ─────────────────────── DESKTOP ─────────────────────────────── -->
-<div class="hidden w-full max-w-xl flex-col gap-6 p-6 sm:flex">
+<div class="mx-auto hidden w-full max-w-lg flex-col gap-6 p-6 sm:flex">
 	<div class="flex items-center justify-between gap-4">
 		<div>
 			<h1 class="text-2xl font-bold tracking-tight">Clientes</h1>

@@ -44,7 +44,6 @@ export const actions: Actions = {
 				name: data.name,
 				duration: data.duration,
 				profile_id: user.id,
-				price: data.price ?? 0,
 				is_active: data.is_active ?? true,
 				min_notice_hours: data.min_notice_hours ?? 2,
 				buffer_after_min: data.buffer_after_min ?? 0
@@ -61,7 +60,6 @@ export const actions: Actions = {
                 ON CONFLICT (id) DO UPDATE SET
                     name = EXCLUDED.name,
                     duration = EXCLUDED.duration,
-                    price = EXCLUDED.price,
                     is_active = EXCLUDED.is_active,
                     min_notice_hours = EXCLUDED.min_notice_hours,
                     buffer_after_min = EXCLUDED.buffer_after_min

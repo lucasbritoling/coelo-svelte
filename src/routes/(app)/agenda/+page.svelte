@@ -260,7 +260,7 @@
 
 <!-- ─────────────────────── DESKTOP ─────────────────────────────── -->
 <div class="hidden sm:block">
-	<div class="mx-auto flex max-w-7xl flex-col gap-6 p-6">
+	<div class="mx-auto flex max-w-3xl flex-col gap-6 p-6">
 		<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 			<div class={navigating.to ? 'opacity-50 transition-opacity' : ''}>
 				<h1 class="text-2xl font-bold tracking-tight capitalize">{formattedTitle}</h1>
@@ -289,7 +289,7 @@
 					<div class="grid gap-3" class:opacity-50={navigating.to}>
 						{#each data.appointments as appointment (appointment.id)}
 							<Card.Root
-								class="group relative overflow-hidden border-sidebar-border/50 shadow-sm transition-all hover:border-primary/40 hover:shadow-md"
+								class="group relative max-w-sm overflow-hidden border-sidebar-border/50 shadow-sm transition-all hover:border-primary/40 hover:shadow-md"
 							>
 								<div
 									class="absolute top-2 right-2 z-10 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100"

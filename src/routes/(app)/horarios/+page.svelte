@@ -265,7 +265,7 @@
 </button>
 
 <!-- ─────────────────────── DESKTOP ─────────────────────────────── -->
-<div class="hidden w-full space-y-8 p-6 sm:block md:max-w-xl lg:max-w-3xl">
+<div class="mx-auto hidden w-full space-y-8 p-6 sm:block md:max-w-xl lg:max-w-3xl">
 	<div>
 		<h1 class="text-2xl font-bold tracking-tight">Horários</h1>
 		<p class="text-sm text-muted-foreground">Sua rotina semanal e datas excepcionais.</p>

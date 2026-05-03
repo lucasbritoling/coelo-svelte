@@ -17,8 +17,9 @@
 
 <Toaster
 	richColors
-	closeButton
+	
 	position="bottom-center"
+	expand={false}
 	toastOptions={{
 		class: 'border-border/50 bg-background shadow-lg font-sans'
 	}}

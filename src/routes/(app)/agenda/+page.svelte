@@ -76,7 +76,6 @@
 			.writeText(schedulingLink)
 			.then(() => {
 				copied = true;
-				toast.success('Link copiado!');
 				setTimeout(() => (copied = false), 2000);
 			})
 			.catch(() => toast.error('Erro ao copiar o link.'));

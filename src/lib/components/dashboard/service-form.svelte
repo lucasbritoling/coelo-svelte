@@ -37,7 +37,7 @@
 		},
 		onUpdated: ({ form }) => {
 			if (form.valid) {
-				toast.success('Serviço guardado com sucesso!');
+				toast.success('Ok');
 				const resultData = form.message?.id ? form.message : form.data;
 				onSuccess?.(resultData);
 				open = false;

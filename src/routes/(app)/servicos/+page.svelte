@@ -459,7 +459,7 @@
 						isLoading = false;
 						if (result.type === 'success') {
 							openDelete = false;
-							toast.success('Removido com sucesso!');
+							toast.success('Ok');
 						} else if (result.type === 'failure') {
 							// @ts-ignore
 							toast.error(result.data?.message ?? 'Erro ao excluir.');

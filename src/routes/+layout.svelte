@@ -12,7 +12,6 @@
 
 <Toaster
 	richColors
-	
 	expand={false}
 	position="bottom-center"
 	toastOptions={{

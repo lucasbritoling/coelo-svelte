@@ -99,19 +99,19 @@
 	action="?/create"
 	class="grid gap-6 py-4"
 	use:enhance={() => {
-    isLoading = true;
-    return async ({ result, update }) => {
-        await update();
-        isLoading = false;
+		isLoading = true;
+		return async ({ result, update }) => {
+			await update();
+			isLoading = false;
 
-        if (result.type === 'success') {
-			toast.success('Ok');
-            onSuccess?.();
-        } else if (result.type === 'failure') {
-            toast.error(result.data?.message ?? 'Erro ao agendar.');
-        }
-    };
-}}
+			if (result.type === 'success') {
+				toast.success('Ok');
+				onSuccess?.();
+			} else if (result.type === 'failure') {
+				toast.error(result.data?.message ?? 'Erro ao agendar.');
+			}
+		};
+	}}
 >
 	<input type="hidden" name="customer_id" value={customerId} />
 	<input type="hidden" name="service_id" value={serviceId} />

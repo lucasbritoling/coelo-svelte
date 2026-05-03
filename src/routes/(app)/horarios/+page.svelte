@@ -414,7 +414,7 @@
 				await update();
 				isLoading = false;
 				if (result.type === 'success') {
-					toast.success('Exceção salva com sucesso!');
+					toast.success('Ok');
 					isAvailableOverride = false;
 					if (context === 'mobile') openOverrideForm = false;
 				}

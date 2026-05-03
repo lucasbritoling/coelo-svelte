@@ -34,7 +34,7 @@
 		},
 		onUpdated: ({ form }) => {
 			if (form.valid) {
-				toast.success('Serviço guardado com sucesso!');
+				toast.success('Ok');
 				onSuccess?.(form.message?.id ? form.message : form.data);
 				open = false;
 			} else if (typeof $message === 'string') {

@@ -42,7 +42,7 @@
 		onUpdated: ({ form }) => {
 			if (form.valid) {
 				open = false;
-				toast.success('Cliente salvo com sucesso!');
+				toast.success('Ok');
 			} else {
 				toast.error($message || 'Erro de validação. Verifique os campos.');
 			}
@@ -425,7 +425,7 @@
 					return async ({ result, update }) => {
 						if (result.type === 'success') {
 							openDelete = false;
-							toast.success('Cliente removido com sucesso!');
+							toast.success('Ok');
 							await update();
 						} else if (result.type === 'failure') {
 							toast.error(result.data?.message || 'Erro ao excluir');

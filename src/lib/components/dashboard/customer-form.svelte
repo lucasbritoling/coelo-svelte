@@ -45,7 +45,7 @@
 				// ou usa o data caso seja uma edição (onde o ID já existia)
 				const resultData = form.message?.id ? form.message : form.data;
 
-				toast.success('Cliente salvo com sucesso!');
+				toast.success('Ok');
 
 				// Passe o resultData, que tem mais chances de conter o ID novo
 				onSuccess?.(resultData);

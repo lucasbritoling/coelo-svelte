@@ -68,7 +68,7 @@
 
 			open = false;
 			await tick();
-			toast.success('Serviço guardado!');
+			toast.success('Ok');
 			onSuccess?.(await res.json().catch(() => null));
 			await invalidateAll();
 		} catch {

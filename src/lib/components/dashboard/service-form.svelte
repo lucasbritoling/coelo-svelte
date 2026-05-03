@@ -1,5 +1,5 @@
 <script lang="ts">
-	import * as Sheet from '$lib/components/ui/sheet';
+	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
@@ -59,21 +59,25 @@
 	});
 </script>
 
-<Sheet.Root bind:open>
-	<Sheet.Content side="bottom" class="rounded-t-2xl px-0 pb-0 max-h-[92dvh] flex flex-col">
-		<Sheet.Header class="border-b px-6 py-4 shrink-0">
-			<Sheet.Title>{$form.id ? 'Editar Serviço' : 'Novo Serviço'}</Sheet.Title>
-		</Sheet.Header>
+<Dialog.Root bind:open>
+	<Dialog.Content
+		class="flex max-h-[90dvh] flex-col gap-0 p-0 sm:max-w-[400px]
+		       translate-y-0 top-auto bottom-0 sm:top-1/2 sm:bottom-auto
+		       rounded-b-none sm:rounded-b-lg rounded-t-2xl sm:rounded-t-lg"
+	>
+		<Dialog.Header class="shrink-0 border-b px-6 py-4">
+			<Dialog.Title>{$form.id ? 'Editar Serviço' : 'Novo Serviço'}</Dialog.Title>
+		</Dialog.Header>
 
 		<form
 			method="POST"
 			action="/servicos?/upsert"
 			use:enhance
-			class="flex flex-1 flex-col overflow-y-auto"
+			class="flex flex-1 flex-col overflow-hidden"
 		>
 			<input type="hidden" name="id" bind:value={$form.id} />
 
-			<div class="flex flex-col gap-5 px-6 py-5 overflow-y-auto flex-1">
+			<div class="flex flex-1 flex-col gap-5 overflow-y-auto px-6 py-5">
 				<!-- Nome -->
 				<div class="grid gap-2">
 					<Label for="name" class={$errors.name ? 'text-destructive' : ''}>Nome do serviço</Label>
@@ -118,7 +122,7 @@
 						type="number"
 						bind:value={$form.min_notice_hours}
 					/>
-					<p class="text-[11px] text-muted-foreground italic">Evita agendamentos de última hora.</p>
+					<p class="text-[11px] italic text-muted-foreground">Evita agendamentos de última hora.</p>
 				</div>
 
 				<div class="grid gap-2">
@@ -133,14 +137,13 @@
 							bind:value={$form.buffer_after_min}
 						/>
 					</div>
-					<p class="text-[11px] text-muted-foreground italic">
+					<p class="text-[11px] italic text-muted-foreground">
 						Tempo livre após o serviço para limpeza/descanso.
 					</p>
 				</div>
 			</div>
 
-			<!-- Footer fixo -->
-			<div class="border-t px-6 py-4 shrink-0 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+			<div class="shrink-0 border-t px-6 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
 				<Button type="submit" disabled={isLoading} class="w-full cursor-pointer">
 					{#if isLoading}
 						<LoaderCircle class="mr-2 h-4 w-4 animate-spin" /> Salvando...
@@ -150,5 +153,5 @@
 				</Button>
 			</div>
 		</form>
-	</Sheet.Content>
-</Sheet.Root>
+	</Dialog.Content>
+</Dialog.Root>

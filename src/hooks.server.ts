@@ -80,7 +80,9 @@ const authHandle: Handle = async ({ event, resolve }) => {
 	);
 
 	// 1. SEMPRE tenta obter a sessão (necessário para o /logout funcionar)
-	const { data: { session } } = await event.locals.supabase.auth.getSession();
+	const {
+		data: { session }
+	} = await event.locals.supabase.auth.getSession();
 	event.locals.session = session;
 	event.locals.user = session?.user
 		? {
@@ -102,7 +104,6 @@ const authHandle: Handle = async ({ event, resolve }) => {
 			name === 'content-range' || name === 'x-supabase-api-version'
 	});
 };
-
 
 /**
  * 3. HOOK DE SEGURANÇA

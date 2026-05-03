@@ -10,7 +10,6 @@
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import { Button } from '$lib/components/ui/button';
-	import { toast } from 'svelte-sonner';
 	import { enhance } from '$app/forms';
 
 	let { appointmentId, appointmentStatus }: { appointmentId: string; appointmentStatus: string } =
@@ -43,15 +42,9 @@
 				isLoading = true;
 				return async ({ result, update }) => {
 					if (result.type === 'success') {
-						// Toast dinâmico
-						const message =
-							appointmentStatus === 'confirmed' ? 'Confirmação removida!' : 'Presença confirmada!';
-						toast.success(message);
-
 						await update();
 						isLoading = false;
 					} else {
-						toast.error('Erro ao processar solicitação.');
 						isLoading = false;
 					}
 				};
@@ -83,13 +76,12 @@
 				method="POST"
 				action="?/cancel"
 				use:enhance={() => {
+					isLoading = true; // Define aqui fora
 					return async ({ result, update }) => {
-						isLoading = true;
 						if (result.type === 'success') {
-							toast.success('Presença cancelada.');
 							await update();
-							isLoading = false;
 						}
+						isLoading = false; // Garante que reseta sempre
 					};
 				}}
 			>
@@ -143,14 +135,12 @@
 
 						if (result.type === 'success') {
 							showConfirmDialog = false; // Fecha o modal logo
-							toast.success('Agendamento removido.');
 
 							// 2. Depois pedimos ao SvelteKit para atualizar os dados (Pode demorar)
 							// Usamos { reset: true } para limpar o form se necessário
 							await update({ reset: true });
 						} else {
 							// Se deu erro, mantemos o modal aberto para o usuário ver
-							toast.error('Erro ao remover agendamento.');
 						}
 					};
 				}}

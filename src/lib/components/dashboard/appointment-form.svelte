@@ -9,7 +9,6 @@
 	import { enhance } from '$app/forms';
 	import { toast } from 'svelte-sonner';
 	import { parseTime } from '@internationalized/date';
-	import { tick } from 'svelte';
 
 	// Importação dos componentes de formulário
 	import ServiceForm from './service-form.svelte';
@@ -68,8 +67,7 @@
 	});
 
 	// Funções de callback para quando o sub-recurso for criado
-	async function handleCustomerCreated(customer: any) {
-		await tick();
+	function handleCustomerCreated(customer: any) {
 		// Extraímos o ID do objeto que o CustomerForm enviou
 		const id = customer?.id || customer;
 
@@ -82,13 +80,12 @@
 		showCustomerModal = false; // Fecha o modal de criação
 	}
 
-	async function handleServiceCreated(service: any) {
+	function handleServiceCreated(service: any) {
 		const id = service?.id || service;
 
 		// Extraímos o ID do objeto ou da string
 
 		if (id) {
-			await tick();
 			serviceId = id; // Seleciona automaticamente
 			serviceSearch = ''; // Limpa a busca do Command
 			openService = false; // Fecha o popover da agenda

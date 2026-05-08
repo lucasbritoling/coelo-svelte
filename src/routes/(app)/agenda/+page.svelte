@@ -41,8 +41,7 @@
 		return new Date(y, m - 1, d);
 	});
 
-	const today = new Date();
-	const todayStr = today.toISOString().split('T')[0];
+	const todayStr = $derived(new Date(ticker).toISOString().split('T')[0]);
 
 	const isTodayView = $derived(data.selectedDate === todayStr);
 

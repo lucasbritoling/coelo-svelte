@@ -1,11 +1,5 @@
 <script lang="ts">
-	import {
-		Plus,
-		Copy,
-		MessageCircle,
-		Check,
-		CalendarDays
-	} from '@lucide/svelte';
+	import { Plus, Copy, MessageCircle, Check, CalendarDays } from '@lucide/svelte';
 
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
@@ -21,20 +15,20 @@
 	let { data } = $props();
 	let ticker = $state(Date.now());
 	$effect(() => {
-    const interval = setInterval(() => {
-        ticker = Date.now();
-    }, 60000); // 1 minuto
-    
-    return () => clearInterval(interval);
-});
-const timeFormatter = new Intl.DateTimeFormat('pt-BR', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
-});
+		const interval = setInterval(() => {
+			ticker = Date.now();
+		}, 60000); // 1 minuto
 
-// Agora o 'now' será atualizado a cada minuto porque depende de 'ticker'
-const reactiveNow = $derived(timeFormatter.format(new Date(ticker)));
+		return () => clearInterval(interval);
+	});
+	const timeFormatter = new Intl.DateTimeFormat('pt-BR', {
+		hour: '2-digit',
+		minute: '2-digit',
+		hour12: false
+	});
+
+	// Agora o 'now' será atualizado a cada minuto porque depende de 'ticker'
+	const reactiveNow = $derived(timeFormatter.format(new Date(ticker)));
 
 	let showAppointmentModal = $state(false);
 	let copied = $state(false);
@@ -157,32 +151,20 @@ const reactiveNow = $derived(timeFormatter.format(new Date(ticker)));
 	};
 
 	// ── Organização ───────────────────────────────────────────────
-	const now = $derived(
-		new Intl.DateTimeFormat('pt-BR', {
-			hour: '2-digit',
-			minute: '2-digit',
-			hour12: false
-		}).format(new Date())
-	);
-
 	const nextAppointment = $derived.by(() => {
 		if (!isTodayView) return null;
-
-		return data.appointments.find((a: any) => a.start_at >= now) ?? null;
+		// Agora ele reage ao reactiveNow!
+		return data.appointments.find((a: any) => a.start_at >= reactiveNow) ?? null;
 	});
 
 	const laterAppointments = $derived.by(() => {
 		if (!isTodayView) return [];
-
-		return data.appointments.filter(
-			(a: any) => a !== nextAppointment && a.start_at >= now
-		);
+		return data.appointments.filter((a: any) => a !== nextAppointment && a.start_at >= reactiveNow);
 	});
 
 	const pastAppointments = $derived.by(() => {
 		if (!isTodayView) return [];
-
-		return data.appointments.filter((a: any) => a.start_at < now);
+		return data.appointments.filter((a: any) => a.start_at < reactiveNow);
 	});
 
 	function soonLabel(t: string) {
@@ -229,43 +211,43 @@ const reactiveNow = $derived(timeFormatter.format(new Date(ticker)));
 		</div>
 
 		<!-- STRIP -->
-<div class="no-scrollbar flex gap-2 overflow-x-auto px-5 pb-4">
-	{#each strip as day}
-		<button
-			onclick={() => {
-				const newUrl = new URL(page.url);
-				newUrl.searchParams.set('date', day.str);
+		<div class="no-scrollbar flex gap-2 overflow-x-auto px-5 pb-4">
+			{#each strip as day}
+				<button
+					onclick={() => {
+						const newUrl = new URL(page.url);
+						newUrl.searchParams.set('date', day.str);
 
-				goto(newUrl.search, {
-					replaceState: true,
-					keepFocus: true,
-					noScroll: true
-				});
-			}}
-			class={`flex min-w-[58px] shrink-0 flex-col items-center rounded-full border py-3 transition-all ${
-				day.str === data.selectedDate
-					? 'border-black opacity-100'
-					: 'border-border/40 opacity-45'
-			}`}
-		>
-			<span
-				class="text-[10px] tracking-wide uppercase"
-				class:text-black={day.str === data.selectedDate}
-				class:text-muted-foreground={day.str !== data.selectedDate}
-			>
-				{day.wd}
-			</span>
+						goto(newUrl.search, {
+							replaceState: true,
+							keepFocus: true,
+							noScroll: true
+						});
+					}}
+					class={`flex min-w-[58px] shrink-0 flex-col items-center rounded-full border py-3 transition-all ${
+						day.str === data.selectedDate
+							? 'border-black opacity-100'
+							: 'border-border/40 opacity-45'
+					}`}
+				>
+					<span
+						class="text-[10px] tracking-wide uppercase"
+						class:text-black={day.str === data.selectedDate}
+						class:text-muted-foreground={day.str !== data.selectedDate}
+					>
+						{day.wd}
+					</span>
 
-			<span
-				class="mt-0.5 text-[16px] leading-none font-medium"
-				class:text-black={day.str === data.selectedDate}
-				class:text-muted-foreground={day.str !== data.selectedDate}
-			>
-				{day.day}
-			</span>
-		</button>
-	{/each}
-</div>
+					<span
+						class="mt-0.5 text-[16px] leading-none font-medium"
+						class:text-black={day.str === data.selectedDate}
+						class:text-muted-foreground={day.str !== data.selectedDate}
+					>
+						{day.day}
+					</span>
+				</button>
+			{/each}
+		</div>
 	</div>
 
 	<!-- CONTENT -->
@@ -277,47 +259,43 @@ const reactiveNow = $derived(timeFormatter.format(new Date(ticker)));
 				>
 					<CalendarDays class="mb-3 size-9 text-muted-foreground/30" />
 
-					<p class="text-sm text-muted-foreground">
-						Nenhum agendamento neste dia.
-					</p>
+					<p class="text-sm text-muted-foreground">Nenhum agendamento neste dia.</p>
 				</div>
 			</div>
-		{:else}
-			{#if isTodayView}
-				{#if nextAppointment}
-					<p class="section-label">próximo</p>
+		{:else if isTodayView}
+			{#if nextAppointment}
+				<p class="section-label">próximo</p>
 
-					<div class="px-3">
-						{@render card(nextAppointment, true, false, true)}
-					</div>
-				{/if}
+				<div class="px-3">
+					{@render card(nextAppointment, true, false, true)}
+				</div>
+			{/if}
 
-				{#if laterAppointments.length > 0}
-					<p class="section-label">mais tarde</p>
+			{#if laterAppointments.length > 0}
+				<p class="section-label">mais tarde</p>
 
-					<div class="flex flex-col gap-2 px-3">
-						{#each laterAppointments as appointment}
-							{@render card(appointment)}
-						{/each}
-					</div>
-				{/if}
-
-				{#if pastAppointments.length > 0}
-					<p class="section-label">anteriores</p>
-
-					<div class="flex flex-col gap-2 px-3">
-						{#each pastAppointments as appointment}
-							{@render card(appointment, false, true)}
-						{/each}
-					</div>
-				{/if}
-			{:else}
-				<div class="flex flex-col gap-2 px-3 pt-3">
-					{#each data.appointments as appointment}
+				<div class="flex flex-col gap-2 px-3">
+					{#each laterAppointments as appointment}
 						{@render card(appointment)}
 					{/each}
 				</div>
 			{/if}
+
+			{#if pastAppointments.length > 0}
+				<p class="section-label">anteriores</p>
+
+				<div class="flex flex-col gap-2 px-3">
+					{#each pastAppointments as appointment}
+						{@render card(appointment, false, true)}
+					{/each}
+				</div>
+			{/if}
+		{:else}
+			<div class="flex flex-col gap-2 px-3 pt-3">
+				{#each data.appointments as appointment}
+					{@render card(appointment)}
+				{/each}
+			</div>
 		{/if}
 
 		<!-- LINK CARD -->
@@ -383,10 +361,7 @@ const reactiveNow = $derived(timeFormatter.format(new Date(ticker)));
 				</div>
 
 				<div class="shrink-0">
-					<AppointmentCardAction
-						appointmentId={appt.id}
-						appointmentStatus={appt.status}
-					/>
+					<AppointmentCardAction appointmentId={appt.id} appointmentStatus={appt.status} />
 				</div>
 			</div>
 
@@ -432,7 +407,7 @@ const reactiveNow = $derived(timeFormatter.format(new Date(ticker)));
 </button>
 
 <!-- DESKTOP -->
-<div class="hidden sm:block max-w-lg mx-auto">
+<div class="mx-auto hidden max-w-lg sm:block">
 	<div class="mx-auto max-w-5xl p-8">
 		<div class="mb-8 flex items-center justify-between">
 			<div>
@@ -440,14 +415,12 @@ const reactiveNow = $derived(timeFormatter.format(new Date(ticker)));
 					{headerLabel}
 				</h1>
 
-				<p class="mt-2 text-muted-foreground">
-					Visualize e gerencie seus atendimentos.
-				</p>
+				<p class="mt-2 text-muted-foreground">Visualize e gerencie seus atendimentos.</p>
 			</div>
 
 			<Button
 				onclick={() => (showAppointmentModal = true)}
-				class="h-12 rounded-2xl px-6 cursor-pointer"
+				class="h-12 cursor-pointer rounded-2xl px-6"
 			>
 				<Plus class="mr-2 size-5" />
 				Novo Agendamento
@@ -456,9 +429,7 @@ const reactiveNow = $derived(timeFormatter.format(new Date(ticker)));
 
 		<div class="grid gap-4">
 			{#each data.appointments as appointment}
-				<div
-					class="rounded-[30px] border bg-card p-6 transition-all hover:border-foreground/20"
-				>
+				<div class="rounded-[30px] border bg-card p-6 transition-all hover:border-foreground/20">
 					<div class="flex items-start justify-between gap-6">
 						<div class="flex gap-5">
 							<div class="flex min-w-[54px] flex-col items-center">
@@ -466,10 +437,7 @@ const reactiveNow = $derived(timeFormatter.format(new Date(ticker)));
 									{appointment.start_at}
 								</span>
 
-								<div
-									class="my-2 w-px flex-1 bg-border"
-									style="min-height:30px"
-								></div>
+								<div class="my-2 w-px flex-1 bg-border" style="min-height:30px"></div>
 
 								<span class="text-sm text-muted-foreground">
 									{appointment.end_at}

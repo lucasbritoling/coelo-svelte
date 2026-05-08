@@ -65,9 +65,9 @@
 
 <Dialog.Root bind:open>
 	<Dialog.Content
-		class="top-auto bottom-0 flex max-h-[90dvh] translate-y-0 flex-col
-		       gap-0 rounded-t-2xl rounded-b-none p-0 sm:top-1/2
-		       sm:bottom-auto sm:max-w-[400px] sm:rounded-t-lg sm:rounded-b-lg"
+		class="flex max-h-[90dvh] flex-col
+		       gap-0 p-0
+		       sm:max-w-100"
 	>
 		<Dialog.Header class="shrink-0 border-b px-6 py-4">
 			<Dialog.Title>{$form.id ? 'Editar Serviço' : 'Novo Serviço'}</Dialog.Title>

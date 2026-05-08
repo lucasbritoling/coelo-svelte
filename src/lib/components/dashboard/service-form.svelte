@@ -10,11 +10,13 @@
 	let {
 		service = null,
 		open = $bindable(),
+		formData,
 		initialName = '',
 		onSuccess
 	} = $props<{
 		service?: any;
 		open: boolean;
+		formData?: any;
 		initialName?: string;
 		onSuccess?: (newService: any) => void;
 	}>();
@@ -73,19 +75,22 @@
 			use:enhance={() => {
 				isLoading = true;
 				return async ({ result, update }) => {
-					// O 'update' aplica o comportamento padrão do SvelteKit (resetar se necessário)
-					await update({ reset: false });
-					isLoading = false;
+    await update({ reset: false });
+    isLoading = false;
 
-					if (result.type === 'success') {
-						// @ts-ignore - os dados retornados pela sua action
-						onSuccess?.(result.data);
-						open = false; // FECHA O MODAL IMEDIATAMENTE
-					} else if (result.type === 'failure') {
-						// @ts-ignore
-						toast.error(result.data?.message || 'Erro ao salvar serviço');
-					}
-				};
+    if (result.type === 'success') {
+        // Agora o dado está exatamente onde a Action colocou: em result.data.service
+        // @ts-ignore
+        const newService = result.data?.service;
+        
+        if (newService) {
+            onSuccess?.(newService);
+        }
+        open = false; 
+    } else if (result.type === 'failure') {
+        // ... erro
+    }
+};
 			}}
 			class="flex flex-1 flex-col overflow-hidden"
 		>

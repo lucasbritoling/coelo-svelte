@@ -66,7 +66,10 @@ export const actions: Actions = {
                 RETURNING id, name
             `;
 
-			return message(form, { id: row.id, name: row.name });
+			return { 
+    success: true, 
+    service: { id: row.id, name: row.name } // Enviamos o objeto que precisamos
+};
 		} catch (err) {
 			console.error('Erro no upsert:', err);
 			return message(form, 'Erro técnico ao salvar serviço.', { status: 500 });

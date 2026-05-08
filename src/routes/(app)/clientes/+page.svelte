@@ -136,7 +136,14 @@
 			</div>
 		{:else}
 			<div class="py-16 text-center">
-				<p class="text-sm italic text-muted-foreground">Nenhum cliente encontrado.</p>
+				{#if isSearching}
+					<div class="flex flex-col items-center gap-2">
+						<LoaderCircle class="h-5 w-5 animate-spin text-primary" />
+						<p class="text-sm text-muted-foreground">Buscando clientes...</p>
+					</div>
+				{:else}
+					<p class="text-sm italic text-muted-foreground">Nenhum cliente encontrado.</p>
+				{/if}
 			</div>
 		{/each}
 	</div>
@@ -230,9 +237,16 @@
 					</tr>
 				{:else}
 					<tr>
-						<td colspan="3" class="p-8 text-center italic text-muted-foreground"
-							>Nenhum cliente encontrado.</td
-						>
+						<td colspan="3" class="p-8 text-center">
+							{#if isSearching}
+								<div class="flex items-center justify-center gap-2 text-muted-foreground">
+									<LoaderCircle class="h-4 w-4 animate-spin text-primary" />
+									<span>Pesquisando na base...</span>
+								</div>
+							{:else}
+								<span class="italic text-muted-foreground">Nenhum cliente encontrado.</span>
+							{/if}
+						</td>
 					</tr>
 				{/each}
 			</tbody>

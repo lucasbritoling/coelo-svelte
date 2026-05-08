@@ -8,20 +8,22 @@ import { customerSchema, serviceSchema } from '$lib/schemas/app';
 export const load: PageServerLoad = async ({ url, locals: { sql, user } }) => {
 	if (!user) throw redirect(303, '/login');
 
+	// 1. Validação estrita da data para evitar ataques de string ou lixo na query
 	const dateParam = url.searchParams.get('date') ?? today(getLocalTimeZone()).toString();
-	const startOfDay = `${dateParam} 00:00:00`;
-	const endOfDay = `${dateParam} 23:59:59`;
+	if (!/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+		throw error(400, 'Data inválida');
+	}
 
 	try {
 		const [customerForm, serviceForm, rawAppointments, customers, services, profile] =
 			await Promise.all([
 				superValidate(zod4(customerSchema)),
 				superValidate(zod4(serviceSchema)),
-				// TO_CHAR é o segredo para ignorar problemas de Timezone do driver
+
+				// 2. Query de Appointments: Mais performática e segura
 				sql`
                 SELECT 
-                    a.id, 
-                    a.status, 
+                    a.id, a.status, 
                     to_char(lower(a.slot), 'HH24:MI') as start_at,
                     to_char(upper(a.slot), 'HH24:MI') as end_at,
                     c.name as customer_name,
@@ -31,16 +33,27 @@ export const load: PageServerLoad = async ({ url, locals: { sql, user } }) => {
                 JOIN customers c ON a.customer_id = c.id
                 JOIN services s ON a.service_id = s.id
                 WHERE a.profile_id = ${user.id}
-                  AND a.slot && tsrange(${startOfDay}, ${endOfDay})
+                  -- Filtro exato por dia usando cast para DATE
+                  AND lower(a.slot)::date = ${dateParam}::date
                 ORDER BY lower(a.slot) ASC
             `,
-				sql`SELECT id, name FROM customers WHERE profile_id = ${user.id} ORDER BY name`,
-				sql`SELECT id, name, duration FROM services WHERE profile_id = ${user.id} AND is_active = true ORDER BY name`,
-				sql`SELECT username FROM profiles WHERE id = ${user.id}`.then((r) => r[0])
+
+				// 3. Clientes com LIMIT (Segurança de memória)
+				// Se tiver mais de 100, o ideal é usar um combo-box com busca
+				sql`SELECT id, name FROM customers 
+                    WHERE profile_id = ${user.id} 
+                    ORDER BY name 
+                    LIMIT 100`,
+
+				sql`SELECT id, name, duration FROM services 
+                    WHERE profile_id = ${user.id} AND is_active = true 
+                    ORDER BY name`,
+
+				sql`SELECT username FROM profiles WHERE id = ${user.id} LIMIT 1`.then((r) => r[0])
 			]);
 
 		return {
-			appointments: rawAppointments, // Agora já vem como "09:00" do SQL
+			appointments: rawAppointments,
 			customers,
 			services,
 			username: profile?.username ?? 'user',
@@ -49,8 +62,9 @@ export const load: PageServerLoad = async ({ url, locals: { sql, user } }) => {
 			serviceForm
 		};
 	} catch (err) {
-		console.error('Erro ao carregar agenda:', err);
-		throw error(500, 'Erro ao carregar dados da agenda.');
+		// Log detalhado internamente, mas mensagem genérica para o usuário
+		console.error(`[Agenda Load Error] User: ${user.id}, Date: ${dateParam}:`, err);
+		throw error(500, 'Não foi possível carregar a agenda.');
 	}
 };
 

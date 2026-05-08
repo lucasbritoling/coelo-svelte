@@ -147,6 +147,11 @@
 			</div>
 		{/each}
 	</div>
+	{#if data.customers.length >= 100}
+		<p class="mt-2 text-center text-[10px] tracking-widest text-muted-foreground/60 uppercase">
+			Mostrando os 100 primeiros. Use a busca para filtrar.
+		</p>
+	{/if}
 </div>
 
 <!-- FAB -->
@@ -252,6 +257,11 @@
 			</tbody>
 		</table>
 	</div>
+	{#if data.customers.length >= 100}
+		<p class="mt-2 text-center text-[10px] tracking-widest text-muted-foreground/60 uppercase">
+			Mostrando os 100 primeiros. Use a busca para filtrar.
+		</p>
+	{/if}
 </div>
 
 <!-- ────────────────── Dialog Adaptativo ──────────────────────── -->

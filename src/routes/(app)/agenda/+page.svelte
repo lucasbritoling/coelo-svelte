@@ -19,6 +19,22 @@
 	import { toast } from 'svelte-sonner';
 
 	let { data } = $props();
+	let ticker = $state(Date.now());
+	$effect(() => {
+    const interval = setInterval(() => {
+        ticker = Date.now();
+    }, 60000); // 1 minuto
+    
+    return () => clearInterval(interval);
+});
+const timeFormatter = new Intl.DateTimeFormat('pt-BR', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+});
+
+// Agora o 'now' será atualizado a cada minuto porque depende de 'ticker'
+const reactiveNow = $derived(timeFormatter.format(new Date(ticker)));
 
 	let showAppointmentModal = $state(false);
 	let copied = $state(false);
@@ -174,10 +190,10 @@
 
 		const [h, m] = t.split(':').map(Number);
 
-		const target = new Date();
+		const target = new Date(ticker);
 		target.setHours(h, m, 0, 0);
 
-		const diff = Math.floor((target.getTime() - Date.now()) / 60000);
+		const diff = Math.floor((target.getTime() - ticker) / 60000);
 
 		if (diff <= 0) return 'agora';
 		if (diff < 60) return `em ${diff} min`;

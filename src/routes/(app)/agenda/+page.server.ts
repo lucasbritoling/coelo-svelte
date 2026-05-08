@@ -14,6 +14,8 @@ export const load: PageServerLoad = async ({ url, locals: { sql, user } }) => {
 		throw error(400, 'Data inválida');
 	}
 
+	const searchQuery = url.searchParams.get('q')?.trim() ?? '';
+
 	try {
 		const [customerForm, serviceForm, rawAppointments, customers, services, profile] =
 			await Promise.all([
@@ -41,9 +43,10 @@ export const load: PageServerLoad = async ({ url, locals: { sql, user } }) => {
 				// 3. Clientes com LIMIT (Segurança de memória)
 				// Se tiver mais de 100, o ideal é usar um combo-box com busca
 				sql`SELECT id, name FROM customers 
-                    WHERE profile_id = ${user.id} 
-                    ORDER BY name 
-                    LIMIT 100`,
+    WHERE profile_id = ${user.id} 
+    ${searchQuery ? sql`AND name ILIKE ${'%' + searchQuery + '%'}` : sql``}
+    ORDER BY name 
+    LIMIT 100`,
 
 				sql`SELECT id, name, duration FROM services 
                     WHERE profile_id = ${user.id} AND is_active = true 

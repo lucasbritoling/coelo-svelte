@@ -363,7 +363,7 @@
 							onclick={copyToClipboard}
 							variant={copied ? 'default' : 'secondary'}
 							size="sm"
-							class="w-full gap-2 text-xs cursor-pointer font-medium transition-all hover:shadow-sm"
+							class="w-full cursor-pointer gap-2 text-xs font-medium transition-all hover:shadow-sm"
 						>
 							{#if copied}
 								<Check class="h-3.5 w-3.5" /> Copiado!

@@ -17,7 +17,7 @@
 		{#each navItems as item (item.url)}
 			<Sidebar.MenuItem>
 				<Sidebar.MenuButton
-					class="h-12 text-lg sm:h-9 sm:text-sm cursor-pointer"
+					class="h-12 cursor-pointer text-lg sm:h-9 sm:text-sm"
 					isActive={page.url.pathname === item.url}
 					onclick={() => goto(item.url)}
 					onmouseenter={() => preloadData(item.url)}

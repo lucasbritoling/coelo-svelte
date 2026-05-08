@@ -1,8 +1,14 @@
 <!doctype html>
-<html lang="en" style="overscroll-behavior-y: none">
+<html
+	lang="en"
+	style="overscroll-behavior-y: none; scrollbar-width: none; -ms-overflow-style: none"
+>
 	<head>
 		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover"
+		/>
 
 		<title>Coelo</title>
 		<meta name="description" content="Link de autoagendamento. Rápido. Simples." />
@@ -15,6 +21,11 @@
 		<link rel="icon" type="image/svg+xml" href="%sveltekit.assets%/favicon.svg" />
 
 		<link rel="manifest" href="/manifest.webmanifest" />
+		<style>
+			::-webkit-scrollbar {
+				display: none;
+			}
+		</style>
 
 		%sveltekit.head%
 	</head>
@@ -27,6 +38,8 @@
 			user-select: none;
 			-webkit-tap-highlight-color: transparent;
 			-webkit-touch-callout: none;
+			scrollbar-width: none;
+			-ms-overflow-style: none;
 		"
 	>
 		<div style="display: contents">%sveltekit.body%</div>

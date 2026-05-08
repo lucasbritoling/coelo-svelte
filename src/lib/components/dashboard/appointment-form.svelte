@@ -97,7 +97,7 @@
 <form
 	method="POST"
 	action="?/create"
-	class="grid gap-6 py-4"
+	class="grid gap-6 px-6 py-6"
 	use:enhance={() => {
 		isLoading = true;
 		return async ({ result, update }) => {
@@ -105,7 +105,7 @@
 			isLoading = false;
 
 			if (result.type === 'success') {
-				toast.success('Ok');
+				// Toast de sucesso removido
 				onSuccess?.();
 			} else if (result.type === 'failure') {
 				toast.error(result.data?.message ?? 'Erro ao agendar.');

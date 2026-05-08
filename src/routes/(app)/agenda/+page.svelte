@@ -13,18 +13,15 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import * as Dialog from '$lib/components/ui/dialog';
-	import * as Drawer from '$lib/components/ui/drawer';
 	import * as Card from '$lib/components/ui/card';
 	import AppointmentForm from '$lib/components/dashboard/appointment-form.svelte';
 	import AppointmentCardAction from '$lib/components/dashboard/appointment-card-action.svelte';
 	import { navigating, page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
-	import { MediaQuery } from 'svelte/reactivity';
 
 	let { data } = $props();
 
-	const isDesktop = new MediaQuery('(min-width: 640px)');
 	let showAppointmentModal = $state(false);
 	let copied = $state(false);
 
@@ -378,13 +375,16 @@
 	</div>
 </div>
 
-{#if isDesktop.current}
-	<Dialog.Root bind:open={showAppointmentModal}>
-		<Dialog.Content class="sm:max-w-[425px]">
-			<Dialog.Header>
-				<Dialog.Title>Novo Horário</Dialog.Title>
-				<Dialog.Description class="capitalize">{formattedTitle}</Dialog.Description>
-			</Dialog.Header>
+<Dialog.Root bind:open={showAppointmentModal}>
+	<Dialog.Content
+		class="flex max-h-[90dvh] w-[95vw] flex-col gap-0 overflow-hidden rounded-xl p-0 sm:max-w-106.25"
+	>
+		<Dialog.Header class="shrink-0 border-b px-6 py-4">
+			<Dialog.Title>Novo Horário</Dialog.Title>
+			<Dialog.Description class="capitalize">{formattedTitle}</Dialog.Description>
+		</Dialog.Header>
+
+		<div class="flex-1 overflow-y-auto">
 			<AppointmentForm
 				customers={data.customers}
 				services={data.services}
@@ -392,31 +392,6 @@
 				{data}
 				onSuccess={() => (showAppointmentModal = false)}
 			/>
-		</Dialog.Content>
-	</Dialog.Root>
-{:else}
-	<Drawer.Root bind:open={showAppointmentModal}>
-		<Drawer.Content>
-			<Drawer.Header class="border-b text-left">
-				<Drawer.Title>Novo Horário</Drawer.Title>
-				<Drawer.Description class="capitalize">{formattedTitle}</Drawer.Description>
-			</Drawer.Header>
-			<div class="overflow-y-auto px-4 py-5">
-				<AppointmentForm
-					customers={data.customers}
-					services={data.services}
-					selectedDate={data.selectedDate}
-					{data}
-					onSuccess={() => (showAppointmentModal = false)}
-				/>
-			</div>
-			<Drawer.Footer class="border-t">
-				<Drawer.Close>
-					{#snippet child({ props })}
-						<Button {...props} variant="outline" class="w-full">Cancelar</Button>
-					{/snippet}
-				</Drawer.Close>
-			</Drawer.Footer>
-		</Drawer.Content>
-	</Drawer.Root>
-{/if}
+		</div>
+	</Dialog.Content>
+</Dialog.Root>

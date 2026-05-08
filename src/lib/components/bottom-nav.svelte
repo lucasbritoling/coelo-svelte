@@ -31,7 +31,7 @@
 				py-3 text-[11px] font-medium tracking-wide
 				transition-all duration-75 active:scale-95
 				{active ? 'text-primary' : 'text-muted-foreground'}
-				appearance-none bg-transparent border-none outline-none
+				appearance-none border-none bg-transparent outline-none
 			"
 		>
 			<item.icon

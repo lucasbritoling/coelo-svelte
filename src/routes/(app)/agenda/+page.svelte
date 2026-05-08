@@ -431,7 +431,7 @@
 
 			<Button
 				onclick={() => (showAppointmentModal = true)}
-				class="h-12 rounded-2xl px-6"
+				class="h-12 rounded-2xl px-6 cursor-pointer"
 			>
 				<Plus class="mr-2 size-5" />
 				Novo Agendamento

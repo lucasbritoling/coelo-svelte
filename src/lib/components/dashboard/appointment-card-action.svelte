@@ -27,19 +27,19 @@
 			value: 'pending',
 			label: 'Marcar pendente',
 			icon: CircleQuestionMark,
-			class: 'hover:bg-accent'
+			class: 'hover:bg-accent cursor-pointer'
 		},
 		{
 			value: 'confirmed',
 			label: 'Marcar confirmado',
 			icon: CircleCheckBig,
-			class: 'hover:bg-emerald-500/10 hover:text-emerald-600'
+			class: 'hover:bg-emerald-500/10 hover:text-emerald-600 cursor-pointer'
 		},
 		{
 			value: 'cancelled',
 			label: 'Marcar cancelado',
 			icon: CircleSlash,
-			class: 'hover:bg-destructive/10 hover:text-destructive'
+			class: 'hover:bg-destructive/10 hover:text-destructive cursor-pointer'
 		}
 	] as const;
 </script>

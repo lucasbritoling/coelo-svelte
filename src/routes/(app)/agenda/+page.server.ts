@@ -104,28 +104,41 @@ export const actions: Actions = {
 		}
 	},
 
-	toggleConfirmation: async ({ request, locals: { sql, user } }) => {
-		if (!user) return fail(401);
-		const id = (await request.formData()).get('id')?.toString();
+	setStatus: async ({ request, locals: { sql, user } }) => {
+	if (!user) return fail(401);
 
-		try {
-			// Toggle atômico em uma única query
-			const result = await sql`
-                UPDATE appointments
-                SET status = CASE 
-                    WHEN status = 'confirmed' THEN 'pending'::appointment_status 
-                    ELSE 'confirmed'::appointment_status 
-                END
-                WHERE id = ${id} AND profile_id = ${user.id}
-                RETURNING status
-            `;
+	const form = await request.formData();
 
-			if (result.count === 0) return fail(404, { message: 'Não encontrado.' });
-			return { success: true };
-		} catch (err) {
-			return fail(500, { message: 'Erro ao alterar status.' });
+	const id = form.get('id')?.toString();
+	const status = form.get('status')?.toString();
+
+	if (!id || !status) {
+		return fail(400, { message: 'Dados inválidos.' });
+	}
+
+	const allowedStatuses = ['pending', 'confirmed', 'cancelled'];
+
+	if (!allowedStatuses.includes(status)) {
+		return fail(400, { message: 'Status inválido.' });
+	}
+
+	try {
+		const result = await sql`
+			UPDATE appointments
+			SET status = ${status}::appointment_status
+			WHERE id = ${id}
+			AND profile_id = ${user.id}
+		`;
+
+		if (result.count === 0) {
+			return fail(404, { message: 'Agendamento não encontrado.' });
 		}
-	},
+
+		return { success: true };
+	} catch (err) {
+		return fail(500, { message: 'Erro ao alterar status.' });
+	}
+},
 
 	cancel: async ({ request, locals: { sql, user } }) => {
 		if (!user) return fail(401);

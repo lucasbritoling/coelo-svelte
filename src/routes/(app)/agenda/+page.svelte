@@ -287,9 +287,7 @@
 							<Card.Root
 								class="group relative max-w-sm overflow-hidden border-sidebar-border/50 shadow-sm transition-all hover:border-primary/40 hover:shadow-md"
 							>
-								<div
-									class="absolute top-2 right-2 z-10 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100"
-								>
+								<div class="absolute top-2 right-2 z-10">
 									<AppointmentCardAction
 										appointmentId={appointment.id}
 										appointmentStatus={appointment.status}

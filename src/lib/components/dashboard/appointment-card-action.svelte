@@ -1,14 +1,16 @@
 <script lang="ts">
 	import {
-		Ellipsis,
+		Pencil,
 		CircleQuestionMark,
 		CircleCheckBig,
 		Trash2,
 		LoaderCircle,
 		CircleSlash
 	} from '@lucide/svelte';
+
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
+
 	import { Button } from '$lib/components/ui/button';
 	import { enhance } from '$app/forms';
 
@@ -18,86 +20,86 @@
 	let isDeleting = $state(false);
 	let isLoading = $state(false);
 	let showConfirmDialog = $state(false);
+	let menuOpen = $state(false);
+
+	const statusOptions = [
+		{
+			value: 'pending',
+			label: 'Marcar pendente',
+			icon: CircleQuestionMark,
+			class: 'hover:bg-accent'
+		},
+		{
+			value: 'confirmed',
+			label: 'Marcar confirmado',
+			icon: CircleCheckBig,
+			class: 'hover:bg-emerald-500/10 hover:text-emerald-600'
+		},
+		{
+			value: 'cancelled',
+			label: 'Marcar cancelado',
+			icon: CircleSlash,
+			class: 'hover:bg-destructive/10 hover:text-destructive'
+		}
+	] as const;
 </script>
 
-<DropdownMenu.Root>
+<DropdownMenu.Root bind:open={menuOpen}>
 	<DropdownMenu.Trigger>
 		{#snippet child({ props })}
 			<Button
 				{...props}
 				variant="ghost"
 				size="icon"
-				class="size-8 cursor-pointer text-muted-foreground transition-colors hover:bg-accent data-[state=open]:bg-accent"
+				class="size-8 cursor-pointer text-muted-foreground transition-colors hover:bg-accent hover:text-foreground data-[state=open]:bg-accent"
 			>
-				<Ellipsis class="size-4" />
+				<Pencil class="size-4" />
 			</Button>
 		{/snippet}
 	</DropdownMenu.Trigger>
 
-	<DropdownMenu.Content align="end" class="min-w-48">
-		<form
-			method="POST"
-			action="?/toggleConfirmation"
-			use:enhance={() => {
-				isLoading = true;
-				return async ({ result, update }) => {
-					if (result.type === 'success') {
-						await update();
-						isLoading = false;
-					} else {
-						isLoading = false;
-					}
-				};
-			}}
-		>
-			<input type="hidden" name="id" value={appointmentId} />
-			<button
-				type="submit"
-				disabled={isLoading}
-				class="flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm transition-colors outline-none hover:bg-accent disabled:opacity-50
-        "
-			>
-				{#if isLoading}
-					<LoaderCircle class="size-3.5 animate-spin" />
-				{:else if appointmentStatus === 'confirmed'}
-					<CircleQuestionMark class="size-3.5" />
-				{:else}
-					<CircleCheckBig class="size-3.5" />
-				{/if}
-
-				<span>
-					{appointmentStatus === 'confirmed' ? 'Desfazer confirmação' : 'Confirmar presença'}
-				</span>
-			</button>
-		</form>
-
-		{#if appointmentStatus !== 'cancelled'}
+	<DropdownMenu.Content align="end" class="min-w-56">
+		{#each statusOptions as option}
 			<form
 				method="POST"
-				action="?/cancel"
+				action="?/setStatus"
 				use:enhance={() => {
-					isLoading = true; // Define aqui fora
+					isLoading = true;
+
 					return async ({ result, update }) => {
 						if (result.type === 'success') {
+							menuOpen = false;
 							await update();
 						}
-						isLoading = false; // Garante que reseta sempre
+
+						isLoading = false;
 					};
 				}}
 			>
 				<input type="hidden" name="id" value={appointmentId} />
+				<input type="hidden" name="status" value={option.value} />
+
 				<button
 					type="submit"
-					disabled={isLoading}
-					class="flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-					>{#if isLoading}
-						<LoaderCircle class="size-3.5 animate-spin" /> <span>Cancelar presença</span>
+					disabled={isLoading || appointmentStatus === option.value}
+					class={`flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm transition-colors disabled:cursor-default disabled:opacity-50 ${option.class}`}
+				>
+					{#if isLoading && appointmentStatus !== option.value}
+						<LoaderCircle class="size-3.5 animate-spin" />
 					{:else}
-						<CircleSlash class="size-3.5" /> <span>Cancelar presença</span>
+						<option.icon class="size-3.5" />
+					{/if}
+
+					<span>{option.label}</span>
+
+					{#if appointmentStatus === option.value}
+						<span class="ml-auto text-[10px] font-semibold tracking-wide uppercase opacity-50">
+							atual
+						</span>
 					{/if}
 				</button>
 			</form>
-		{/if}
+		{/each}
 
 		<DropdownMenu.Separator />
 
@@ -115,13 +117,17 @@
 	<AlertDialog.Content>
 		<AlertDialog.Header>
 			<AlertDialog.Title>Excluir agendamento?</AlertDialog.Title>
+
 			<AlertDialog.Description>
-				Esta ação não pode ser desfeita. O horário ficará disponível para outros clientes
-				imediatamente.
+				Esta ação não pode ser desfeita. O horário ficará disponível para outros
+				clientes imediatamente.
 			</AlertDialog.Description>
 		</AlertDialog.Header>
+
 		<AlertDialog.Footer>
-			<AlertDialog.Cancel disabled={isDeleting} class="cursor-pointer">Cancelar</AlertDialog.Cancel>
+			<AlertDialog.Cancel disabled={isDeleting} class="cursor-pointer">
+				Cancelar
+			</AlertDialog.Cancel>
 
 			<form
 				method="POST"
@@ -130,22 +136,18 @@
 					isDeleting = true;
 
 					return async ({ result, update }) => {
-						// 1. Primeiro resolvemos a interface local (Rápido)
 						isDeleting = false;
 
 						if (result.type === 'success') {
-							showConfirmDialog = false; // Fecha o modal logo
+							showConfirmDialog = false;
 
-							// 2. Depois pedimos ao SvelteKit para atualizar os dados (Pode demorar)
-							// Usamos { reset: true } para limpar o form se necessário
 							await update({ reset: true });
-						} else {
-							// Se deu erro, mantemos o modal aberto para o usuário ver
 						}
 					};
 				}}
 			>
 				<input type="hidden" name="id" value={appointmentId} />
+
 				<Button
 					type="submit"
 					variant="destructive"

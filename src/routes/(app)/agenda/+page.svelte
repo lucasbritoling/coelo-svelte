@@ -180,13 +180,13 @@
 
 							<div class="flex gap-3 pt-3 pr-3 pb-2.5 pl-4">
 								<div class="flex min-w-10.5 flex-col items-center pt-0.5">
-									<span class="text-[14px] leading-none font-semibold tabular-nums">
+									<span class="text-[16px] leading-none font-semibold tabular-nums">
 										{appointment.start_at}
 									</span>
 
 									<div class="my-1.5 w-px flex-1 bg-border" style="min-height:16px"></div>
 
-									<span class="text-[11px] leading-none text-muted-foreground tabular-nums">
+									<span class="text-[12px] leading-none text-muted-foreground tabular-nums">
 										{appointment.end_at}
 									</span>
 								</div>
@@ -282,7 +282,7 @@
 				<h2
 					class="mb-2 flex items-center gap-2 text-xs font-bold tracking-[0.2em] text-muted-foreground uppercase"
 				>
-					<Clock class="h-3.5 w-3.5 text-primary" /> Atendimentos do Dia
+					
 				</h2>
 
 				{#if data.appointments.length === 0}
@@ -306,13 +306,13 @@
 								<Card.Header class="space-y-0 pt-0 pb-0">
 									<div class="flex items-start gap-4">
 										<div class="flex min-w-10.5 flex-col items-center pt-0 pb-0">
-											<span class="text-[13px] leading-none font-semibold tabular-nums">
+											<span class="text-[16px] leading-none font-semibold tabular-nums">
 												{appointment.start_at}
 											</span>
 
 											<div class="my-1.5 w-px flex-1 bg-border" style="min-height:20px"></div>
 
-											<span class="text-[11px] leading-none text-muted-foreground tabular-nums">
+											<span class="text-[12px] leading-none text-muted-foreground tabular-nums">
 												{appointment.end_at}
 											</span>
 										</div>

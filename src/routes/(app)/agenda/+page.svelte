@@ -1,21 +1,19 @@
 <script lang="ts">
 	import {
-		Clock,
 		Plus,
 		Copy,
 		MessageCircle,
 		Check,
-		ChevronLeft,
-		ChevronRight,
-		Link,
 		CalendarDays
 	} from '@lucide/svelte';
+
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
 	import * as Dialog from '$lib/components/ui/dialog';
-	import * as Card from '$lib/components/ui/card';
+
 	import AppointmentForm from '$lib/components/dashboard/appointment-form.svelte';
 	import AppointmentCardAction from '$lib/components/dashboard/appointment-card-action.svelte';
+
 	import { navigating, page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
@@ -27,47 +25,64 @@
 
 	const schedulingLink = $derived(`coelo.dev/${data.username}`);
 
-	// ── Helpers de Data ──────────────────────────────────────────
-	// Centraliza o parsing da data para evitar repetição
+	// ── Datas ─────────────────────────────────────────────────────
 	const parsedDate = $derived.by(() => {
 		const [y, m, d] = data.selectedDate.split('-').map(Number);
 		return new Date(y, m - 1, d);
 	});
 
-	const isToday = $derived(data.selectedDate === new Date().toISOString().split('T')[0]);
+	const today = new Date();
+	const todayStr = today.toISOString().split('T')[0];
+
+	const isTodayView = $derived(data.selectedDate === todayStr);
+
+	const headerLabel = $derived.by(() => {
+		if (isTodayView) return 'Hoje';
+
+		return new Intl.DateTimeFormat('pt-BR', {
+			weekday: 'short',
+			day: 'numeric',
+			month: 'short'
+		}).format(parsedDate);
+	});
 
 	function navigateDay(offset: number) {
 		const date = new Date(parsedDate);
 		date.setDate(date.getDate() + offset);
+
 		const newUrl = new URL(page.url);
 		newUrl.searchParams.set('date', date.toISOString().split('T')[0]);
-		goto(newUrl.search, { keepFocus: true, noScroll: true, replaceState: true });
+
+		goto(newUrl.search, {
+			keepFocus: true,
+			noScroll: true,
+			replaceState: true
+		});
 	}
 
-	function goToToday() {
-		const newUrl = new URL(page.url);
-		newUrl.searchParams.set('date', new Date().toISOString().split('T')[0]);
-		goto(newUrl.search, { keepFocus: true, noScroll: true, replaceState: true });
+	// ── Strip de datas ────────────────────────────────────────────
+	function makeStrip(center: Date) {
+		return Array.from({ length: 7 }, (_, i) => {
+			const d = new Date(center);
+			d.setDate(center.getDate() - 3 + i);
+
+			return {
+				str: d.toISOString().split('T')[0],
+				day: d.getDate(),
+				wd: new Intl.DateTimeFormat('pt-BR', {
+					weekday: 'short'
+				})
+					.format(d)
+					.replace('.', '')
+					.slice(0, 3)
+					.toUpperCase()
+			};
+		});
 	}
 
-	// ── Título formatado ───────────────────────────────────────────
-	const formattedTitle = $derived(
-		new Intl.DateTimeFormat('pt-BR', {
-			weekday: 'long',
-			day: 'numeric',
-			month: 'long'
-		}).format(parsedDate)
-	);
+	const strip = $derived(makeStrip(parsedDate));
 
-	const formattedTitleShort = $derived(
-		new Intl.DateTimeFormat('pt-BR', {
-			weekday: 'short',
-			day: 'numeric',
-			month: 'short'
-		}).format(parsedDate)
-	);
-
-	// ── Ações ─────────────────────────────────────────────────────
+	// ── Clipboard ─────────────────────────────────────────────────
 	function copyToClipboard() {
 		navigator.clipboard
 			.writeText(schedulingLink)
@@ -78,174 +93,238 @@
 			.catch(() => toast.error('Erro ao copiar o link.'));
 	}
 
+	// ── Swipe ─────────────────────────────────────────────────────
+	let touchStartX = 0;
+	let touchStartY = 0;
+
 	function handleTouchStart(e: TouchEvent) {
 		touchStartX = e.changedTouches[0].screenX;
 		touchStartY = e.changedTouches[0].screenY;
 	}
 
-	let touchStartX = 0;
-	let touchStartY = 0;
-
 	function handleTouchEnd(e: TouchEvent) {
 		const dx = touchStartX - e.changedTouches[0].screenX;
 		const dy = touchStartY - e.changedTouches[0].screenY;
-		if (Math.abs(dy) > Math.abs(dx)) return;
-		if (Math.abs(dx) > 70) {
-			if (e.cancelable) e.preventDefault();
 
+		if (Math.abs(dy) > Math.abs(dx)) return;
+
+		if (Math.abs(dx) > 70) {
 			if (dx > 70) navigateDay(1);
-			else if (dx < -70) navigateDay(-1);
+			else navigateDay(-1);
 		}
 	}
 
-	const statusLabel = (s: string) =>
-		({
-			confirmed: 'Confirmado',
-			cancelled: 'Cancelado',
-			pending: 'Pendente'
-		})[s] || 'Pendente';
-
-	const statusClass = (s: string) => {
-		if (s === 'confirmed') return 'border-emerald-200 bg-emerald-50 text-emerald-700';
-		if (s === 'cancelled') return 'border-red-200 bg-red-50 text-red-700';
-		return 'border-slate-200 bg-slate-50 text-slate-600';
+	// ── Status ────────────────────────────────────────────────────
+	const STATUS: Record<
+		string,
+		{
+			label: string;
+			bg: string;
+			text: string;
+		}
+	> = {
+		confirmed: {
+			label: 'confirmado',
+			bg: '#EAF3DE',
+			text: '#3B6D11'
+		},
+		pending: {
+			label: 'pendente',
+			bg: '#FAEEDA',
+			text: '#854F0B'
+		},
+		cancelled: {
+			label: 'cancelado',
+			bg: '#FEE2E2',
+			text: '#991B1B'
+		}
 	};
+
+	// ── Organização ───────────────────────────────────────────────
+	const now = $derived(
+		new Intl.DateTimeFormat('pt-BR', {
+			hour: '2-digit',
+			minute: '2-digit',
+			hour12: false
+		}).format(new Date())
+	);
+
+	const nextAppointment = $derived.by(() => {
+		if (!isTodayView) return null;
+
+		return data.appointments.find((a: any) => a.start_at >= now) ?? null;
+	});
+
+	const laterAppointments = $derived.by(() => {
+		if (!isTodayView) return [];
+
+		return data.appointments.filter(
+			(a: any) => a !== nextAppointment && a.start_at >= now
+		);
+	});
+
+	const pastAppointments = $derived.by(() => {
+		if (!isTodayView) return [];
+
+		return data.appointments.filter((a: any) => a.start_at < now);
+	});
+
+	function soonLabel(t: string) {
+		if (!isTodayView) return '';
+
+		const [h, m] = t.split(':').map(Number);
+
+		const target = new Date();
+		target.setHours(h, m, 0, 0);
+
+		const diff = Math.floor((target.getTime() - Date.now()) / 60000);
+
+		if (diff <= 0) return 'agora';
+		if (diff < 60) return `em ${diff} min`;
+
+		return `em ${Math.round(diff / 60)}h`;
+	}
 </script>
 
-<!-- ─────────────────────── MOBILE ──────────────────────────────── -->
+<!-- MOBILE -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-	class="flex h-full touch-pan-y flex-col sm:hidden"
+	class="flex h-full touch-pan-y flex-col bg-background sm:hidden"
 	ontouchstart={handleTouchStart}
 	ontouchend={handleTouchEnd}
-	role="region"
-	aria-label="Agenda de atendimentos"
 >
-	<div class="sticky top-0 z-20 border-b bg-background/95 backdrop-blur-sm">
-		<div class="flex items-center gap-2 px-2 py-2">
-			<button
-				onclick={() => navigateDay(-1)}
-				class="flex size-10 items-center justify-center rounded-xl text-muted-foreground transition-colors active:bg-muted"
-				aria-label="Dia anterior"
-			>
-				<ChevronLeft class="size-5" />
-			</button>
-
-			<button
-				onclick={goToToday}
-				class="flex min-w-0 flex-1 flex-col items-center py-0.5"
-				aria-label="Ir para hoje"
-			>
-				<span
-					class="text-base leading-tight font-bold capitalize transition-opacity"
+	<!-- HEADER -->
+	<div class="sticky top-0 z-20 bg-background/80 backdrop-blur-xl">
+		<div class="flex items-start justify-between px-5 pt-6 pb-3">
+			<div>
+				<h1
+					class="text-[1.5rem] leading-none font-semibold tracking-tight capitalize"
 					class:opacity-40={navigating.to}
 				>
-					{formattedTitleShort}
-				</span>
-				{#if !isToday}
-					<span
-						class="mt-0.5 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary"
-					>
-						toque para hoje
-					</span>
-				{/if}
-			</button>
+					{headerLabel}
+				</h1>
+			</div>
 
-			<button
-				onclick={() => navigateDay(1)}
-				class="flex size-10 items-center justify-center rounded-xl text-muted-foreground transition-colors active:bg-muted"
-				aria-label="Próximo dia"
+			<div
+				class="mt-0.5 flex size-10 items-center justify-center rounded-full bg-muted text-sm font-semibold text-muted-foreground"
 			>
-				<ChevronRight class="size-5" />
-			</button>
+				L
+			</div>
 		</div>
+
+		<!-- STRIP -->
+<div class="no-scrollbar flex gap-2 overflow-x-auto px-5 pb-4">
+	{#each strip as day}
+		<button
+			onclick={() => {
+				const newUrl = new URL(page.url);
+				newUrl.searchParams.set('date', day.str);
+
+				goto(newUrl.search, {
+					replaceState: true,
+					keepFocus: true,
+					noScroll: true
+				});
+			}}
+			class={`flex min-w-[58px] shrink-0 flex-col items-center rounded-full border py-3 transition-all ${
+				day.str === data.selectedDate
+					? 'border-black opacity-100'
+					: 'border-border/40 opacity-45'
+			}`}
+		>
+			<span
+				class="text-[10px] tracking-wide uppercase"
+				class:text-black={day.str === data.selectedDate}
+				class:text-muted-foreground={day.str !== data.selectedDate}
+			>
+				{day.wd}
+			</span>
+
+			<span
+				class="mt-0.5 text-[16px] leading-none font-medium"
+				class:text-black={day.str === data.selectedDate}
+				class:text-muted-foreground={day.str !== data.selectedDate}
+			>
+				{day.day}
+			</span>
+		</button>
+	{/each}
+</div>
 	</div>
 
-	<div class="flex-1 overflow-y-auto pb-28">
-		<div class="p-4" class:opacity-50={navigating.to}>
-			{#if data.appointments.length === 0}
-				<div class="flex flex-col items-center justify-center py-20 text-center">
-					<CalendarDays class="mb-3 size-10 text-muted-foreground/30" />
-					<p class="text-sm text-muted-foreground italic">Nenhum agendamento para este dia.</p>
+	<!-- CONTENT -->
+	<div class="flex-1 overflow-y-auto pb-36">
+		{#if data.appointments.length === 0}
+			<div class="px-4 pt-10">
+				<div
+					class="flex flex-col items-center justify-center rounded-[28px] border border-dashed py-16"
+				>
+					<CalendarDays class="mb-3 size-9 text-muted-foreground/30" />
+
+					<p class="text-sm text-muted-foreground">
+						Nenhum agendamento neste dia.
+					</p>
 				</div>
+			</div>
+		{:else}
+			{#if isTodayView}
+				{#if nextAppointment}
+					<p class="section-label">próximo</p>
+
+					<div class="px-3">
+						{@render card(nextAppointment, true, false, true)}
+					</div>
+				{/if}
+
+				{#if laterAppointments.length > 0}
+					<p class="section-label">mais tarde</p>
+
+					<div class="flex flex-col gap-2 px-3">
+						{#each laterAppointments as appointment}
+							{@render card(appointment)}
+						{/each}
+					</div>
+				{/if}
+
+				{#if pastAppointments.length > 0}
+					<p class="section-label">anteriores</p>
+
+					<div class="flex flex-col gap-2 px-3">
+						{#each pastAppointments as appointment}
+							{@render card(appointment, false, true)}
+						{/each}
+					</div>
+				{/if}
 			{:else}
-				<div class="space-y-3">
-					{#each data.appointments as appointment (appointment.id)}
-						<div class="relative overflow-hidden rounded-2xl border bg-background shadow-sm">
-							<div
-								class="absolute inset-y-0 left-0 w-1 rounded-l-2xl
-									{appointment.status === 'confirmed' ? 'bg-emerald-400' : ''}
-									{appointment.status === 'cancelled' ? 'bg-red-400 opacity-40' : ''}
-									{appointment.status === 'pending' ? 'bg-slate-300' : ''}"
-							></div>
-
-							<div class="flex gap-3 pt-3 pr-3 pb-2.5 pl-4">
-								<div class="flex min-w-10.5 flex-col items-center pt-0.5">
-									<span class="text-[16px] leading-none font-semibold tabular-nums">
-										{appointment.start_at}
-									</span>
-
-									<div class="my-1.5 w-px flex-1 bg-border" style="min-height:16px"></div>
-
-									<span class="text-[12px] leading-none text-muted-foreground tabular-nums">
-										{appointment.end_at}
-									</span>
-								</div>
-
-								<div class="flex-1">
-									<div class="flex items-start justify-between gap-2">
-										<Badge
-											variant="outline"
-											class="h-4 px-1.5 text-[9px] font-bold tracking-wider uppercase {statusClass(
-												appointment.status
-											)}"
-										>
-											{statusLabel(appointment.status)}
-										</Badge>
-
-										<div class="shrink-0">
-											<AppointmentCardAction
-												appointmentId={appointment.id}
-												appointmentStatus={appointment.status}
-											/>
-										</div>
-									</div>
-
-									<div class="mt-2">
-										<p class="leading-snug font-semibold">{appointment.customer_name}</p>
-										<p class="text-xs text-muted-foreground">{appointment.service_name}</p>
-									</div>
-
-									{#if appointment.customer_phone}
-										<div class="mt-2.5 border-t pt-2">
-											<a
-												href="https://wa.me/{appointment.customer_phone.replace(/\D/g, '')}"
-												target="_blank"
-												class="flex items-center gap-1.5 text-green-600 active:opacity-70"
-											>
-												<MessageCircle class="size-4 fill-green-500/15" />
-												<span class="font-mono text-xs">{appointment.customer_phone}</span>
-											</a>
-										</div>
-									{/if}
-								</div>
-							</div>
-						</div>
+				<div class="flex flex-col gap-2 px-3 pt-3">
+					{#each data.appointments as appointment}
+						{@render card(appointment)}
 					{/each}
 				</div>
 			{/if}
+		{/if}
 
-			<div class="mt-6 rounded-2xl border bg-muted/30 p-4">
-				<p class="mb-1 text-xs font-semibold text-muted-foreground">Seu link de agendamento</p>
-				<p class="mb-3 truncate font-mono text-xs text-foreground/70">{schedulingLink}</p>
+		<!-- LINK CARD -->
+		<div class="px-3 pt-5">
+			<div class="rounded-[30px] border bg-card p-5">
+				<p class="text-[11px] font-semibold tracking-[0.15em] text-muted-foreground uppercase">
+					Link de agendamento
+				</p>
+
+				<p class="mt-2 truncate font-mono text-[13px] text-muted-foreground">
+					{schedulingLink}
+				</p>
+
 				<button
 					onclick={copyToClipboard}
-					class="flex w-full items-center justify-center gap-2 rounded-xl border bg-background py-2.5 text-sm font-medium transition-colors active:bg-muted
-						{copied ? 'border-emerald-300 text-emerald-600' : 'text-foreground'}"
+					class="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-2xl border bg-muted/40 text-[14px] font-medium transition-all active:scale-[0.98]"
 				>
 					{#if copied}
-						<Check class="size-4" /> Copiado!
+						<Check class="size-4" />
+						Copiado!
 					{:else}
-						<Copy class="size-4" /> Copiar Link
+						<Copy class="size-4" />
+						Copiar link
 					{/if}
 				</button>
 			</div>
@@ -253,153 +332,190 @@
 	</div>
 </div>
 
-<!-- FAB (Mobile) -->
+<!-- CARD -->
+{#snippet card(appt: any, highlighted = false, dimmed = false, showSoon = false)}
+	{@const soon = soonLabel(appt.start_at)}
+
+	<div
+		class={`flex gap-4 rounded-[30px] border bg-card px-5 py-5 transition-all active:scale-[0.985] ${
+			highlighted ? 'border-border' : 'border-border/50'
+		}`}
+		class:opacity-40={dimmed}
+	>
+		<div class="flex min-w-[52px] flex-col items-center pt-0.5">
+			<span class="text-[15px] leading-none font-semibold tabular-nums">
+				{appt.start_at}
+			</span>
+
+			<div class="my-2 w-px flex-1 bg-border" style="min-height:22px"></div>
+
+			<span class="text-[12px] leading-none text-muted-foreground tabular-nums">
+				{appt.end_at}
+			</span>
+		</div>
+
+		<div class="min-w-0 flex-1">
+			<div class="flex items-start justify-between gap-3">
+				<div class="min-w-0">
+					<p class="truncate text-[17px] leading-tight font-semibold">
+						{appt.customer_name}
+					</p>
+
+					<p class="mt-1 text-[13px] text-muted-foreground">
+						{appt.service_name}
+					</p>
+				</div>
+
+				<div class="shrink-0">
+					<AppointmentCardAction
+						appointmentId={appt.id}
+						appointmentStatus={appt.status}
+					/>
+				</div>
+			</div>
+
+			<div class="mt-4 flex flex-wrap items-center gap-2">
+				{#if showSoon && soon}
+					<span
+						class="inline-flex rounded-full px-3 py-1 text-[12px] font-medium"
+						style="background:#E6F1FB;color:#185FA5"
+					>
+						{soon}
+					</span>
+				{/if}
+
+				{#if STATUS[appt.status]}
+					<Badge
+						class="rounded-full border-none px-3 py-1 text-[12px] font-medium"
+						style={`background:${STATUS[appt.status].bg};color:${STATUS[appt.status].text}`}
+					>
+						{STATUS[appt.status].label}
+					</Badge>
+				{/if}
+
+				{#if appt.customer_phone}
+					<a
+						href="https://wa.me/{appt.customer_phone.replace(/\D/g, '')}"
+						target="_blank"
+						class="ml-auto flex items-center gap-1.5 text-muted-foreground transition-opacity active:opacity-60"
+					>
+						<MessageCircle class="size-4" />
+					</a>
+				{/if}
+			</div>
+		</div>
+	</div>
+{/snippet}
+
+<!-- FAB -->
 <button
 	onclick={() => (showAppointmentModal = true)}
-	class="fixed right-4 z-30 flex items-center gap-2 rounded-full bg-primary px-5 py-3.5
-		text-sm font-semibold text-primary-foreground shadow-[0_4px_20px_rgba(0,0,0,0.25)]
-		transition-all duration-150 active:scale-95 sm:hidden"
-	style="bottom: calc(4rem + 1rem + env(safe-area-inset-bottom))"
+	class="fixed right-5 bottom-24 z-30 flex size-16 items-center justify-center rounded-full bg-black text-white shadow-2xl transition-all active:scale-95 sm:hidden"
 >
-	<Plus class="size-5" /> Novo Agendamento
+	<Plus class="size-7" strokeWidth={2.5} />
 </button>
 
-<!-- ─────────────────────── DESKTOP ─────────────────────────────── -->
-<div class="hidden sm:block">
-	<div class="mx-auto flex max-w-3xl flex-col gap-6 p-6">
-		<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-			<div class={navigating.to ? 'opacity-50 transition-opacity' : ''}>
-				<h1 class="text-2xl font-bold tracking-tight capitalize">{formattedTitle}</h1>
-				<p class="text-sm text-muted-foreground">Visualize e controle seus atendimentos.</p>
+<!-- DESKTOP -->
+<div class="hidden sm:block max-w-lg mx-auto">
+	<div class="mx-auto max-w-5xl p-8">
+		<div class="mb-8 flex items-center justify-between">
+			<div>
+				<h1 class="text-4xl font-semibold tracking-tight capitalize">
+					{headerLabel}
+				</h1>
+
+				<p class="mt-2 text-muted-foreground">
+					Visualize e gerencie seus atendimentos.
+				</p>
 			</div>
-			<Button onclick={() => (showAppointmentModal = true)} size="sm" class="h-9 cursor-pointer">
-				<Plus class="mr-2 h-4 w-4" /> Novo Agendamento
+
+			<Button
+				onclick={() => (showAppointmentModal = true)}
+				class="h-12 rounded-2xl px-6"
+			>
+				<Plus class="mr-2 size-5" />
+				Novo Agendamento
 			</Button>
 		</div>
 
-		<div class="grid gap-8 lg:grid-cols-3">
-			<div class="space-y-4 lg:col-span-2">
-				<h2
-					class="mb-2 flex items-center gap-2 text-xs font-bold tracking-[0.2em] text-muted-foreground uppercase"
+		<div class="grid gap-4">
+			{#each data.appointments as appointment}
+				<div
+					class="rounded-[30px] border bg-card p-6 transition-all hover:border-foreground/20"
 				>
-					
-				</h2>
+					<div class="flex items-start justify-between gap-6">
+						<div class="flex gap-5">
+							<div class="flex min-w-[54px] flex-col items-center">
+								<span class="text-lg font-semibold">
+									{appointment.start_at}
+								</span>
 
-				{#if data.appointments.length === 0}
-					<div
-						class="flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-12 opacity-60"
-					>
-						<p class="text-sm text-muted-foreground italic">Nenhum agendamento encontrado.</p>
-					</div>
-				{:else}
-					<div class="grid gap-3" class:opacity-50={navigating.to}>
-						{#each data.appointments as appointment (appointment.id)}
-							<Card.Root
-								class="group relative max-w-sm overflow-hidden border-sidebar-border/50 shadow-sm transition-all hover:border-primary/40 hover:shadow-md"
-							>
-								<div class="absolute top-2 right-2 z-10">
-									<AppointmentCardAction
-										appointmentId={appointment.id}
-										appointmentStatus={appointment.status}
-									/>
-								</div>
-								<Card.Header class="space-y-0 pt-0 pb-0">
-									<div class="flex items-start gap-4">
-										<div class="flex min-w-10.5 flex-col items-center pt-0 pb-0">
-											<span class="text-[16px] leading-none font-semibold tabular-nums">
-												{appointment.start_at}
-											</span>
+								<div
+									class="my-2 w-px flex-1 bg-border"
+									style="min-height:30px"
+								></div>
 
-											<div class="my-1.5 w-px flex-1 bg-border" style="min-height:20px"></div>
+								<span class="text-sm text-muted-foreground">
+									{appointment.end_at}
+								</span>
+							</div>
 
-											<span class="text-[12px] leading-none text-muted-foreground tabular-nums">
-												{appointment.end_at}
-											</span>
-										</div>
+							<div>
+								<h3 class="text-lg font-semibold">
+									{appointment.customer_name}
+								</h3>
 
-										<div class="min-w-0 flex-1">
-											<Card.Title class="truncate text-sm font-semibold tracking-tight">
-												{appointment.customer_name}
-											</Card.Title>
+								<p class="text-sm text-muted-foreground">
+									{appointment.service_name}
+								</p>
 
-											<Card.Description class="mt-0.5 text-xs">
-												{appointment.service_name}
-											</Card.Description>
-										</div>
-									</div>
-								</Card.Header>
-								<Card.Footer class="flex justify-between bg-muted/30 py-2">
-									<div class="flex items-center gap-3">
-										<Badge
-											variant="outline"
-											class="h-4.5 px-1.5 text-[9px] font-bold tracking-wider uppercase {statusClass(
-												appointment.status
-											)}"
+								<div class="mt-4 flex items-center gap-2">
+									<Badge
+										class="rounded-full border-none px-3 py-1 text-[12px]"
+										style={`background:${STATUS[appointment.status].bg};color:${STATUS[appointment.status].text}`}
+									>
+										{STATUS[appointment.status].label}
+									</Badge>
+
+									{#if appointment.customer_phone}
+										<a
+											href="https://wa.me/{appointment.customer_phone.replace(/\D/g, '')}"
+											target="_blank"
+											class="flex items-center gap-2 text-sm text-muted-foreground"
 										>
-											{statusLabel(appointment.status)}
-										</Badge>
-										{#if appointment.customer_phone}
-											<a
-												href="https://wa.me/{appointment.customer_phone.replace(/\D/g, '')}"
-												target="_blank"
-												class="group/wa flex items-center gap-2 font-mono text-[12px] text-green-600 transition-all hover:text-green-600 sm:text-muted-foreground/50"
-											>
-												<MessageCircle
-													class="mb-0.5 h-4 w-4 text-green-500 group-hover/wa:fill-green-500/15"
-												/>
-												<span>{appointment.customer_phone}</span>
-											</a>
-										{/if}
-									</div>
-								</Card.Footer>
-							</Card.Root>
-						{/each}
-					</div>
-				{/if}
-			</div>
-
-			<div class="space-y-6">
-				<Card.Root class="border-none bg-zinc-50 shadow-none ring-1 ring-foreground/5 ring-inset">
-					<Card.Header class="pb-3">
-						<Card.Title class="text-sm font-semibold tracking-tight">Link de Agendamento</Card.Title
-						>
-						<Card.Description class="text-xs">Seus clientes marcam por aqui:</Card.Description>
-					</Card.Header>
-					<Card.Content class="space-y-3">
-						<div
-							class="truncate rounded-md border border-border bg-background/80 p-2.5 font-mono text-[11px] shadow-inner"
-						>
-							{schedulingLink}
+											<MessageCircle class="size-4" />
+											{appointment.customer_phone}
+										</a>
+									{/if}
+								</div>
+							</div>
 						</div>
-						<Button
-							onclick={copyToClipboard}
-							variant={copied ? 'default' : 'secondary'}
-							size="sm"
-							class="w-full cursor-pointer gap-2 text-xs font-medium transition-all hover:shadow-sm"
-						>
-							{#if copied}
-								<Check class="h-3.5 w-3.5" /> Copiado!
-							{:else}
-								<Copy class="h-3.5 w-3.5" /> Copiar Link
-							{/if}
-						</Button>
-					</Card.Content>
-				</Card.Root>
-			</div>
+
+						<AppointmentCardAction
+							appointmentId={appointment.id}
+							appointmentStatus={appointment.status}
+						/>
+					</div>
+				</div>
+			{/each}
 		</div>
 	</div>
 </div>
 
+<!-- MODAL -->
 <Dialog.Root bind:open={showAppointmentModal}>
 	<Dialog.Content
-		class="flex max-h-[90dvh] w-[95vw] flex-col gap-0 overflow-hidden rounded-xl p-0 sm:max-w-106.25"
+		class="flex max-h-[90dvh] w-[95vw] flex-col gap-0 overflow-hidden rounded-[32px] p-0 sm:max-w-[420px]"
 	>
-		<Dialog.Header class="shrink-0 border-b px-6 py-4">
-			<Dialog.Title>Novo Agendamento</Dialog.Title>
-			<Dialog.Description class="capitalize">{formattedTitle}</Dialog.Description>
+		<Dialog.Header class="border-b px-6 py-5">
+			<Dialog.Title class="text-xl">Novo Agendamento</Dialog.Title>
+
+			<Dialog.Description class="capitalize">
+				{headerLabel}
+			</Dialog.Description>
 		</Dialog.Header>
 
-		<div class="flex-1 overflow-y-auto">
+		<div class="overflow-y-auto">
 			<AppointmentForm
 				customers={data.customers}
 				services={data.services}
@@ -410,3 +526,30 @@
 		</div>
 	</Dialog.Content>
 </Dialog.Root>
+
+<style>
+	.no-scrollbar::-webkit-scrollbar {
+		display: none;
+	}
+
+	.no-scrollbar {
+		-ms-overflow-style: none;
+		scrollbar-width: none;
+	}
+
+	button {
+		-webkit-tap-highlight-color: transparent;
+	}
+
+	.section-label {
+		padding: 14px 16px 8px;
+
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+
+		color: hsl(var(--muted-foreground));
+		opacity: 0.7;
+	}
+</style>

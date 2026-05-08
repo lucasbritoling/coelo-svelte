@@ -280,7 +280,7 @@
 				<LoaderCircle class="mr-2 size-4 animate-spin" />
 				Salvando...
 			{:else}
-				Salvar Horário
+				Salvar Agendamento
 			{/if}
 		</Button>
 	</div>

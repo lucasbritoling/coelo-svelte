@@ -251,7 +251,7 @@
 		transition-all duration-150 active:scale-95 sm:hidden"
 	style="bottom: calc(4rem + 1rem + env(safe-area-inset-bottom))"
 >
-	<Plus class="size-5" /> Novo Horário
+	<Plus class="size-5" /> Novo Agendamento
 </button>
 
 <!-- ─────────────────────── DESKTOP ─────────────────────────────── -->
@@ -263,7 +263,7 @@
 				<p class="text-sm text-muted-foreground">Visualize e controle seus atendimentos.</p>
 			</div>
 			<Button onclick={() => (showAppointmentModal = true)} size="sm" class="h-9 cursor-pointer">
-				<Plus class="mr-2 h-4 w-4" /> Novo Horário
+				<Plus class="mr-2 h-4 w-4" /> Novo Agendamento
 			</Button>
 		</div>
 
@@ -380,7 +380,7 @@
 		class="flex max-h-[90dvh] w-[95vw] flex-col gap-0 overflow-hidden rounded-xl p-0 sm:max-w-106.25"
 	>
 		<Dialog.Header class="shrink-0 border-b px-6 py-4">
-			<Dialog.Title>Novo Horário</Dialog.Title>
+			<Dialog.Title>Novo Agendamento</Dialog.Title>
 			<Dialog.Description class="capitalize">{formattedTitle}</Dialog.Description>
 		</Dialog.Header>
 

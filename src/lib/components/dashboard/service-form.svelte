@@ -26,8 +26,12 @@
 	const { form, errors, enhance, constraints, message } = superForm(formData, {
 		resetForm: true,
 		invalidateAll: true,
-		onSubmit: () => { isLoading = true; },
-		onResult: () => { isLoading = false; },
+		onSubmit: () => {
+			isLoading = true;
+		},
+		onResult: () => {
+			isLoading = false;
+		},
 		onUpdated: ({ form }) => {
 			if (form.valid) {
 				toast.success('Ok');
@@ -61,9 +65,9 @@
 
 <Dialog.Root bind:open>
 	<Dialog.Content
-		class="flex max-h-[90dvh] flex-col gap-0 p-0 sm:max-w-[400px]
-		       translate-y-0 top-auto bottom-0 sm:top-1/2 sm:bottom-auto
-		       rounded-b-none sm:rounded-b-lg rounded-t-2xl sm:rounded-t-lg"
+		class="top-auto bottom-0 flex max-h-[90dvh] translate-y-0 flex-col
+		       gap-0 rounded-t-2xl rounded-b-none p-0 sm:top-1/2
+		       sm:bottom-auto sm:max-w-[400px] sm:rounded-t-lg sm:rounded-b-lg"
 	>
 		<Dialog.Header class="shrink-0 border-b px-6 py-4">
 			<Dialog.Title>{$form.id ? 'Editar Serviço' : 'Novo Serviço'}</Dialog.Title>
@@ -122,7 +126,7 @@
 						type="number"
 						bind:value={$form.min_notice_hours}
 					/>
-					<p class="text-[11px] italic text-muted-foreground">Evita agendamentos de última hora.</p>
+					<p class="text-[11px] text-muted-foreground italic">Evita agendamentos de última hora.</p>
 				</div>
 
 				<div class="grid gap-2">
@@ -137,7 +141,7 @@
 							bind:value={$form.buffer_after_min}
 						/>
 					</div>
-					<p class="text-[11px] italic text-muted-foreground">
+					<p class="text-[11px] text-muted-foreground italic">
 						Tempo livre após o serviço para limpeza/descanso.
 					</p>
 				</div>

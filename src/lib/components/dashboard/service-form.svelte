@@ -75,22 +75,22 @@
 			use:enhance={() => {
 				isLoading = true;
 				return async ({ result, update }) => {
-    await update({ reset: false });
-    isLoading = false;
+					await update({ reset: false });
+					isLoading = false;
 
-    if (result.type === 'success') {
-        // Agora o dado está exatamente onde a Action colocou: em result.data.service
-        // @ts-ignore
-        const newService = result.data?.service;
-        
-        if (newService) {
-            onSuccess?.(newService);
-        }
-        open = false; 
-    } else if (result.type === 'failure') {
-        // ... erro
-    }
-};
+					if (result.type === 'success') {
+						// Agora o dado está exatamente onde a Action colocou: em result.data.service
+						// @ts-ignore
+						const newService = result.data?.service;
+
+						if (newService) {
+							onSuccess?.(newService);
+						}
+						open = false;
+					} else if (result.type === 'failure') {
+						// ... erro
+					}
+				};
 			}}
 			class="flex flex-1 flex-col overflow-hidden"
 		>

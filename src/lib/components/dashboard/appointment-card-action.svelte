@@ -119,15 +119,13 @@
 			<AlertDialog.Title>Excluir agendamento?</AlertDialog.Title>
 
 			<AlertDialog.Description>
-				Esta ação não pode ser desfeita. O horário ficará disponível para outros
-				clientes imediatamente.
+				Esta ação não pode ser desfeita. O horário ficará disponível para outros clientes
+				imediatamente.
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 
 		<AlertDialog.Footer>
-			<AlertDialog.Cancel disabled={isDeleting} class="cursor-pointer">
-				Cancelar
-			</AlertDialog.Cancel>
+			<AlertDialog.Cancel disabled={isDeleting} class="cursor-pointer">Cancelar</AlertDialog.Cancel>
 
 			<form
 				method="POST"

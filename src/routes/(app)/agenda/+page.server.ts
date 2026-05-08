@@ -105,40 +105,40 @@ export const actions: Actions = {
 	},
 
 	setStatus: async ({ request, locals: { sql, user } }) => {
-	if (!user) return fail(401);
+		if (!user) return fail(401);
 
-	const form = await request.formData();
+		const form = await request.formData();
 
-	const id = form.get('id')?.toString();
-	const status = form.get('status')?.toString();
+		const id = form.get('id')?.toString();
+		const status = form.get('status')?.toString();
 
-	if (!id || !status) {
-		return fail(400, { message: 'Dados inválidos.' });
-	}
+		if (!id || !status) {
+			return fail(400, { message: 'Dados inválidos.' });
+		}
 
-	const allowedStatuses = ['pending', 'confirmed', 'cancelled'];
+		const allowedStatuses = ['pending', 'confirmed', 'cancelled'];
 
-	if (!allowedStatuses.includes(status)) {
-		return fail(400, { message: 'Status inválido.' });
-	}
+		if (!allowedStatuses.includes(status)) {
+			return fail(400, { message: 'Status inválido.' });
+		}
 
-	try {
-		const result = await sql`
+		try {
+			const result = await sql`
 			UPDATE appointments
 			SET status = ${status}::appointment_status
 			WHERE id = ${id}
 			AND profile_id = ${user.id}
 		`;
 
-		if (result.count === 0) {
-			return fail(404, { message: 'Agendamento não encontrado.' });
-		}
+			if (result.count === 0) {
+				return fail(404, { message: 'Agendamento não encontrado.' });
+			}
 
-		return { success: true };
-	} catch (err) {
-		return fail(500, { message: 'Erro ao alterar status.' });
-	}
-},
+			return { success: true };
+		} catch (err) {
+			return fail(500, { message: 'Erro ao alterar status.' });
+		}
+	},
 
 	cancel: async ({ request, locals: { sql, user } }) => {
 		if (!user) return fail(401);

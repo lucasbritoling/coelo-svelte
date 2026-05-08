@@ -1,55 +1,31 @@
 <script lang="ts">
 	import { Plus, Search, Trash2, LoaderCircle, ChevronRight, Phone, User } from '@lucide/svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
-	import * as Drawer from '$lib/components/ui/drawer';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { toast } from 'svelte-sonner';
-	import { MediaQuery } from 'svelte/reactivity';
-	import { customerSchema } from '$lib/schemas/app';
-	import { superForm } from 'sveltekit-superforms';
-	import { zod4Client } from 'sveltekit-superforms/adapters';
 	import { enhance } from '$app/forms';
 
 	let { data } = $props();
 
-	const isDesktop = new MediaQuery('(min-width: 640px)');
-
+	// Estados de controle
 	let open = $state(false);
 	let openDelete = $state(false);
-	let isDeleting = $state(false);
-	let customerToDelete = $state<{ id: string; name: string } | null>(null);
 	let isLoading = $state(false);
+	let isConfirmingDelete = $state(false);
+	let searchQuery = $state('');
 
-	// svelte-ignore state_referenced_locally
-	const {
-		form,
-		errors,
-		enhance: formEnhance,
-		reset,
-		message
-	} = superForm(data.form, {
-		validators: zod4Client(customerSchema),
-		resetForm: true,
-		onSubmit: () => {
-			isLoading = true;
-		},
-		onResult: () => {
-			isLoading = false;
-		},
-		onUpdated: ({ form }) => {
-			if (form.valid) {
-				open = false;
-				toast.success('Ok');
-			} else {
-				toast.error($message || 'Erro de validação. Verifique os campos.');
-			}
-		}
+	// Estado manual do formulário
+	let formState = $state({
+		id: '',
+		name: '',
+		phone: ''
 	});
 
-	let searchQuery = $state('');
+	let customerToDelete = $state<{ id: string; name: string } | null>(null);
+
 	let filteredCustomers = $derived(
 		data.customers.filter(
 			(c) =>
@@ -57,77 +33,30 @@
 		)
 	);
 
-	function startEdit(customer: any) {
-		if (swipedId === customer.id) {
-			swipedId = null;
-			return;
+	// Reset de estados ao abrir/fechar
+	$effect(() => {
+		if (!open) {
+			isConfirmingDelete = false;
 		}
-		$form = { id: customer.id, name: customer.name, phone: customer.phone };
-		open = true;
-	}
+	});
 
 	function startCreate() {
-		reset();
+		formState = { id: '', name: '', phone: '' };
 		open = true;
 	}
 
-	function confirmDelete(customer: any) {
-		swipedId = null;
+	function startEdit(customer: any) {
+		formState = { id: customer.id, name: customer.name, phone: customer.phone };
+		open = true;
+	}
+
+	function startDeleteDesktop(customer: any) {
 		customerToDelete = { id: customer.id, name: customer.name };
 		openDelete = true;
 	}
-
-	// ── Swipe-to-delete ────────────────────────────────────────────
-	let swipedId = $state<string | null>(null);
-	let touching = $state(false);
-	let touchStartX = 0;
-	let touchStartY = 0;
-	let lockAxis = $state<'h' | 'v' | null>(null);
-	const SWIPE_OPEN_X = -80;
-	const SWIPE_THRESHOLD = 52;
-
-	function onTouchStart(e: TouchEvent, id: string) {
-		if (swipedId && swipedId !== id) {
-			swipedId = null;
-			return;
-		}
-		touchStartX = e.touches[0].clientX;
-		touchStartY = e.touches[0].clientY;
-		lockAxis = null;
-		touching = true;
-	}
-
-	function onTouchMove(e: TouchEvent, id: string) {
-		const dx = e.touches[0].clientX - touchStartX;
-		const dy = e.touches[0].clientY - touchStartY;
-		if (!lockAxis) lockAxis = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v';
-		if (lockAxis === 'h') e.preventDefault();
-	}
-
-	function onTouchEnd(e: TouchEvent, id: string) {
-		touching = false;
-		if (lockAxis !== 'h') return;
-		const dx = e.changedTouches[0].clientX - touchStartX;
-		if (dx < -SWIPE_THRESHOLD) swipedId = id;
-		else if (dx > SWIPE_THRESHOLD / 2) swipedId = null;
-		lockAxis = null;
-	}
-
-	function closeSwipe() {
-		swipedId = null;
-	}
 </script>
 
-{#if swipedId}
-	<div
-		class="fixed inset-0 z-10"
-		role="presentation"
-		onclick={closeSwipe}
-		ontouchstart={closeSwipe}
-	></div>
-{/if}
-
-<!-- ─────────────────────── MOBILE ──────────────────────────────── -->
+<!-- ───────────────────────── MOBILE ───────────────────────────── -->
 <div class="flex w-full flex-col gap-4 p-4 pb-28 sm:hidden">
 	<div>
 		<h1 class="text-2xl font-bold tracking-tight">Clientes</h1>
@@ -145,48 +74,25 @@
 	</div>
 
 	{#if data.customers.length > 0}
-		<p class="text-center text-[11px] text-muted-foreground/60 select-none">
-			← Deslize para excluir · Toque para editar
-		</p>
+		<p class="text-center select-none">Toque para editar</p>
 	{/if}
 
 	<div class="overflow-hidden rounded-2xl border bg-background shadow-sm">
 		{#each filteredCustomers as customer (customer.id)}
-			<div class="relative overflow-hidden border-b last:border-b-0">
-				<!-- Fundo: ação de deletar -->
+			<div class="relative border-b last:border-b-0">
 				<div
-					class="absolute inset-y-0 right-0 flex w-20 items-center justify-center bg-destructive"
-				>
-					<button
-						class="flex h-full w-full flex-col items-center justify-center gap-1 text-white active:opacity-70"
-						onclick={() => confirmDelete(customer)}
-					>
-						<Trash2 class="size-5" />
-						<span class="text-[10px] font-semibold tracking-wide">Excluir</span>
-					</button>
-				</div>
-
-				<!-- Conteúdo deslizável -->
-				<div
-					class="relative z-10 flex items-center gap-3 bg-background px-4 py-3.5 will-change-transform"
-					class:transition-transform={!touching}
-					style="transform: translateX({swipedId === customer.id ? SWIPE_OPEN_X : 0}px)"
-					ontouchstart={(e) => onTouchStart(e, customer.id)}
-					ontouchmove={(e) => onTouchMove(e, customer.id)}
-					ontouchend={(e) => onTouchEnd(e, customer.id)}
+					class="flex items-center gap-3 bg-background px-4 py-3.5 transition-colors active:bg-muted/50"
 					role="button"
 					tabindex="0"
 					onclick={() => startEdit(customer)}
 					onkeydown={(e) => e.key === 'Enter' && startEdit(customer)}
 				>
-					<!-- Avatar inicial -->
 					<div
 						class="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-semibold text-muted-foreground"
 					>
 						{customer.name.charAt(0).toUpperCase()}
 					</div>
 
-					<!-- Info -->
 					<div class="min-w-0 flex-1">
 						<p class="truncate leading-snug font-semibold">{customer.name}</p>
 						<p class="mt-0.5 font-mono text-xs text-muted-foreground">{customer.phone}</p>
@@ -207,17 +113,16 @@
 <button
 	onclick={startCreate}
 	class="fixed right-4 z-30 flex items-center gap-2 rounded-full bg-primary px-5 py-3.5
-		text-sm font-semibold text-primary-foreground shadow-[0_4px_20px_rgba(0,0,0,0.25)]
-		transition-all duration-150 active:scale-95 active:shadow-sm sm:hidden"
+        text-sm font-semibold text-primary-foreground shadow-[0_4px_20px_rgba(0,0,0,0.25)]
+        transition-all duration-150 active:scale-95 active:shadow-sm sm:hidden"
 	style="bottom: calc(4rem + 1rem + env(safe-area-inset-bottom))"
-	aria-label="Novo Cliente"
 >
 	<Plus class="size-5" />
 	Novo Cliente
 </button>
 
-<!-- ─────────────────────── DESKTOP ─────────────────────────────── -->
-<div class="mx-auto hidden w-full max-w-lg flex-col gap-6 p-6 sm:flex">
+<!-- ─────────────────────── DESKTOP ────────────────────────────── -->
+<div class="max-lg mx-auto hidden w-full flex-col gap-6 p-6 sm:flex sm:max-w-lg">
 	<div class="flex items-center justify-between gap-4">
 		<div>
 			<h1 class="text-2xl font-bold tracking-tight">Clientes</h1>
@@ -277,7 +182,7 @@
 									variant="ghost"
 									size="icon"
 									class="cursor-pointer text-destructive hover:bg-destructive/10"
-									onclick={() => confirmDelete(customer)}
+									onclick={() => startDeleteDesktop(customer)}
 								>
 									<Trash2 class="h-4 w-4" />
 								</Button>
@@ -296,114 +201,132 @@
 	</div>
 </div>
 
-<!-- ────────────────── Form: Drawer (mobile) / Dialog (desktop) ── -->
+<!-- ────────────────── Dialog Adaptativo ──────────────────────── -->
+<Dialog.Root bind:open>
+	<Dialog.Content
+		class="flex max-h-[90dvh] w-[95vw] flex-col gap-0 
+           overflow-hidden rounded-xl p-0 sm:max-w-[400px]"
+	>
+		<Dialog.Header class="shrink-0 border-b px-6 py-4">
+			<Dialog.Title>{formState.id ? 'Editar Cliente' : 'Novo Cliente'}</Dialog.Title>
+		</Dialog.Header>
 
-{#snippet formFields()}
-	<input type="hidden" name="id" bind:value={$form.id} />
+		<form
+			method="POST"
+			action="?/upsert"
+			class="flex flex-1 flex-col overflow-hidden"
+			use:enhance={({ cancel, submitter }) => {
+				if (isConfirmingDelete && submitter?.getAttribute('formaction') !== '?/delete') {
+					cancel();
+					isConfirmingDelete = false;
+					return;
+				}
+				isLoading = true;
+				return async ({ result, update }) => {
+					await update();
+					isLoading = false;
+					if (result.type === 'success') {
+						open = false;
+					}
+				};
+			}}
+		>
+			<div class="flex flex-1 flex-col gap-5 overflow-y-auto px-6 py-5">
+				<input type="hidden" name="id" value={formState.id} />
 
-	<div class="grid gap-2">
-		<Label for="name" class={$errors.name ? 'text-destructive' : ''}>Nome completo</Label>
-		<div class="relative">
-			<User class="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
-			<Input
-				id="name"
-				name="name"
-				class="pl-9"
-				bind:value={$form.name}
-				maxlength={60}
-				aria-invalid={$errors.name ? 'true' : undefined}
-				oninput={(e) => {
-					$form.name = e.currentTarget.value.replace(/\d/g, '').replace(/\s{2,}/g, ' ');
-				}}
-				onblur={() => {
-					$form.name = $form.name.trim();
-				}}
-			/>
-		</div>
-		{#if $errors.name}
-			<small class="text-destructive">{$errors.name}</small>
-		{/if}
-	</div>
-
-	<div class="grid gap-2">
-		<Label for="phone" class={$errors.phone ? 'text-destructive' : ''}>Telefone (com DDD)</Label>
-		<div class="relative">
-			<Phone class="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
-			<Input
-				id="phone"
-				name="phone"
-				class="pl-9 font-mono"
-				bind:value={$form.phone}
-				inputmode="numeric"
-				minlength={11}
-				maxlength={11}
-				placeholder="11 99999-9999"
-				aria-invalid={$errors.phone ? 'true' : undefined}
-				oninput={(e) => {
-					$form.phone = e.currentTarget.value.replace(/\D/g, '');
-				}}
-			/>
-		</div>
-		{#if $errors.phone}
-			<small class="text-destructive">{$errors.phone}</small>
-		{/if}
-	</div>
-{/snippet}
-
-{#snippet submitButton()}
-	<Button type="submit" disabled={isLoading} class="w-full cursor-pointer">
-		{#if isLoading}
-			<LoaderCircle class="mr-2 h-4 w-4 animate-spin" /> Salvando...
-		{:else}
-			{$form.id ? 'Salvar Alterações' : 'Criar Cliente'}
-		{/if}
-	</Button>
-{/snippet}
-
-{#if isDesktop.current}
-	<Dialog.Root bind:open>
-		<Dialog.Content class="flex max-h-[95dvh] flex-col gap-0 p-0 sm:max-w-[400px]">
-			<Dialog.Header class="border-b px-6 py-4">
-				<Dialog.Title>{$form.id ? 'Editar Cliente' : 'Novo Cliente'}</Dialog.Title>
-			</Dialog.Header>
-			<form
-				method="POST"
-				action="?/upsert"
-				class="flex flex-1 flex-col overflow-y-auto"
-				use:formEnhance
-			>
-				<div class="flex flex-col gap-4 px-6 py-5">
-					{@render formFields()}
+				<div class="grid gap-2">
+					<Label for="name">Nome completo</Label>
+					<div class="relative">
+						<User class="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
+						<Input
+							id="name"
+							name="name"
+							class="pl-9"
+							bind:value={formState.name}
+							minlength={3}
+							required
+							oninput={(e) => {
+								formState.name = e.currentTarget.value.replace(/\d/g, '').replace(/\s{2,}/g, ' ');
+							}}
+							onblur={() => {
+								formState.name = formState.name.trim();
+							}}
+						/>
+					</div>
 				</div>
-				<div class="border-t px-6 py-4">
-					{@render submitButton()}
-				</div>
-			</form>
-		</Dialog.Content>
-	</Dialog.Root>
-{:else}
-	<Drawer.Root bind:open>
-		<Drawer.Content>
-			<Drawer.Header class="border-b text-left">
-				<Drawer.Title>{$form.id ? 'Editar Cliente' : 'Novo Cliente'}</Drawer.Title>
-			</Drawer.Header>
-			<form method="POST" action="?/upsert" class="flex flex-col overflow-y-auto" use:formEnhance>
-				<div class="flex flex-col gap-4 px-4 py-5">
-					{@render formFields()}
-				</div>
-				<Drawer.Footer class="border-t">
-					<Drawer.Close>
-						{#snippet child({ props })}
-							<Button {...props} variant="outline" class="w-full">Cancelar</Button>
-						{/snippet}
-					</Drawer.Close>
-				</Drawer.Footer>
-			</form>
-		</Drawer.Content>
-	</Drawer.Root>
-{/if}
 
-<!-- ──────────────────────── Delete ──────────────────────────────── -->
+				<div class="grid gap-2">
+					<Label for="phone">Telefone (com DDD)</Label>
+					<div class="relative">
+						<Phone class="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
+						<Input
+							id="phone"
+							name="phone"
+							class="pl-9 font-mono"
+							bind:value={formState.phone}
+							inputmode="numeric"
+							required
+							maxlength={11}
+							minlength={11}
+							placeholder="11999999999"
+							oninput={(e) => {
+								formState.phone = e.currentTarget.value.replace(/\D/g, '');
+							}}
+							onblur={() => {
+								formState.phone = formState.phone.trim();
+							}}
+						/>
+					</div>
+				</div>
+			</div>
+
+			<div class="shrink-0 border-t px-6 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+				<div class="flex gap-3">
+					{#if formState.id}
+						{#if !isConfirmingDelete}
+							<Button
+								type="button"
+								variant="outline"
+								onclick={() => (isConfirmingDelete = true)}
+								class="flex-1 cursor-pointer border-destructive/20 text-destructive sm:hidden"
+							>
+								<Trash2 class="mr-2 h-4 w-4" /> Excluir
+							</Button>
+						{:else}
+							<Button
+								type="submit"
+								variant="destructive"
+								formaction="?/delete"
+								disabled={isLoading}
+								class="flex-1 animate-in cursor-pointer duration-200 zoom-in-95 fade-in sm:hidden"
+							>
+								{#if isLoading}
+									<LoaderCircle class="h-4 w-4 animate-spin" />
+								{:else}
+									Confirmar?
+								{/if}
+							</Button>
+						{/if}
+					{/if}
+
+					<Button
+						type="submit"
+						disabled={isLoading}
+						class="cursor-pointer {formState.id ? 'flex-[2] sm:w-full' : 'w-full'}"
+					>
+						{#if isLoading}
+							<LoaderCircle class="mr-2 h-4 w-4 animate-spin" /> Salvando...
+						{:else}
+							{isConfirmingDelete ? 'Cancelar' : formState.id ? 'Salvar' : 'Criar Cliente'}
+						{/if}
+					</Button>
+				</div>
+			</div>
+		</form>
+	</Dialog.Content>
+</Dialog.Root>
+
+<!-- ──────────────────────── Delete Desktop ──────────────────────── -->
 <AlertDialog.Root bind:open={openDelete}>
 	<AlertDialog.Content>
 		<AlertDialog.Header>
@@ -413,7 +336,7 @@
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer class="flex-col-reverse gap-2 sm:flex-row">
-			<AlertDialog.Cancel disabled={isDeleting} class="w-full cursor-pointer sm:w-auto">
+			<AlertDialog.Cancel disabled={isLoading} class="w-full cursor-pointer sm:w-auto">
 				Cancelar
 			</AlertDialog.Cancel>
 			<form
@@ -421,16 +344,13 @@
 				action="?/delete"
 				class="w-full sm:w-auto"
 				use:enhance={() => {
-					isDeleting = true;
+					isLoading = true;
 					return async ({ result, update }) => {
+						await update();
+						isLoading = false;
 						if (result.type === 'success') {
 							openDelete = false;
-							toast.success('Ok');
-							await update();
-						} else if (result.type === 'failure') {
-							toast.error(result.data?.message || 'Erro ao excluir');
 						}
-						isDeleting = false;
 					};
 				}}
 			>
@@ -438,10 +358,10 @@
 				<Button
 					type="submit"
 					variant="destructive"
-					disabled={isDeleting}
+					disabled={isLoading}
 					class="w-full cursor-pointer sm:min-w-36"
 				>
-					{#if isDeleting}
+					{#if isLoading}
 						<LoaderCircle class="mr-2 h-4 w-4 animate-spin" /> Excluindo...
 					{:else}
 						Confirmar Exclusão

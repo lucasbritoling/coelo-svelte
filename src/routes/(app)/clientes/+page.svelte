@@ -5,8 +5,9 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
-	import { toast } from 'svelte-sonner';
 	import { enhance } from '$app/forms';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 
 	let { data } = $props();
 
@@ -15,7 +16,7 @@
 	let openDelete = $state(false);
 	let isLoading = $state(false);
 	let isConfirmingDelete = $state(false);
-	let searchQuery = $state('');
+	let isSearching = $state(false);
 
 	// Estado manual do formulário
 	let formState = $state({
@@ -54,6 +55,33 @@
 		customerToDelete = { id: customer.id, name: customer.name };
 		openDelete = true;
 	}
+	let searchQuery = $state(data.q || '');
+
+	// Debounce para não martelar o banco a cada tecla
+	let searchTimeout: ReturnType<typeof setTimeout>;
+
+	function handleSearch(e: Event) {
+		isSearching = true;
+		const value = (e.currentTarget as HTMLInputElement).value;
+		clearTimeout(searchTimeout);
+
+		searchTimeout = setTimeout(() => {
+			const newUrl = new URL(page.url);
+			if (value) {
+				newUrl.searchParams.set('q', value);
+			} else {
+				newUrl.searchParams.delete('q');
+			}
+
+			goto(newUrl.search, {
+				keepFocus: true,
+				replaceState: true,
+				noScroll: true
+			}).finally(() => {
+				isSearching = false;
+			});
+		}, 300); // 300ms de espera após o usuário parar de digitar
+	}
 </script>
 
 <!-- ───────────────────────── MOBILE ───────────────────────────── -->
@@ -64,12 +92,17 @@
 	</div>
 
 	<div class="relative">
-		<Search class="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
+		<Search
+			class="absolute top-2.5 left-3 h-4 w-4 {isSearching
+				? 'animate-pulse text-primary'
+				: 'text-muted-foreground'}"
+		/>
 		<Input
 			type="search"
 			placeholder="Buscar por nome ou telefone..."
 			class="pl-9"
 			bind:value={searchQuery}
+			oninput={handleSearch}
 		/>
 	</div>
 
@@ -134,12 +167,18 @@
 	</div>
 
 	<div class="relative">
-		<Search class="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
+		<!-- Adicione a lógica do ícone aqui também -->
+		<Search
+			class="absolute top-2.5 left-3 h-4 w-4 {isSearching
+				? 'animate-pulse text-primary'
+				: 'text-muted-foreground'}"
+		/>
 		<Input
 			type="search"
 			placeholder="Buscar por nome ou telefone..."
 			class="pl-9"
 			bind:value={searchQuery}
+			oninput={handleSearch}
 		/>
 	</div>
 

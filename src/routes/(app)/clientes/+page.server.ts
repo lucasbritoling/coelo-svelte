@@ -4,22 +4,21 @@ import { customerSchema } from '$lib/schemas/app';
 import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 
-export const load: PageServerLoad = async ({ locals: { sql, user } }) => {
+export const load: PageServerLoad = async ({ locals: { sql, user }, url }) => {
 	if (!user) throw redirect(303, '/login');
 
-	// O Promise.all continua sendo útil para performance
-	const [form, customers] = await Promise.all([
-		superValidate(zod4(customerSchema)),
-		sql`
-            SELECT id, name, phone 
-            FROM customers 
-            WHERE profile_id = ${user.id} 
-            ORDER BY name ASC
-			LIMIT 200
-        `
-	]);
+	const q = url.searchParams.get('q') || '';
 
-	return { form, customers };
+	const customers = await sql`
+        SELECT id, name, phone 
+        FROM customers 
+        WHERE profile_id = ${user.id} 
+        ${q ? sql`AND (name ILIKE ${'%' + q + '%'} OR phone ILIKE ${'%' + q + '%'})` : sql``}
+        ORDER BY name ASC
+        LIMIT 100
+    `;
+
+	return { customers, q };
 };
 
 export const actions: Actions = {

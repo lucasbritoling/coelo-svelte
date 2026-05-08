@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { goto, preloadData } from '$app/navigation'; // Importações necessárias
 	import { Calendar, Clock, UsersRound, BriefcaseBusiness } from '@lucide/svelte';
 
 	const navItems = [
@@ -21,13 +22,16 @@
 >
 	{#each navItems as item}
 		{@const active = page.url.pathname === item.href}
-		<a
-			href={item.href}
+		<button
+			onclick={() => goto(item.href)}
+			onmouseenter={() => preloadData(item.href)}
+			ontouchstart={() => preloadData(item.href)}
 			class="
 				flex flex-1 flex-col items-center justify-center gap-1
 				py-3 text-[11px] font-medium tracking-wide
 				transition-all duration-75 active:scale-95
 				{active ? 'text-primary' : 'text-muted-foreground'}
+				appearance-none bg-transparent border-none outline-none
 			"
 		>
 			<item.icon
@@ -35,6 +39,6 @@
 				stroke-width={active ? 2.5 : 1.75}
 			/>
 			{item.title}
-		</a>
+		</button>
 	{/each}
 </nav>

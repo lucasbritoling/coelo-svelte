@@ -354,6 +354,7 @@
 									value={service.is_active}
 								/>
 								<Switch
+								class="cursor-pointer"
 									checked={service.is_active}
 									onCheckedChange={(v) => handleToggleAttempt(service, v)}
 								/>

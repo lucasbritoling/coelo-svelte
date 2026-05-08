@@ -265,7 +265,7 @@
 				<h1 class="text-2xl font-bold tracking-tight capitalize">{formattedTitle}</h1>
 				<p class="text-sm text-muted-foreground">Visualize e controle seus atendimentos.</p>
 			</div>
-			<Button onclick={() => (showAppointmentModal = true)} size="sm" class="h-9">
+			<Button onclick={() => (showAppointmentModal = true)} size="sm" class="h-9 cursor-pointer">
 				<Plus class="mr-2 h-4 w-4" /> Novo Horário
 			</Button>
 		</div>
@@ -363,7 +363,7 @@
 							onclick={copyToClipboard}
 							variant={copied ? 'default' : 'secondary'}
 							size="sm"
-							class="w-full gap-2 text-xs font-medium transition-all hover:shadow-sm"
+							class="w-full gap-2 text-xs cursor-pointer font-medium transition-all hover:shadow-sm"
 						>
 							{#if copied}
 								<Check class="h-3.5 w-3.5" /> Copiado!

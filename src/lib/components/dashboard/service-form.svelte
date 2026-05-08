@@ -3,7 +3,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
-	import { Clock, LoaderCircle, CalendarClock, Coffee } from '@lucide/svelte';
+	import { Clock, LoaderCircle, CalendarClock, Coffee, Trash2 } from '@lucide/svelte';
 	import { enhance } from '$app/forms';
 	import { toast } from 'svelte-sonner';
 
@@ -28,6 +28,13 @@
 		duration: 30,
 		min_notice_hours: 2,
 		buffer_after_min: 0
+	});
+
+	let isConfirmingDelete = $state(false);
+	$effect(() => {
+		if (!open) {
+			isConfirmingDelete = false;
+		}
 	});
 
 	// Sincroniza o estado quando o modal abre ou o serviço muda
@@ -71,9 +78,8 @@
 					isLoading = false;
 
 					if (result.type === 'success') {
-						toast.success('Serviço salvo!');
 						// @ts-ignore - os dados retornados pela sua action
-						onSuccess?.(result.data); 
+						onSuccess?.(result.data);
 						open = false; // FECHA O MODAL IMEDIATAMENTE
 					} else if (result.type === 'failure') {
 						// @ts-ignore
@@ -93,6 +99,7 @@
 						name="name"
 						bind:value={formState.name}
 						placeholder="Ex: Corte de Cabelo"
+						minlength={3}
 						required
 					/>
 				</div>
@@ -105,6 +112,8 @@
 							id="duration"
 							name="duration"
 							type="number"
+							inputmode="numeric"
+							min={1}
 							class="pl-9"
 							bind:value={formState.duration}
 							required
@@ -121,6 +130,8 @@
 					<Input
 						id="min_notice_hours"
 						name="min_notice_hours"
+						inputmode="numeric"
+						min={0}
 						type="number"
 						bind:value={formState.min_notice_hours}
 					/>
@@ -134,6 +145,8 @@
 							id="buffer_after_min"
 							name="buffer_after_min"
 							type="number"
+							inputmode="numeric"
+							min={0}
 							class="pl-9"
 							bind:value={formState.buffer_after_min}
 						/>
@@ -141,13 +154,52 @@
 				</div>
 			</div>
 
-			<div class="shrink-0 border-t px-6 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-				<Button type="submit" disabled={isLoading} class="w-full cursor-pointer">
+			<div
+				class="flex shrink-0 gap-3 border-t px-6 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))]"
+			>
+				{#if formState.id}
+					{#if !isConfirmingDelete}
+						<!-- Primeiro toque: Ativa o estado de confirmação -->
+						<Button
+							type="button"
+							variant="outline"
+							onclick={() => (isConfirmingDelete = true)}
+							class="flex-1 cursor-pointer border-destructive/20 text-destructive sm:hidden"
+						>
+							<Trash2 class="mr-2 h-4 w-4" />
+							Excluir
+						</Button>
+					{:else}
+						<!-- Segundo toque: Executa a exclusão de fato -->
+						<Button
+							type="submit"
+							variant="destructive"
+							formaction="/servicos?/delete"
+							disabled={isLoading}
+							class="flex-1 animate-in cursor-pointer duration-200 zoom-in-95 fade-in sm:hidden"
+						>
+							{#if isLoading}
+								<LoaderCircle class="h-4 w-4 animate-spin" />
+							{:else}
+								Confirmar?
+							{/if}
+						</Button>
+					{/if}
+				{/if}
+
+				<Button
+					type="submit"
+					disabled={isLoading}
+					class="cursor-pointer {formState.id ? 'flex-[2] sm:w-full' : 'w-full'}"
+				>
 					{#if isLoading}
 						<LoaderCircle class="mr-2 h-4 w-4 animate-spin" /> Salvando...
 					{:else}
-						{formState.id ? 'Salvar Alterações' : 'Criar Serviço'}
+						{isConfirmingDelete ? 'Cancelar' : formState.id ? 'Salvar' : 'Criar Serviço'}
 					{/if}
+					<!-- Se o usuário clicar em "Cancelar" (botão principal) enquanto estiver confirmando, voltamos o estado -->
+					<button type="button" class="hidden" onclick={() => (isConfirmingDelete = false)}
+					></button>
 				</Button>
 			</div>
 		</form>

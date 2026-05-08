@@ -26,49 +26,6 @@
 		services.filter((s: any) => s.name.toLowerCase().includes(searchQuery.toLowerCase()))
 	);
 
-	// ── Swipe-to-delete ────────────────────────────────────────────
-	let swipedId = $state<string | null>(null);
-	let touching = $state(false);
-	let touchStartX = 0;
-	let touchStartY = 0;
-	let lockAxis = $state<'h' | 'v' | null>(null);
-	const SWIPE_OPEN_X = -80;
-	const SWIPE_THRESHOLD = 52;
-
-	function onTouchStart(e: TouchEvent, id: string) {
-		if (swipedId && swipedId !== id) {
-			swipedId = null;
-			return;
-		}
-		touchStartX = e.touches[0].clientX;
-		touchStartY = e.touches[0].clientY;
-		lockAxis = null;
-		touching = true;
-	}
-
-	function onTouchMove(e: TouchEvent, id: string) {
-		const dx = e.touches[0].clientX - touchStartX;
-		const dy = e.touches[0].clientY - touchStartY;
-
-		if (!lockAxis) {
-			lockAxis = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v';
-		}
-		if (lockAxis === 'h') e.preventDefault(); // prevent scroll during horizontal swipe
-	}
-
-	function onTouchEnd(e: TouchEvent, id: string) {
-		touching = false;
-		if (lockAxis !== 'h') return;
-		const dx = e.changedTouches[0].clientX - touchStartX;
-		if (dx < -SWIPE_THRESHOLD) swipedId = id;
-		else if (dx > SWIPE_THRESHOLD / 2) swipedId = null;
-		lockAxis = null;
-	}
-
-	function closeSwipe() {
-		swipedId = null;
-	}
-
 	// ── Actions ────────────────────────────────────────────────────
 	function startCreate() {
 		selectedService = null;
@@ -76,16 +33,11 @@
 	}
 
 	function startEdit(service: any) {
-		if (swipedId === service.id) {
-			swipedId = null;
-			return;
-		}
 		selectedService = service;
 		openForm = true;
 	}
 
 	function confirmDelete(service: any) {
-		swipedId = null;
 		serviceToDelete = { id: service.id, name: service.name };
 		openDelete = true;
 	}
@@ -134,16 +86,6 @@
 	}
 </script>
 
-<!-- Overlay que fecha qualquer row aberta ao tocar fora -->
-{#if swipedId}
-	<div
-		class="fixed inset-0 z-10"
-		role="presentation"
-		onclick={closeSwipe}
-		ontouchstart={closeSwipe}
-	></div>
-{/if}
-
 <!-- ───────────────────────── MOBILE ───────────────────────────── -->
 <div class="flex w-full flex-col gap-4 p-4 pb-28 sm:hidden">
 	<!-- Header -->
@@ -158,44 +100,18 @@
 		<Input type="search" placeholder="Procurar serviço..." class="pl-9" bind:value={searchQuery} />
 	</div>
 
-	<!-- Hint de swipe (some depois da primeira interação) -->
+	<!-- Hint -->
 	{#if services.length > 0}
-		<p class="text-center text-[11px] text-muted-foreground/60 select-none">
-			← Deslize para excluir · Toque para editar
-		</p>
+		<p class="text-center select-none">Toque para editar</p>
 	{/if}
 
-	<!-- Lista com swipe -->
+	<!-- Lista Simples -->
 	<div class="overflow-hidden rounded-2xl border bg-background shadow-sm">
 		{#each filteredServices as service (service.id)}
-			<div class="relative overflow-hidden border-b last:border-b-0">
-				<!-- Fundo vermelho (ação de deletar) -->
+			<div class="relative border-b last:border-b-0">
 				<div
-					class="absolute inset-y-0 right-0 flex w-20 items-center justify-center bg-destructive transition-opacity"
-					class:pointer-events-none={swipedId !== service.id}
-					class:opacity-0={swipedId !== service.id}
-					class:opacity-100={swipedId === service.id}
-				>
-					<button
-						class="flex h-full w-full flex-col items-center justify-center gap-1 text-white active:opacity-70"
-						onclick={() => confirmDelete(service)}
-					>
-						<Trash2 class="size-5" />
-						<span class="text-[10px] font-semibold tracking-wide">Excluir</span>
-					</button>
-				</div>
-
-				<!-- Conteúdo deslizável -->
-				<div
-					class="relative z-20 flex items-center gap-3 bg-background px-4 py-3.5 will-change-transform"
+					class="flex items-center gap-3 bg-background px-4 py-3.5 transition-colors active:bg-muted/50"
 					class:opacity-40={!service.is_active}
-					class:transition-transform={!touching}
-					style="transform: translateX({swipedId === service.id
-						? SWIPE_OPEN_X
-						: 0}px); touch-action: pan-y;"
-					ontouchstart={(e) => onTouchStart(e, service.id)}
-					ontouchmove={(e) => onTouchMove(e, service.id)}
-					ontouchend={(e) => onTouchEnd(e, service.id)}
 					role="button"
 					tabindex="0"
 					onclick={() => startEdit(service)}
@@ -235,9 +151,6 @@
 								}
 							}}
 						onclick={(e) => e.stopPropagation()}
-						ontouchstart={(e) => e.stopPropagation()}
-						ontouchmove={(e) => e.stopPropagation()}
-						ontouchend={(e) => e.stopPropagation()}
 					>
 						<input type="hidden" name="id" value={service.id} />
 						<input
@@ -267,11 +180,11 @@
 <button
 	onclick={startCreate}
 	class="
-		fixed right-4 z-30 flex items-center gap-2
-		rounded-full bg-primary px-5 py-3.5 text-sm font-semibold text-primary-foreground
-		shadow-[0_4px_20px_rgba(0,0,0,0.25)] transition-all duration-150
-		active:scale-95 active:shadow-sm sm:hidden
-	"
+        fixed right-4 z-30 flex items-center gap-2
+        rounded-full bg-primary px-5 py-3.5 text-sm font-semibold text-primary-foreground
+        shadow-[0_4px_20px_rgba(0,0,0,0.25)] transition-all duration-150
+        active:scale-95 active:shadow-sm sm:hidden
+    "
 	style="bottom: calc(4rem + 1rem + env(safe-area-inset-bottom))"
 	aria-label="Novo Serviço"
 >
@@ -404,7 +317,7 @@
 	</div>
 </div>
 
-<!-- ─────────────────── Dialogs / Drawers ──────────────────────── -->
+<!-- ─────────────────── Dialogs ──────────────────────── -->
 <ServiceForm formData={data.form} service={selectedService} bind:open={openForm} />
 
 <AlertDialog.Root
@@ -438,11 +351,6 @@
 			<AlertDialog.Title>Excluir serviço?</AlertDialog.Title>
 			<AlertDialog.Description>
 				Esta ação não pode ser desfeita. Remover <strong>{serviceToDelete?.name}</strong>?
-				{#if services.length === 1}
-					<div class="mt-2 font-bold text-destructive">
-						Atenção: Este é seu último serviço. Sua agenda ficará indisponível.
-					</div>
-				{/if}
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer class="flex-col-reverse gap-2 sm:flex-row">

@@ -178,12 +178,21 @@
 									{appointment.status === 'pending' ? 'bg-slate-300' : ''}"
 							></div>
 
-							<div class="pt-3 pr-3 pb-2.5 pl-4">
-								<div class="flex items-start justify-between gap-2">
-									<div class="flex items-baseline gap-2">
-										<span class="text-xl leading-none font-bold tabular-nums">
-											{appointment.start_at}
-										</span>
+							<div class="flex gap-3 pt-3 pr-3 pb-2.5 pl-4">
+								<div class="flex min-w-10.5 flex-col items-center pt-0.5">
+									<span class="text-[14px] leading-none font-semibold tabular-nums">
+										{appointment.start_at}
+									</span>
+
+									<div class="my-1.5 w-px flex-1 bg-border" style="min-height:16px"></div>
+
+									<span class="text-[11px] leading-none text-muted-foreground tabular-nums">
+										{appointment.end_at}
+									</span>
+								</div>
+
+								<div class="flex-1">
+									<div class="flex items-start justify-between gap-2">
 										<Badge
 											variant="outline"
 											class="h-4 px-1.5 text-[9px] font-bold tracking-wider uppercase {statusClass(
@@ -192,32 +201,33 @@
 										>
 											{statusLabel(appointment.status)}
 										</Badge>
-									</div>
-									<div class="shrink-0">
-										<AppointmentCardAction
-											appointmentId={appointment.id}
-											appointmentStatus={appointment.status}
-										/>
-									</div>
-								</div>
 
-								<div class="mt-1.5">
-									<p class="leading-snug font-semibold">{appointment.customer_name}</p>
-									<p class="text-xs text-muted-foreground">{appointment.service_name}</p>
-								</div>
-
-								{#if appointment.customer_phone}
-									<div class="mt-2.5 border-t pt-2">
-										<a
-											href="https://wa.me/{appointment.customer_phone.replace(/\D/g, '')}"
-											target="_blank"
-											class="flex items-center gap-1.5 text-green-600 active:opacity-70"
-										>
-											<MessageCircle class="size-4 fill-green-500/15" />
-											<span class="font-mono text-xs">{appointment.customer_phone}</span>
-										</a>
+										<div class="shrink-0">
+											<AppointmentCardAction
+												appointmentId={appointment.id}
+												appointmentStatus={appointment.status}
+											/>
+										</div>
 									</div>
-								{/if}
+
+									<div class="mt-2">
+										<p class="leading-snug font-semibold">{appointment.customer_name}</p>
+										<p class="text-xs text-muted-foreground">{appointment.service_name}</p>
+									</div>
+
+									{#if appointment.customer_phone}
+										<div class="mt-2.5 border-t pt-2">
+											<a
+												href="https://wa.me/{appointment.customer_phone.replace(/\D/g, '')}"
+												target="_blank"
+												class="flex items-center gap-1.5 text-green-600 active:opacity-70"
+											>
+												<MessageCircle class="size-4 fill-green-500/15" />
+												<span class="font-mono text-xs">{appointment.customer_phone}</span>
+											</a>
+										</div>
+									{/if}
+								</div>
 							</div>
 						</div>
 					{/each}
@@ -293,21 +303,28 @@
 										appointmentStatus={appointment.status}
 									/>
 								</div>
-								<Card.Header class="flex-row items-center justify-between gap-5 space-y-0 pt-3">
-									<div class="flex w-full items-center gap-5">
-										<div class="flex min-w-18.75 flex-col border-r border-foreground/5 pr-5">
-											<span class="text-base font-bold tracking-tight">{appointment.start_at}</span>
-											<span
-												class="text-[10px] font-medium tracking-widest text-muted-foreground/60 uppercase"
-												>Início</span
-											>
+								<Card.Header class="space-y-0 pt-0 pb-0">
+									<div class="flex items-start gap-4">
+										<div class="flex min-w-10.5 flex-col items-center pt-0 pb-0">
+											<span class="text-[13px] leading-none font-semibold tabular-nums">
+												{appointment.start_at}
+											</span>
+
+											<div class="my-1.5 w-px flex-1 bg-border" style="min-height:20px"></div>
+
+											<span class="text-[11px] leading-none text-muted-foreground tabular-nums">
+												{appointment.end_at}
+											</span>
 										</div>
-										<div class="flex-1 space-y-0.5">
-											<Card.Title class="text-sm font-semibold tracking-tight"
-												>{appointment.customer_name}</Card.Title
-											>
-											<Card.Description class="text-xs">{appointment.service_name}</Card.Description
-											>
+
+										<div class="min-w-0 flex-1">
+											<Card.Title class="truncate text-sm font-semibold tracking-tight">
+												{appointment.customer_name}
+											</Card.Title>
+
+											<Card.Description class="mt-0.5 text-xs">
+												{appointment.service_name}
+											</Card.Description>
 										</div>
 									</div>
 								</Card.Header>

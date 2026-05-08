@@ -15,6 +15,7 @@ export const load: PageServerLoad = async ({ locals: { sql, user } }) => {
             FROM customers 
             WHERE profile_id = ${user.id} 
             ORDER BY name ASC
+			LIMIT 200
         `
 	]);
 

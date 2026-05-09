@@ -231,7 +231,11 @@
 	ontouchend={handleTouchEnd}
 >
 	<!-- HEADER -->
-	<div class="sticky top-0 z-20 bg-background/80 backdrop-blur-xl">
+	<div
+		class="sticky top-0 z-20 bg-background/80 backdrop-blur-xl"
+		ontouchstart={(e) => e.stopPropagation()}
+		ontouchend={(e) => e.stopPropagation()}
+	>
 		<div class="flex items-start justify-between px-5 pt-6 pb-3">
 			<div>
 				<h1

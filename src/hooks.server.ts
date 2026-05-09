@@ -83,16 +83,30 @@ const authHandle: Handle = async ({ event, resolve }) => {
 	const {
 		data: { session }
 	} = await event.locals.supabase.auth.getSession();
+
 	event.locals.session = session;
-	event.locals.user = session?.user
-		? {
-				id: session.user.id,
-				email: session.user.email ?? '',
-				full_name: session.user.user_metadata?.full_name ?? 'Usuário',
-				username: session.user.user_metadata?.username ?? '',
-				avatar_url: session.user.user_metadata?.avatar_url ?? null
-			}
-		: null;
+
+	if (session?.user) {
+		// Buscamos o path (nome do arquivo) que está guardado no metadado
+		const avatarPath = session.user.user_metadata?.avatar_url;
+
+		// Se existir um path, geramos a URL pública real do Storage
+		let avatarFullUrl = null;
+		if (avatarPath) {
+			const { data } = event.locals.supabase.storage.from('avatars').getPublicUrl(avatarPath);
+			avatarFullUrl = data.publicUrl;
+		}
+
+		event.locals.user = {
+			id: session.user.id,
+			email: session.user.email ?? '',
+			full_name: session.user.user_metadata?.full_name ?? 'Usuário',
+			username: session.user.user_metadata?.username ?? '',
+			avatar_url: avatarFullUrl // Agora com o link completo!
+		};
+	} else {
+		event.locals.user = null;
+	}
 
 	// 2. Lógica de proteção de rotas (Redirecionamentos)
 	const isPrivate = PRIVATE_ROUTES.has(event.url.pathname);

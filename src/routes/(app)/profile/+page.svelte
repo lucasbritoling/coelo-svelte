@@ -13,7 +13,7 @@
 	let username = $state(data.user?.username ?? '');
 
 	// Sincroniza o avatarUrl com o retorno da Action ou com o dado inicial
-	let avatarUrl = $state(data.user?.avatar_url ?? '');
+	const avatarUrl = $derived(data.user?.avatar_url ?? '');
 
 	let uploading = $state(false);
 	let isSaving = $state(false);
@@ -21,10 +21,10 @@
 	let nameFocused = $state(false);
 	let usernameFocused = $state(false);
 
-	// Efeito para atualizar o avatar assim que a action retornar sucesso
+	// O $effect do avatarUrl não é mais necessário,
+	// pois o invalidateAll + $derived cuidam disso.
 	$effect(() => {
-		if (form?.success && form?.avatarUrl) {
-			avatarUrl = form.avatarUrl;
+		if (form?.success) {
 			toast.success('Foto atualizada!');
 		}
 	});
@@ -71,9 +71,8 @@
 			action="?/updateAvatar"
 			enctype="multipart/form-data"
 			use:enhance={() => {
-				console.log('Iniciando upload via enhance...');
 				uploading = true;
-
+				console.log('Iniciando upload via enhance...');
 				return async ({ result, update }) => {
 					console.log('Resultado da Action recebido:', result);
 
@@ -90,11 +89,9 @@
 					if (result.type === 'success') {
 						console.log('Upload confirmado pelo servidor:', result.data);
 						// O update() aqui vai atualizar o objeto 'form'
-						avatarUrl = result.data.avatarUrl;
 						await invalidateAll();
 						await update();
 					}
-
 					uploading = false;
 				};
 			}}

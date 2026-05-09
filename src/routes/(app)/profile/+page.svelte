@@ -4,6 +4,7 @@
 	import { enhance } from '$app/forms';
 	import { Camera, ArrowLeft, Loader2, Check } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
+	import { invalidateAll } from '$app/navigation';
 
 	let { data, form } = $props();
 
@@ -89,6 +90,7 @@
 					if (result.type === 'success') {
 						console.log('Upload confirmado pelo servidor:', result.data);
 						// O update() aqui vai atualizar o objeto 'form'
+						await invalidateAll();
 						await update();
 					}
 

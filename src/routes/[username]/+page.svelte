@@ -18,13 +18,13 @@
 	const selectedService = $derived(services.find((s) => s.id == data.selectedServiceId));
 
 	const initials = $derived(
-        professional.full_name
-            .split(' ')
-            .map((n: string) => n[0])
-            .slice(0, 1)
-            .join('')
-            .toUpperCase() || '?'
-    );
+		professional.full_name
+			.split(' ')
+			.map((n: string) => n[0])
+			.slice(0, 1)
+			.join('')
+			.toUpperCase() || '?'
+	);
 
 	let isLoading = $state(false);
 	let isSuccess = $state(false);

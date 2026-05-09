@@ -69,16 +69,16 @@
 		<div class="avatar-identity">
 			<h1 class="identity-name">{fullName || 'Seu nome'}</h1>
 			<p class="identity-handle">
-				<span class="handle-domain">coelo.dev/</span><span class="handle-slug">{username || 'username'}</span>
+				<span class="handle-domain">coelo.dev/</span><span class="handle-slug"
+					>{username || 'username'}</span
+				>
 			</p>
 		</div>
 	</div>
 
 	<!-- FORM -->
 	<div class="form-body">
-
 		<div class="form-card">
-
 			<!-- Campo: Nome -->
 			<div class="field" class:is-focused={nameFocused}>
 				<label for="name" class="field-label">Nome completo</label>
@@ -113,7 +113,6 @@
 				</div>
 				<div class="field-bar" class:active={usernameFocused}></div>
 			</div>
-
 		</div>
 
 		<!-- Botão Salvar -->
@@ -124,7 +123,7 @@
 			class:is-done={saved}
 		>
 			{#if isSaving}
-				<Loader2 class="size-[18px] shrink-0 spin-icon" />
+				<Loader2 class="spin-icon size-[18px] shrink-0" />
 				<span>Salvando...</span>
 			{:else if saved}
 				<Check class="size-[18px] shrink-0" strokeWidth={2.5} />
@@ -133,7 +132,6 @@
 				<span>Salvar alterações</span>
 			{/if}
 		</button>
-
 	</div>
 </div>
 
@@ -150,7 +148,9 @@
 		background: transparent;
 		color: hsl(var(--foreground));
 		cursor: pointer;
-		transition: background 0.12s, transform 0.1s;
+		transition:
+			background 0.12s,
+			transform 0.1s;
 		-webkit-tap-highlight-color: transparent;
 	}
 	.back-btn:active {
@@ -214,7 +214,9 @@
 		justify-content: center;
 		cursor: pointer;
 		box-shadow: 0 1px 4px hsl(0 0% 0% / 0.1);
-		transition: transform 0.1s, background 0.12s;
+		transition:
+			transform 0.1s,
+			background 0.12s;
 		-webkit-tap-highlight-color: transparent;
 	}
 	.camera-trigger:active {
@@ -371,7 +373,10 @@
 		font-weight: 600;
 		letter-spacing: 0.005em;
 		cursor: pointer;
-		transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s, opacity 0.15s;
+		transition:
+			transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1),
+			background 0.2s,
+			opacity 0.15s;
 		-webkit-tap-highlight-color: transparent;
 		margin-top: 0.25rem;
 	}
@@ -395,7 +400,9 @@
 	}
 
 	@keyframes spin {
-		to { transform: rotate(360deg); }
+		to {
+			transform: rotate(360deg);
+		}
 	}
 
 	button {

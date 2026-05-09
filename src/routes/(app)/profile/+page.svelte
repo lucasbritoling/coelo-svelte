@@ -90,6 +90,7 @@
 					if (result.type === 'success') {
 						console.log('Upload confirmado pelo servidor:', result.data);
 						// O update() aqui vai atualizar o objeto 'form'
+						avatarUrl = result.data.avatarUrl;
 						await invalidateAll();
 						await update();
 					}

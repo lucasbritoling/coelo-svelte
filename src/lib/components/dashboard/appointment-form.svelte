@@ -145,7 +145,7 @@
 			}).finally(() => {
 				isSearchingCustomer = false;
 			});
-		}, 300);
+		}, 0);
 	}
 </script>
 

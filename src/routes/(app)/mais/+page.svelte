@@ -5,7 +5,7 @@
 	let { data } = $props();
 
 	const profile = {
-		name: 'Lucas Ferreira', // Poderia vir de data.user.name se preferir
+		name: data.user?.full_name ?? 'Usuário',
 		slug: data.username
 	};
 </script>
@@ -20,15 +20,16 @@
 	<div class="mx-3 overflow-hidden rounded-2xl border border-border/40 bg-card">
 		<button class="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-muted/50">
 			<div
-				class="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-medium text-muted-foreground"
+				class="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-medium text-muted-foreground uppercase"
 			>
 				{profile.name[0]}
 			</div>
 			<div class="min-w-0 flex-1">
-				<p class="text-[14px] font-medium">{profile.name}</p>
-				<p class="text-[12px] text-muted-foreground">coelo.dev/{profile.slug}</p>
+				<!-- truncate garante que nomes longos não empurrem o ícone de Chevron -->
+				<p class="truncate text-[14px] font-medium">{profile.name}</p>
+				<p class="truncate text-[12px] text-muted-foreground">coelo.dev/{profile.slug}</p>
 			</div>
-			<ChevronRight class="size-4 text-muted-foreground/40" />
+			<ChevronRight class="size-4 shrink-0 text-muted-foreground/40" />
 		</button>
 	</div>
 

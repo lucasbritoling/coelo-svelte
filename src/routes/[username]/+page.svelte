@@ -286,23 +286,28 @@
 							action="?/finishSelfBooking"
 							use:enhance={() => {
 								isLoading = true;
-								return async ({ result, update }) => {
-									if (result.type === 'success') {
-										// Formatação simples para a mensagem de share
-										const day = String(calendarValue.day).padStart(2, '0');
-										const month = String(calendarValue.month).padStart(2, '0');
+								console.log('Enviando formulário...');
 
-										bookingSnapshot = {
-											serviceName:
-												services.find((s) => s.id === data.selectedServiceId)?.name ?? '',
-											dayName: getDayName(calendarValue),
-											date: `${day}/${month}`, // Ex: 11/05
-											time: formatSlotTime(selectedSlot?.slot_start) // Usa sua função de limpeza
-										};
+								return async ({ result }) => {
+									console.log('Resultado da Action recebido:', result);
+
+									if (result.type === 'success') {
+										const appId = result.data?.appointmentId;
+										console.log('ID do agendamento para redirecionamento:', appId);
+
+										if (appId) {
+											await goto(`/${appId}`, {
+												replaceState: true
+											});
+										} else {
+											console.error('Action retornou sucesso, mas appointmentId está nulo!');
+											isLoading = false;
+										}
+									} else if (result.type === 'failure') {
+										console.warn('Falha na validação/banco:', result.data?.message);
 										isLoading = false;
-										isSuccess = true;
-									} else {
-										await update();
+									} else if (result.type === 'error') {
+										console.error('Erro inesperado do servidor:', result.error);
 										isLoading = false;
 									}
 								};

@@ -1,19 +1,32 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
+	import { enhance } from '$app/forms';
 	import { Camera, ArrowLeft, Loader2, Check } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
 
-	let { data } = $props();
+	let { data, form } = $props();
 
+	// Estados reativos com Runes
 	let fullName = $state(data.user?.full_name ?? '');
 	let username = $state(data.user?.username ?? '');
+
+	// Sincroniza o avatarUrl com o retorno da Action ou com o dado inicial
 	let avatarUrl = $state(data.user?.avatar_url ?? '');
+
 	let uploading = $state(false);
 	let isSaving = $state(false);
 	let saved = $state(false);
 	let nameFocused = $state(false);
 	let usernameFocused = $state(false);
+
+	// Efeito para atualizar o avatar assim que a action retornar sucesso
+	$effect(() => {
+		if (form?.success && form?.avatarUrl) {
+			avatarUrl = form.avatarUrl;
+			toast.success('Foto atualizada!');
+		}
+	});
 
 	const initials = $derived(
 		fullName
@@ -24,50 +37,19 @@
 			.toUpperCase() || '?'
 	);
 
+	// Função para disparar o clique no input escondido
+	function triggerFileInput() {
+		document.getElementById('avatar-input')?.click();
+	}
+
 	async function handleSave() {
 		isSaving = true;
+		// Aqui você chamará sua outra Action de salvar dados do perfil futuramente
 		await new Promise((r) => setTimeout(r, 1200));
 		isSaving = false;
 		saved = true;
 		toast.success('Perfil atualizado!');
 		setTimeout(() => (saved = false), 2500);
-	}
-
-	async function handleAvatarUpload(event: Event) {
-		const target = event.target as HTMLInputElement;
-		if (!target.files || target.files.length === 0) return;
-
-		try {
-			uploading = true;
-			const file = target.files[0];
-			const fileExt = file.name.split('.').pop();
-			const filePath = `${data.user.id}/${Math.random()}.${fileExt}`;
-
-			// 1. Upload para o Storage
-			const { error: uploadError } = await data.supabase.storage
-				.from('avatars')
-				.upload(filePath, file, { upsert: true });
-
-			if (uploadError) throw uploadError;
-
-			// 2. Obter URL pública
-			const {
-				data: { publicUrl }
-			} = data.supabase.storage.from('avatars').getPublicUrl(filePath);
-
-			avatarUrl = publicUrl;
-
-			// 3. Atualizar metadados para latência zero no hook
-			await data.supabase.auth.updateUser({
-				data: { avatar_url: publicUrl }
-			});
-
-			toast.success('Foto atualizada!');
-		} catch (error) {
-			toast.error('Erro ao subir imagem');
-		} finally {
-			uploading = false;
-		}
 	}
 </script>
 
@@ -83,18 +65,52 @@
 
 	<!-- AVATAR HERO -->
 	<div class="avatar-hero">
-		<div class="avatar-wrapper">
-			<div class="avatar-shell">
-				{#if avatarUrl}
-					<img src={avatarUrl} alt={fullName} style="width:100%;height:100%;object-fit:cover" />
-				{:else}
-					<span class="avatar-initials">{initials}</span>
-				{/if}
+		<form
+			method="POST"
+			action="?/updateAvatar"
+			enctype="multipart/form-data"
+			use:enhance={() => {
+				uploading = true;
+				return async ({ update }) => {
+					await update();
+					uploading = false;
+				};
+			}}
+		>
+			<div class="avatar-wrapper">
+				<div class="avatar-shell">
+					{#if uploading}
+						<Loader2 size={24} class="spin-icon text-muted-foreground/50" />
+					{:else if avatarUrl}
+						<img src={avatarUrl} alt={fullName} style="width:100%;height:100%;object-fit:cover" />
+					{:else}
+						<span class="avatar-initials">{initials}</span>
+					{/if}
+				</div>
+
+				<!-- Input real escondido -->
+				<input
+					id="avatar-input"
+					type="file"
+					name="avatar"
+					accept="image/*"
+					class="hidden"
+					style="display: none"
+					onchange={(e) => e.currentTarget.form?.requestSubmit()}
+				/>
+
+				<!-- Botão visual que dispara o input -->
+				<button
+					type="button"
+					class="camera-trigger"
+					onclick={triggerFileInput}
+					disabled={uploading}
+					aria-label="Alterar foto"
+				>
+					<Camera size={14} strokeWidth={2.5} />
+				</button>
 			</div>
-			<button class="camera-trigger" onclick={handleAvatarUpload} aria-label="Alterar foto">
-				<Camera size={16} strokeWidth={2} />
-			</button>
-		</div>
+		</form>
 
 		<div class="avatar-identity">
 			<h1 class="identity-name">{fullName || 'Seu nome'}</h1>

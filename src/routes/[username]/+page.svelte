@@ -98,17 +98,23 @@
 		content="Reserve seu horário com @{professional.username}. Rápido e simples."
 	/>
 
-	<!-- Aqui entra a imagem que você queria -->
-	<meta property="og:image" content={professional.avatar_url} />
+	<!-- Configuração de Compartilhamento (Open Graph) -->
+	<meta property="og:type" content="website" />
 	<meta property="og:title" content="Agendamento com {professional.full_name}" />
 	<meta
 		property="og:description"
 		content="Confira os horários disponíveis para {selectedService?.name ?? 'serviços'}."
 	/>
+	<!-- Forçando o ícone do app -->
+	<meta property="og:image" content="/icon-512-squared.png" />
+	<meta property="og:image:width" content="512" />
+	<meta property="og:image:height" content="512" />
 
 	<!-- Twitter/X -->
-	<meta name="twitter:card" content="summary_large_image" />
-	<meta name="twitter:image" content={professional.avatar_url} />
+	<meta name="twitter:card" content="summary" />
+	<!-- 'summary' é melhor para ícones quadrados -->
+	<meta name="twitter:title" content="Agendamento com {professional.full_name}" />
+	<meta name="twitter:image" content="/icon-512-squared.png" />
 </svelte:head>
 
 <div class="mx-auto p-6 {data.singleService ? 'max-w-sm' : 'max-w-sm lg:max-w-5xl'}">

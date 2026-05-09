@@ -187,7 +187,7 @@
 						class="w-full cursor-pointer justify-between font-normal hover:shadow-sm"
 					>
 						<!-- Truncate no botão principal para nomes longos -->
-						<span class="max-w-60! truncate xs:max-w-xs!">
+						<span class="max-w-50! truncate xs:max-w-xs!">
 							{selectedCustomerName}
 						</span>
 						<ChevronsUpDown class="ml-2 size-4 shrink-0 opacity-50" />
@@ -229,7 +229,7 @@
 							{/if}
 						</Command.Empty>
 						<Command.Group>
-							{#each customers as customer (customer.id)}
+							{#each customers.slice(0, 5) as customer (customer.id)}
 								<Command.Item
 									value={customer.name}
 									class="flex max-w-65! min-w-0 cursor-pointer items-center xs:max-w-xs!"
@@ -251,6 +251,13 @@
 								</Command.Item>
 							{/each}
 						</Command.Group>
+						{#if customers.length > 5}
+							<div
+								class="border-t bg-muted/5 px-2 py-2 text-center text-[10px] font-medium tracking-widest text-muted-foreground/50 uppercase"
+							>
+								Refine a busca para ver mais
+							</div>
+						{/if}
 					</Command.List>
 				</Command.Root>
 			</Popover.Content>
@@ -270,7 +277,7 @@
 						class="w-full cursor-pointer justify-between font-normal hover:shadow-sm"
 					>
 						<!-- CORREÇÃO: Usando a variável de serviço em vez de cliente -->
-						<span class="max-w-60! truncate xs:max-w-xs!">
+						<span class="max-w-50! truncate xs:max-w-xs!">
 							{selectedServiceName}
 						</span>
 						<ChevronsUpDown class="ml-2 size-4 shrink-0 opacity-50" />

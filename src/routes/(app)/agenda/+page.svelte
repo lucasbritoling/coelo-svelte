@@ -500,6 +500,7 @@
 
 		<div class="overflow-y-auto">
 			<AppointmentForm
+				open={showAppointmentModal}
 				customers={data.customers}
 				services={data.services}
 				selectedDate={data.selectedDate}

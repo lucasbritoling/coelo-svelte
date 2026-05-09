@@ -40,7 +40,7 @@
 
 <!-- MOBILE: layout fullscreen + bottom nav -->
 <div class="flex h-svh flex-col md:hidden">
-	<main class="flex-1 overflow-y-auto bg-zinc-50 p-4">
+	<main class="flex-1 overflow-y-auto bg-zinc-50 p-4 pb-1">
 		{@render children()}
 	</main>
 	<BottomNav />

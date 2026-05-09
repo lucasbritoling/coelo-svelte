@@ -277,7 +277,7 @@
 
 		<!-- STRIP -->
 		<div
-			class="no-scrollbar flex gap-2 overflow-x-auto px-5 pb-4"
+			class="no-scrollbar flex gap-2 overflow-x-auto px-5 pb-0"
 			ontouchstart={(e) => e.stopPropagation()}
 			ontouchend={(e) => e.stopPropagation()}
 		>

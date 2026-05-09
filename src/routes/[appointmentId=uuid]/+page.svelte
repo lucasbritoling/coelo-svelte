@@ -47,7 +47,11 @@
 		property="og:description"
 		content="{appointment.service_name} com {professional.full_name} em {appointment.date} às {appointment.time}."
 	/>
-	<meta property="og:image" content="{page.url.origin}/icon-512-squared.png" />
+	<meta property="og:image" content="{page.url.origin}/icon-300-squared.png?v=1" />
+	<meta property="og:image:width" content="300" />
+	<meta property="og:image:height" content="300" />
+
+	<meta property="og:type" content="website" />
 	<meta name="twitter:card" content="summary" />
 </svelte:head>
 

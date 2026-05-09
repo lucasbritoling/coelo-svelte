@@ -268,11 +268,12 @@
 				</h1>
 			</div>
 
-			<div
-				class="mt-0.5 flex size-10 items-center justify-center rounded-full bg-muted text-sm font-semibold text-muted-foreground"
+			<a
+				href="/mais"
+				class="flex size-10 -translate-y-2 items-center justify-center rounded-full bg-muted text-sm font-semibold text-muted-foreground uppercase transition-all active:scale-95"
 			>
 				{data.user?.full_name?.charAt(0) ?? 'U'}
-			</div>
+			</a>
 		</div>
 
 		<!-- STRIP -->

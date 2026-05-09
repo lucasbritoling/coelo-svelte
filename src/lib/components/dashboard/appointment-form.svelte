@@ -202,31 +202,30 @@
 						oninput={handleCustomerSearch}
 					/>
 					<Command.List>
+						{#if isSearchingCustomer}
+							<div
+								class="flex animate-in items-center justify-center gap-2 border-b bg-muted/30 py-2 text-xs text-muted-foreground duration-200 fade-in"
+							>
+								<LoaderCircle class="size-3 animate-spin" />
+								Buscando clientes...
+							</div>
+						{/if}
 						<Command.Empty>
-							{#if isSearchingCustomer}
-								<div
-									class="flex items-center justify-center gap-2 py-4 text-sm text-muted-foreground"
+							<div class="flex flex-col items-center gap-2 px-2 py-4 text-center">
+								<p class="text-sm text-muted-foreground">Cliente não encontrado.</p>
+								<Button
+									variant="secondary"
+									size="sm"
+									class="h-8 w-full"
+									onclick={() => {
+										openCustomer = false;
+										showCustomerModal = true;
+									}}
 								>
-									<LoaderCircle class="size-4 animate-spin" />
-									Buscando cliente...
-								</div>
-							{:else}
-								<div class="flex flex-col items-center gap-2 px-2 py-4 text-center">
-									<p class="text-sm text-muted-foreground">Cliente não encontrado.</p>
-									<Button
-										variant="secondary"
-										size="sm"
-										class="h-8 w-full"
-										onclick={() => {
-											openCustomer = false;
-											showCustomerModal = true;
-										}}
-									>
-										<Plus class="mr-2 size-3" />
-										Criar "{customerSearch}"
-									</Button>
-								</div>
-							{/if}
+									<Plus class="mr-2 size-3" />
+									Criar "{customerSearch}"
+								</Button>
+							</div>
 						</Command.Empty>
 						<Command.Group>
 							{#each customers.slice(0, 5) as customer (customer.id)}

@@ -126,7 +126,11 @@
 					disabled={uploading}
 					aria-label="Alterar foto"
 				>
-					<Camera size={14} strokeWidth={2.5} />
+					<Camera
+						size={16}
+						strokeWidth={2.5}
+						style="filter: drop-shadow(0 0 2px white) drop-shadow(0 1px 2px rgb(0 0 0 / 0.3))"
+					/>
 				</button>
 			</div>
 		</form>
@@ -291,8 +295,8 @@
 		position: absolute;
 		bottom: 2px;
 		right: 2px;
-		width: 1.75rem;
-		height: 1.75rem;
+		width: 1.375rem; /* era 1.75rem */
+		height: 1.375rem; /* era 1.75rem */
 		border-radius: 9999px;
 		background: #ffffff;
 		border: 1.5px solid hsl(var(--border));

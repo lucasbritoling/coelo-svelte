@@ -13,7 +13,6 @@
 	import {
 		LoaderCircle,
 		CircleCheckBig,
-		CalendarCheck2,
 		CalendarX2,
 		ArrowLeft,
 		Share2
@@ -92,6 +91,20 @@
             setTimeout(() => (showCopiedFeedback = false), 3000);
         }
     }
+
+	function getDayName(dateObj: any) {
+    if (!dateObj) return '';
+    
+    // Converte para um objeto Date nativo para pegar o dia da semana
+    const date = dateObj.toDate(getLocalTimeZone());
+    
+    const days = [
+        'Domingo', 'Segunda', 'Terça', 'Quarta', 
+        'Quinta', 'Sexta', 'Sábado'
+    ];
+    
+    return days[date.getDay()];
+}
 </script>
 
 <svelte:head>
@@ -126,7 +139,7 @@
 		<!-- TELA DE SUCESSO (Oculta todo o resto) -->
 		<div class="mx-auto max-w-md animate-in duration-500 zoom-in-95 fade-in">
 			<Card.Root>
-				<Card.Content class="flex flex-col items-center justify-center p-8 py-4 text-center">
+				<Card.Content class="flex flex-col items-center justify-center p-8 px-4 py-4 text-center">
 					<div
 						class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 shadow-sm"
 					>
@@ -150,10 +163,9 @@
 									>Data e Hora</span
 								>
 								<span class="text-base font-semibold">
-									{bookingSnapshot.date} às {bookingSnapshot.time}
+									{bookingSnapshot.dayName}, {bookingSnapshot.date} às {bookingSnapshot.time}
 								</span>
 							</div>
-							<CalendarCheck2 class="h-5 w-5 text-muted-foreground/50" />
 						</div>
 					</div>
 
@@ -291,6 +303,7 @@
                 
                 bookingSnapshot = {
                     serviceName: services.find((s) => s.id === data.selectedServiceId)?.name ?? '',
+					dayName: getDayName(calendarValue),
                     date: `${day}/${month}`, // Ex: 11/05
                     time: formatSlotTime(selectedSlot?.slot_start) // Usa sua função de limpeza
                 };

@@ -493,61 +493,63 @@
 
 <!-- DESKTOP -->
 <div class="mx-auto hidden max-w-5xl p-8 sm:block">
-    <div class="mb-8 flex items-center justify-between">
-        <div>
-            <h1 class="text-4xl font-semibold tracking-tight capitalize">
-                {headerLabel}
-            </h1>
-            <p class="mt-2 text-muted-foreground">Visualize e gerencie seus atendimentos.</p>
-        </div>
+	<div class="mb-8 flex items-center justify-between">
+		<div>
+			<h1 class="text-4xl font-semibold tracking-tight capitalize">
+				{headerLabel}
+			</h1>
+			<p class="mt-2 text-muted-foreground">Visualize e gerencie seus atendimentos.</p>
+		</div>
 
-        <Button
-            onclick={() => (showAppointmentModal = true)}
-            class="h-12 cursor-pointer rounded-2xl px-6"
-        >
-            <Plus class="mr-2 size-5" />
-            Novo Agendamento
-        </Button>
-    </div>
+		<Button
+			onclick={() => (showAppointmentModal = true)}
+			class="h-12 cursor-pointer rounded-2xl px-6"
+		>
+			<Plus class="mr-2 size-5" />
+			Novo Agendamento
+		</Button>
+	</div>
 
-    <div class="flex flex-col gap-4">
-        {#if data.appointments.length === 0}
-            <div class="flex flex-col items-center justify-center rounded-[28px] border border-dashed py-20">
-                <CalendarDays class="mb-3 size-10 text-muted-foreground/30" />
-                <p class="text-muted-foreground">Nenhum agendamento neste dia.</p>
-            </div>
-        {:else if isTodayView}
-            {#if nextAppointment}
-                <p class="section-label px-0">próximo</p>
-                {@render card(nextAppointment, true, false, true)}
-            {/if}
+	<div class="flex flex-col gap-4">
+		{#if data.appointments.length === 0}
+			<div
+				class="flex flex-col items-center justify-center rounded-[28px] border border-dashed py-20"
+			>
+				<CalendarDays class="mb-3 size-10 text-muted-foreground/30" />
+				<p class="text-muted-foreground">Nenhum agendamento neste dia.</p>
+			</div>
+		{:else if isTodayView}
+			{#if nextAppointment}
+				<p class="section-label px-0">próximo</p>
+				{@render card(nextAppointment, true, false, true)}
+			{/if}
 
-            {#if laterAppointments.length > 0}
-                <p class="section-label px-0">mais tarde</p>
-                <div class="flex flex-col gap-3">
-                    {#each laterAppointments as appointment}
-                        {@render card(appointment)}
-                    {/each}
-                </div>
-            {/if}
+			{#if laterAppointments.length > 0}
+				<p class="section-label px-0">mais tarde</p>
+				<div class="flex flex-col gap-3">
+					{#each laterAppointments as appointment}
+						{@render card(appointment)}
+					{/each}
+				</div>
+			{/if}
 
-            {#if pastAppointments.length > 0}
-                <p class="section-label px-0">anteriores</p>
-                <div class="flex flex-col gap-3">
-                    {#each pastAppointments as appointment}
-                        {@render card(appointment, false, true)}
-                    {/each}
-                </div>
-            {/if}
-        {:else}
-            <!-- Visualização de outros dias (sem hierarquia de horário atual) -->
-            <div class="flex flex-col gap-3">
-                {#each data.appointments as appointment}
-                    {@render card(appointment)}
-                {/each}
-            </div>
-        {/if}
-    </div>
+			{#if pastAppointments.length > 0}
+				<p class="section-label px-0">anteriores</p>
+				<div class="flex flex-col gap-3">
+					{#each pastAppointments as appointment}
+						{@render card(appointment, false, true)}
+					{/each}
+				</div>
+			{/if}
+		{:else}
+			<!-- Visualização de outros dias (sem hierarquia de horário atual) -->
+			<div class="flex flex-col gap-3">
+				{#each data.appointments as appointment}
+					{@render card(appointment)}
+				{/each}
+			</div>
+		{/if}
+	</div>
 </div>
 
 <!-- MODAL -->

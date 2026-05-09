@@ -328,10 +328,10 @@
 >
 	<AlertDialog.Content>
 		<AlertDialog.Header>
-			<AlertDialog.Title>Desativar último serviço?</AlertDialog.Title>
+			<AlertDialog.Title>Desativar visibilidade?</AlertDialog.Title>
 			<AlertDialog.Description>
-				Se você desativar <strong>{servicePendingToggle?.name}</strong>, sua agenda pública ficará
-				offline.
+				Se você deixar invisíveis todos os seus serviços, sua agenda pública ficará
+				offline até você reativar um.
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer class="flex-col-reverse gap-2 sm:flex-row">

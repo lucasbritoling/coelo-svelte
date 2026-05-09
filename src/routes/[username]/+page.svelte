@@ -15,16 +15,12 @@
 	let { data, form } = $props();
 
 	const { professional, services, slots } = $derived(data);
-	const selectedService = $derived(services.find((s) => s.id == data.selectedServiceId));
 
-	const initials = $derived(
-		professional.full_name
-			.split(' ')
-			.map((n: string) => n[0])
-			.slice(0, 1)
-			.join('')
-			.toUpperCase() || '?'
-	);
+	$effect(() => {
+		console.log('--- CLIENT DEBUG ---');
+		console.log('Objeto professional:', professional);
+		console.log('Avatar URL no cliente:', professional.avatar_url);
+	});
 
 	let isLoading = $state(false);
 	let isSuccess = $state(false);

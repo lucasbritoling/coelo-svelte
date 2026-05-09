@@ -1,7 +1,7 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 
-export const load: PageServerLoad = async ({ params, url, locals: { sql } }) => {
+export const load: PageServerLoad = async ({ params, url, locals: { sql, supabase } }) => {
 	const { username } = params;
 	const date = url.searchParams.get('date');
 	const serviceId = url.searchParams.get('serviceId');
@@ -28,6 +28,20 @@ export const load: PageServerLoad = async ({ params, url, locals: { sql } }) => 
 
 		const profile = rows[0];
 		if (!profile) throw error(404, 'Profissional não encontrado');
+
+		if (profile.avatar_url) {
+			console.log('--- SERVER DEBUG: AVATAR ---');
+			console.log('Path original do banco:', profile.avatar_url);
+
+			const {
+				data: { publicUrl }
+			} = supabase.storage.from('avatars').getPublicUrl(profile.avatar_url);
+
+			profile.avatar_url = publicUrl;
+			console.log('URL gerada pelo Supabase:', profile.avatar_url);
+		} else {
+			console.log('SERVER DEBUG: Profissional sem avatar_url no banco.');
+		}
 
 		const services = profile.services ?? [];
 		const hasActiveServices = services.length > 0;

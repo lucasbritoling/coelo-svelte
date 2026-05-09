@@ -286,7 +286,7 @@
 			<Popover.Content class="w-[--bits-popover-anchor-width] p-0" align="start">
 				<Command.Root>
 					<Command.Input placeholder="Buscar serviço..." bind:value={serviceSearch} />
-					<Command.List>
+					<Command.List class="max-h-44 overflow-y-auto">
 						<Command.Empty>
 							<div class="flex flex-col items-center gap-2 px-2 py-4 text-center">
 								<p class="text-sm text-muted-foreground">Serviço não encontrado.</p>

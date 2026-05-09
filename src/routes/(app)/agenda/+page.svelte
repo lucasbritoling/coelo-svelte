@@ -268,17 +268,30 @@
 				</h1>
 			</div>
 
-			<a
-				href="/mais"
-				class="flex size-10 -translate-y-2 items-center justify-center rounded-full border border-blue-100/50 bg-blue-50 text-sm font-bold text-blue-600 uppercase shadow-sm transition-all hover:bg-blue-100 active:scale-90"
-			>
-				{data.user?.full_name?.charAt(0) ?? 'U'}
-				<div
-					class="absolute -right-1 -bottom-1 flex size-4 items-center justify-center rounded-full border border-background text-zinc-500 shadow-sm"
+			<div class="relative size-10 -translate-y-2">
+				<a
+					href="/mais"
+					class="flex size-10 items-center justify-center overflow-hidden rounded-full border border-blue-100/50 bg-blue-50 text-sm font-bold text-blue-600 uppercase shadow-sm transition-all hover:bg-blue-100 active:scale-90"
 				>
-					<Settings class="animate-pulse" strokeWidth={2.3} />
-				</div>
-			</a>
+					{#if data.user?.avatar_url}
+						<img
+							src={data.user.avatar_url}
+							alt="Perfil"
+							loading="lazy"
+							class="h-full w-full object-cover"
+						/>
+					{:else}
+						{data.user?.full_name?.charAt(0) ?? 'U'}
+					{/if}
+				</a>
+
+				<Settings
+					size={13}
+					strokeWidth={2.5}
+					class="pointer-events-none absolute -right-1 -bottom-1 text-zinc-600"
+					style="filter: drop-shadow(0 0 2px white) drop-shadow(0 1px 2px rgb(0 0 0 / 0.3))"
+				/>
+			</div>
 		</div>
 
 		<!-- STRIP -->

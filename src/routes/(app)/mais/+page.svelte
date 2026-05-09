@@ -4,10 +4,15 @@
 
 	let { data } = $props();
 
+	// Derivamos o avatar direto do data.user (que já vem com a URL completa do Hook)
+	const avatarUrl = $derived(data.user?.avatar_url);
+
 	const profile = {
 		name: data.user?.full_name ?? 'Usuário',
-		slug: data.username
+		slug: data.user?.username ?? 'username' // Ajustado para pegar de data.user
 	};
+
+	const initials = $derived(profile.name[0]?.toUpperCase() ?? '?');
 </script>
 
 <div class="mx-auto flex min-h-full max-w-xl flex-col pb-28" in:fly={{ x: -24, duration: 200 }}>
@@ -23,12 +28,18 @@
 			class="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors active:bg-muted/50"
 		>
 			<div
-				class="flex size-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-sm font-medium text-blue-600 uppercase"
+				class="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border/40 bg-muted"
 			>
-				{profile.name[0]}
+				{#if avatarUrl}
+					<img src={avatarUrl} alt={profile.name} class="h-full w-full object-cover" />
+				{:else}
+					<span class="text-sm font-medium text-muted-foreground uppercase">
+						{initials}
+					</span>
+				{/if}
 			</div>
+
 			<div class="min-w-0 flex-1">
-				<!-- truncate garante que nomes longos não empurrem o ícone de Chevron -->
 				<p class="truncate text-[14px] font-medium">{profile.name}</p>
 				<p class="truncate text-[12px] text-muted-foreground">coelo.dev/{profile.slug}</p>
 			</div>

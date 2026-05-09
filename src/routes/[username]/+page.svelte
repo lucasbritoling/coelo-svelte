@@ -91,6 +91,26 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Agendamento com {professional.full_name}</title>
+	<meta
+		name="description"
+		content="Reserve seu horário com @{professional.username}. Rápido e simples."
+	/>
+
+	<!-- Aqui entra a imagem que você queria -->
+	<meta property="og:image" content={professional.avatar_url} />
+	<meta property="og:title" content="Agendamento com {professional.full_name}" />
+	<meta
+		property="og:description"
+		content="Confira os horários disponíveis para {selectedService?.name ?? 'serviços'}."
+	/>
+
+	<!-- Twitter/X -->
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:image" content={professional.avatar_url} />
+</svelte:head>
+
 <div class="mx-auto p-6 {data.singleService ? 'max-w-sm' : 'max-w-sm lg:max-w-5xl'}">
 	<!-- HEADER (Sempre visível como você pediu) -->
 	<header class="mb-8 text-center">

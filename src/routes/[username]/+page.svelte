@@ -67,6 +67,7 @@
 		return time.slice(0, 5);
 	}
 
+	let showCopiedFeedback = $state(false);
 	function handleShare() {
 		if (!bookingSnapshot) return;
 
@@ -77,13 +78,15 @@
 		};
 
 		if (navigator.share) {
-			navigator.share(shareData).catch(() => {
-				// Silencioso ou fallback para cópia
-			});
+			navigator.share(shareData).catch(() => {});
 		} else {
-			// Fallback: copiar para área de transferência se o navegador não suportar share
 			navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`);
-			alert('Detalhes copiados para a área de transferência!');
+
+			// Feedback visual com timeout
+			showCopiedFeedback = true;
+			setTimeout(() => {
+				showCopiedFeedback = false;
+			}, 3000);
 		}
 	}
 </script>
@@ -108,7 +111,7 @@
 		<!-- TELA DE SUCESSO (Oculta todo o resto) -->
 		<div class="mx-auto max-w-md animate-in duration-500 zoom-in-95 fade-in">
 			<Card.Root>
-				<Card.Content class="flex flex-col items-center justify-center p-8 text-center">
+				<Card.Content class="flex flex-col items-center justify-center p-8 py-4 text-center">
 					<div
 						class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 shadow-sm"
 					>
@@ -117,7 +120,7 @@
 
 					<h2 class="text-2xl font-bold tracking-tight text-foreground">Agendamento Confirmado!</h2>
 					<p class="mt-2 text-sm text-muted-foreground">
-						Tudo pronto, {customerName.split(' ')[0]}! Aqui estão os detalhes:
+						Tudo pronto, {customerName.split(' ')[0]}. Aqui estão os detalhes:
 					</p>
 
 					<div class="mt-8 w-full space-y-3 rounded-xl border bg-muted/30 p-4 text-left">
@@ -140,14 +143,20 @@
 					</div>
 
 					<div class="mt-8 w-full space-y-6">
-						<!-- aumentei um pouco o gap para o botão respirar -->
-
 						<button
 							onclick={handleShare}
-							class="mx-auto flex cursor-pointer items-center gap-2 text-xs font-medium text-muted-foreground transition-colors hover:text-primary"
+							disabled={showCopiedFeedback}
+							class="mx-auto flex cursor-pointer items-center gap-2 text-xs font-medium transition-all duration-200 {showCopiedFeedback
+								? 'text-emerald-600'
+								: 'text-muted-foreground hover:text-primary'}"
 						>
-							<Share2 class="h-3.5 w-3.5" />
-							Compartilhar agendamento
+							{#if showCopiedFeedback}
+								<CircleCheckBig class="h-3.5 w-3.5 animate-in zoom-in" />
+								Copiado para a área de transferência!
+							{:else}
+								<Share2 class="h-3.5 w-3.5" />
+								Compartilhar agendamento
+							{/if}
 						</button>
 
 						<p class="text-[10px] text-muted-foreground">

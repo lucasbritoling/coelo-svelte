@@ -89,7 +89,8 @@ const authHandle: Handle = async ({ event, resolve }) => {
 				id: session.user.id,
 				email: session.user.email ?? '',
 				full_name: session.user.user_metadata?.full_name ?? 'Usuário',
-				username: session.user.user_metadata?.username ?? ''
+				username: session.user.user_metadata?.username ?? '',
+				avatar_url: session.user.user_metadata?.avatar_url ?? null
 			}
 		: null;
 

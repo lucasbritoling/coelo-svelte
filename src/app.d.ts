@@ -25,6 +25,7 @@ declare global {
 				email: string | undefined;
 				full_name: string;
 				username: string;
+				avatar_url: string;
 			} | null;
 		}
 		interface PageData {

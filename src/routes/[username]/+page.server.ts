@@ -89,8 +89,8 @@ export const actions: Actions = {
 		}
 
 		try {
-            // 1. Forçamos o alias "id" e verificamos o retorno explicitamente
-            const result = await sql`
+			// 1. Forçamos o alias "id" e verificamos o retorno explicitamente
+			const result = await sql`
                 SELECT finish_self_booking(
                     ${profile_id}::uuid,
                     ${service_id}::uuid,
@@ -101,21 +101,21 @@ export const actions: Actions = {
                 ) as id
             `;
 
-            // 2. Log para depuração no terminal (Server-side)
-            console.log('Resultado da função SQL:', result);
+			// 2. Log para depuração no terminal (Server-side)
+			console.log('Resultado da função SQL:', result);
 
-            const appointmentId = result[0]?.id;
+			const appointmentId = result[0]?.id;
 
-            if (!appointmentId) {
-                return fail(500, { message: 'Erro interno: ID não gerado pelo banco.' });
-            }
+			if (!appointmentId) {
+				return fail(500, { message: 'Erro interno: ID não gerado pelo banco.' });
+			}
 
-            return { 
-                success: true, 
-                appointmentId 
-            };
-        } catch (err: any) {
-            console.error('Erro no agendamento:', err);
+			return {
+				success: true,
+				appointmentId
+			};
+		} catch (err: any) {
+			console.error('Erro no agendamento:', err);
 
 			if (err.code === '23P01' || err.message?.includes('ocupado')) {
 				return fail(400, { message: 'Este horário acabou de ser ocupado por outro cliente.' });

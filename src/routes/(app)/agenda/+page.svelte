@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Plus, Copy, MessageCircle, Check, CalendarDays } from '@lucide/svelte';
+	import { Plus, Copy, MessageCircle, Check, CalendarDays, Settings } from '@lucide/svelte';
 
 	import { Button } from '$lib/components/ui/button';
 	import { Badge } from '$lib/components/ui/badge';
@@ -273,6 +273,9 @@
 				class="flex size-10 -translate-y-2 items-center justify-center rounded-full border border-blue-100/50 bg-blue-50 text-sm font-bold text-blue-600 uppercase shadow-sm transition-all hover:bg-blue-100 active:scale-90"
 			>
 				{data.user?.full_name?.charAt(0) ?? 'U'}
+				<div class="absolute -right-1 -bottom-1 flex size-4 items-center justify-center rounded-full border border-background text-zinc-500 shadow-sm">
+        <Settings class="animate-pulse" strokeWidth={2.3} />
+    </div>
 			</a>
 		</div>
 

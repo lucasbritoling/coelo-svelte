@@ -270,7 +270,7 @@
 
 			<a
 				href="/mais"
-				class="flex size-10 -translate-y-2 items-center justify-center rounded-full bg-muted text-sm font-semibold text-muted-foreground uppercase transition-all active:scale-95"
+				class="flex size-10 -translate-y-2 items-center justify-center rounded-full border border-blue-100/50 bg-blue-50 text-sm font-bold text-blue-600 uppercase shadow-sm transition-all hover:bg-blue-100 active:scale-90"
 			>
 				{data.user?.full_name?.charAt(0) ?? 'U'}
 			</a>

@@ -12,6 +12,9 @@
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
 
+	import DatePicker from '$lib/components/date-picker.svelte';
+	import { parseDate, getLocalTimeZone } from '@internationalized/date';
+
 	let { data } = $props();
 	let ticker = $state(Date.now());
 	$effect(() => {
@@ -48,6 +51,25 @@
 
 	let showAppointmentModal = $state(false);
 	let copied = $state(false);
+	let showCalendarPicker = $state(false);
+
+	function handleCalendarSelect(d: any) {
+		if (!d) return;
+
+		// Converte o objeto DateValue para YYYY-MM-DD
+		const newDateStr = d.toString();
+
+		const newUrl = new URL(page.url);
+		newUrl.searchParams.set('date', newDateStr);
+
+		goto(newUrl.search, {
+			replaceState: true,
+			keepFocus: true,
+			noScroll: true
+		});
+
+		showCalendarPicker = false;
+	}
 
 	const schedulingLink = $derived(`coelo.dev/${data.username}`);
 
@@ -294,6 +316,22 @@
 					</span>
 				</button>
 			{/each}
+			<Dialog.Root bind:open={showCalendarPicker}>
+				<Dialog.Trigger
+					ontouchstart={(e) => e.stopPropagation()}
+					ontouchend={(e) => e.stopPropagation()}
+					class="flex min-w-[58px] shrink-0 flex-col items-center justify-center rounded-full border border-border/40 bg-muted/30 py-3 transition-all active:scale-95"
+				>
+					<CalendarDays class="size-5 text-muted-foreground" />
+					<span class="mt-1 text-[9px] font-bold text-muted-foreground uppercase">Ver</span>
+				</Dialog.Trigger>
+
+				<Dialog.Content
+					class="fixed top-[50%] left-[50%] z-50 w-[92vw] max-w-xs translate-x-[-50%] translate-y-[-50%] rounded-[32px] border bg-background p-4 shadow-lg"
+				>
+					<DatePicker value={parseDate(data.selectedDate)} onValueChange={handleCalendarSelect} />
+				</Dialog.Content>
+			</Dialog.Root>
 		</div>
 	</div>
 
@@ -558,6 +596,17 @@
 		</div>
 	</Dialog.Content>
 </Dialog.Root>
+
+{#if showCalendarPicker}
+	{console.log('clicado')}
+	<!-- Aqui entraria seu componente de Calendar. 
+         Ao selecionar, você rodaria algo como:
+         const newUrl = new URL(page.url);
+         newUrl.searchParams.set('date', selectedDateFromCalendar);
+         goto(newUrl.search);
+         showCalendarPicker = false;
+    -->
+{/if}
 
 <style>
 	.no-scrollbar::-webkit-scrollbar {

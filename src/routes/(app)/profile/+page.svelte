@@ -61,7 +61,7 @@
 				{/if}
 			</div>
 			<button class="camera-trigger" onclick={handleAvatarUpload} aria-label="Alterar foto">
-				<Camera size={14} strokeWidth={2} />
+				<Camera size={16} strokeWidth={2} />
 			</button>
 		</div>
 
@@ -136,7 +136,6 @@
 				<span>Salvar alterações</span>
 			{/if}
 		</button>
-
 	</div>
 </div>
 
@@ -224,7 +223,7 @@
 		width: 1.75rem;
 		height: 1.75rem;
 		border-radius: 9999px;
-		background: hsl(var(--background));
+		background: #ffffff;
 		border: 1.5px solid hsl(var(--border));
 		color: hsl(var(--foreground));
 		display: flex;
@@ -296,19 +295,31 @@
 	}
 
 	.field-label {
-		display: block;
-		font-size: 11px;
-		font-weight: 600;
-		letter-spacing: 0.07em;
-		text-transform: uppercase;
-		color: hsl(var(--muted-foreground) / 0.55);
-		margin-bottom: 0.15rem;
-		transition: color 0.15s;
-	}
+    display: block;
+    font-size: 11px;
+    
+    /* 1. Peso: 600 ainda é forte. 500 ou 600 com menos opacidade 
+       ajuda a não "competir" com o texto principal */
+    font-weight: 600; 
+    
+    /* 2. Letter-spacing: 0.07em é bem aberto. 
+       0.04em ou 0.05em costuma ser o "sweet spot" para uppercase no mobile */
+    letter-spacing: 0.05em;
+    
+    text-transform: uppercase;
+    
+    /* 3. Saturação/Peso Visual: Reduzi de 0.55 para 0.4.
+       Isso faz o label "recuar" no layout, dando destaque ao dado do usuário */
+    color: hsl(var(--muted-foreground) / 0.4); 
+    
+    margin-bottom: 0.2rem;
+    transition: color 0.2s ease;
+}
 
-	.field.is-focused .field-label {
-		color: hsl(var(--foreground));
-	}
+.field.is-focused .field-label {
+    /* No foco, trazemos ele para perto do preto total para dar feedback de atividade */
+    color: hsl(var(--foreground) / 0.85);
+}
 
 	/* Input nativo — sem depender de shadcn */
 	.native-input {

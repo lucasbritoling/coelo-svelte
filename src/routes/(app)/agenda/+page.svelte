@@ -15,33 +15,33 @@
 	let { data } = $props();
 	let ticker = $state(Date.now());
 	$effect(() => {
-        let interval: ReturnType<typeof setInterval>;
+		let interval: ReturnType<typeof setInterval>;
 
-        // 1. Calcula quantos ms faltam para o próximo minuto exato
-        const now = Date.now();
-        const msUntilNextMinute = 60000 - (now % 60000);
+		// 1. Calcula quantos ms faltam para o próximo minuto exato
+		const now = Date.now();
+		const msUntilNextMinute = 60000 - (now % 60000);
 
-        // 2. Cria um timeout para esperar o início do próximo minuto
-        const timeout = setTimeout(() => {
-            ticker = Date.now(); // Atualiza no segundo zero
-            
-            // 3. Agora sim, inicia o intervalo de 1 em 1 minuto
-            interval = setInterval(() => {
-                ticker = Date.now();
-            }, 60000);
-        }, msUntilNextMinute);
+		// 2. Cria um timeout para esperar o início do próximo minuto
+		const timeout = setTimeout(() => {
+			ticker = Date.now(); // Atualiza no segundo zero
 
-        return () => {
-            clearTimeout(timeout);
-            if (interval) clearInterval(interval);
-        };
-    });
+			// 3. Agora sim, inicia o intervalo de 1 em 1 minuto
+			interval = setInterval(() => {
+				ticker = Date.now();
+			}, 60000);
+		}, msUntilNextMinute);
+
+		return () => {
+			clearTimeout(timeout);
+			if (interval) clearInterval(interval);
+		};
+	});
 	const timeFormatter = new Intl.DateTimeFormat('pt-BR', {
-    timeZone: 'America/Sao_Paulo',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
-});
+		timeZone: 'America/Sao_Paulo',
+		hour: '2-digit',
+		minute: '2-digit',
+		hour12: false
+	});
 
 	// Agora o 'now' será atualizado a cada minuto porque depende de 'ticker'
 	const reactiveNow = $derived(timeFormatter.format(new Date(ticker)));
@@ -57,13 +57,14 @@
 		return new Date(y, m - 1, d);
 	});
 
-		// refactor 'hoje'
-	const dateFormatter = new Intl.DateTimeFormat('sv-SE', { // 'sv-SE' cospe YYYY-MM-DD
-    timeZone: 'America/Sao_Paulo',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-});
+	// refactor 'hoje'
+	const dateFormatter = new Intl.DateTimeFormat('sv-SE', {
+		// 'sv-SE' cospe YYYY-MM-DD
+		timeZone: 'America/Sao_Paulo',
+		year: 'numeric',
+		month: '2-digit',
+		day: '2-digit'
+	});
 
 	const todayStr = $derived(dateFormatter.format(new Date(ticker)));
 
@@ -191,36 +192,35 @@
 	});
 
 	function soonLabel(t: string) {
-    if (!isTodayView) return '';
+		if (!isTodayView) return '';
 
-    const [h, m] = t.split(':').map(Number);
-    
-    // Pegamos o momento atual no fuso de SP
-    const nowInSP = new Date(new Intl.DateTimeFormat('en-US', {
-        timeZone: 'America/Sao_Paulo',
-        year: 'numeric',
-        month: 'numeric',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: 'numeric',
-        second: 'numeric',
-        hour12: false
-    }).format(new Date(ticker)));
+		const [h, m] = t.split(':').map(Number);
 
-    const target = new Date(nowInSP);
-    target.setHours(h, m, 0, 0);
+		// Pegamos o momento atual no fuso de SP
+		const nowInSP = new Date(
+			new Intl.DateTimeFormat('en-US', {
+				timeZone: 'America/Sao_Paulo',
+				year: 'numeric',
+				month: 'numeric',
+				day: 'numeric',
+				hour: 'numeric',
+				minute: 'numeric',
+				second: 'numeric',
+				hour12: false
+			}).format(new Date(ticker))
+		);
 
-    const diff = Math.floor((target.getTime() - nowInSP.getTime()) / 60000);
+		const target = new Date(nowInSP);
+		target.setHours(h, m, 0, 0);
 
-    if (diff <= 0 && diff > -30) return 'agora'; // janela de 30min para "agora"
-    if (diff <= -30) return '';
-    if (diff < 60) return `em ${diff} min`;
+		const diff = Math.floor((target.getTime() - nowInSP.getTime()) / 60000);
 
-    return `em ${Math.round(diff / 60)}h`;
-}
+		if (diff <= 0 && diff > -30) return 'agora'; // janela de 30min para "agora"
+		if (diff <= -30) return '';
+		if (diff < 60) return `em ${diff} min`;
 
-
-
+		return `em ${Math.round(diff / 60)}h`;
+	}
 </script>
 
 <!-- MOBILE -->
@@ -250,7 +250,11 @@
 		</div>
 
 		<!-- STRIP -->
-		<div class="no-scrollbar flex gap-2 overflow-x-auto px-5 pb-4">
+		<div
+			class="no-scrollbar flex gap-2 overflow-x-auto px-5 pb-4"
+			ontouchstart={(e) => e.stopPropagation()}
+			ontouchend={(e) => e.stopPropagation()}
+		>
 			{#each strip as day}
 				<button
 					onclick={() => {

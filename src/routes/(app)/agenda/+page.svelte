@@ -15,12 +15,27 @@
 	let { data } = $props();
 	let ticker = $state(Date.now());
 	$effect(() => {
-		const interval = setInterval(() => {
-			ticker = Date.now();
-		}, 60000); // 1 minuto
+        let interval: ReturnType<typeof setInterval>;
 
-		return () => clearInterval(interval);
-	});
+        // 1. Calcula quantos ms faltam para o próximo minuto exato
+        const now = Date.now();
+        const msUntilNextMinute = 60000 - (now % 60000);
+
+        // 2. Cria um timeout para esperar o início do próximo minuto
+        const timeout = setTimeout(() => {
+            ticker = Date.now(); // Atualiza no segundo zero
+            
+            // 3. Agora sim, inicia o intervalo de 1 em 1 minuto
+            interval = setInterval(() => {
+                ticker = Date.now();
+            }, 60000);
+        }, msUntilNextMinute);
+
+        return () => {
+            clearTimeout(timeout);
+            if (interval) clearInterval(interval);
+        };
+    });
 	const timeFormatter = new Intl.DateTimeFormat('pt-BR', {
     timeZone: 'America/Sao_Paulo',
     hour: '2-digit',

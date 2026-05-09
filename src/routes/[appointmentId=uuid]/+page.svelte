@@ -17,6 +17,7 @@
 	const { appointment, professional } = data;
 
 	let copied = $state(false);
+	const firstName = $derived(appointment.customer_name.split(' ')[0]);
 
 	async function handleShare() {
 		const shareData = {
@@ -65,6 +66,13 @@
 	</div>
 
 	<main in:fly={{ y: 20, duration: 600 }} class="w-full max-w-sm">
+		<div class="mb-6 text-center">
+			<h2 class="text-2xl font-bold tracking-tight text-foreground">
+				Tudo pronto, {firstName}!
+			</h2>
+			<p class="text-sm text-muted-foreground">Seu horário está garantido.</p>
+		</div>
+
 		<!-- Forçamos o Root a ignorar paddings/gaps para o header sangrar -->
 		<Card.Root
 			class="!gap-0 overflow-hidden border-none bg-white !p-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:bg-[#111] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)]"

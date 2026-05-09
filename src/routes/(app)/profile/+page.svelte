@@ -2,7 +2,6 @@
 	import { fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import { Camera, ArrowLeft, Loader2, Check } from '@lucide/svelte';
-	import { Input } from '$lib/components/ui/input';
 	import { toast } from 'svelte-sonner';
 
 	let { data } = $props();
@@ -39,16 +38,16 @@
 </script>
 
 <div
-	class="flex min-h-full flex-col bg-background"
+	class="page"
 	in:fly={{ y: 20, duration: 260, easing: cubicOut }}
 >
 	<!-- TOPBAR -->
-	<div class="flex items-center justify-between px-4 pt-5 pb-2">
+	<div class="topbar">
 		<button onclick={() => history.back()} class="back-btn" aria-label="Voltar">
-			<ArrowLeft class="size-[18px]" strokeWidth={2} />
+			<ArrowLeft size={18} strokeWidth={2} />
 		</button>
 		<span class="topbar-title">Editar Perfil</span>
-		<div class="size-9"></div>
+		<div style="width:2.25rem"></div>
 	</div>
 
 	<!-- AVATAR HERO -->
@@ -56,63 +55,68 @@
 		<div class="avatar-wrapper">
 			<div class="avatar-shell">
 				{#if avatarUrl}
-					<img src={avatarUrl} alt={fullName} class="h-full w-full object-cover" />
+					<img src={avatarUrl} alt={fullName} style="width:100%;height:100%;object-fit:cover" />
 				{:else}
 					<span class="avatar-initials">{initials}</span>
 				{/if}
 			</div>
 			<button class="camera-trigger" onclick={handleAvatarUpload} aria-label="Alterar foto">
-				<Camera class="size-4" strokeWidth={2} />
+				<Camera size={14} strokeWidth={2} />
 			</button>
 		</div>
 
 		<div class="avatar-identity">
 			<h1 class="identity-name">{fullName || 'Seu nome'}</h1>
 			<p class="identity-handle">
-				<span class="handle-domain">coelo.dev/</span><span class="handle-slug"
-					>{username || 'username'}</span
-				>
+				<span class="handle-domain">coelo.dev/</span><span class="handle-slug">{username || 'username'}</span>
 			</p>
 		</div>
 	</div>
 
 	<!-- FORM -->
 	<div class="form-body">
+
+		<!-- Card -->
 		<div class="form-card">
-			<!-- Campo: Nome -->
+
+			<!-- Campo Nome -->
 			<div class="field" class:is-focused={nameFocused}>
 				<label for="name" class="field-label">Nome completo</label>
-				<Input
+				<input
 					id="name"
+					type="text"
 					bind:value={fullName}
 					onfocus={() => (nameFocused = true)}
 					onblur={() => (nameFocused = false)}
 					placeholder="Como você se chama?"
-					class="field-input"
 					autocomplete="name"
+					class="native-input"
 				/>
 				<div class="field-bar" class:active={nameFocused}></div>
 			</div>
 
 			<div class="field-divider"></div>
 
-			<!-- Campo: Link -->
+			<!-- Campo Link -->
 			<div class="field" class:is-focused={usernameFocused}>
 				<label for="username" class="field-label">Link da agenda</label>
 				<div class="field-prefix-wrap">
 					<span class="field-prefix">coelo.dev/</span>
-					<Input
+					<input
 						id="username"
+						type="text"
 						bind:value={username}
 						onfocus={() => (usernameFocused = true)}
 						onblur={() => (usernameFocused = false)}
 						placeholder="seu-link"
-						class="field-input field-input-prefixed"
 						autocomplete="username"
+						class="native-input"
+						style="flex:1;min-width:0"
 					/>
 				</div>
 				<div class="field-bar" class:active={usernameFocused}></div>
 			</div>
+
 		</div>
 
 		<!-- Botão Salvar -->
@@ -123,20 +127,35 @@
 			class:is-done={saved}
 		>
 			{#if isSaving}
-				<Loader2 class="spin-icon size-[18px] shrink-0" />
+				<Loader2 size={18} strokeWidth={2.5} class="spin-icon" />
 				<span>Salvando...</span>
 			{:else if saved}
-				<Check class="size-[18px] shrink-0" strokeWidth={2.5} />
+				<Check size={18} strokeWidth={2.5} />
 				<span>Salvo!</span>
 			{:else}
 				<span>Salvar alterações</span>
 			{/if}
 		</button>
+
 	</div>
 </div>
 
 <style>
+	.page {
+		display: flex;
+		flex-direction: column;
+		min-height: 100%;
+		background: hsl(var(--background));
+	}
+
 	/* ── Topbar ─────────────────────────────────── */
+	.topbar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 1.25rem 1rem 0.5rem;
+	}
+
 	.back-btn {
 		display: flex;
 		align-items: center;
@@ -148,9 +167,7 @@
 		background: transparent;
 		color: hsl(var(--foreground));
 		cursor: pointer;
-		transition:
-			background 0.12s,
-			transform 0.1s;
+		transition: background 0.12s, transform 0.1s;
 		-webkit-tap-highlight-color: transparent;
 	}
 	.back-btn:active {
@@ -172,7 +189,7 @@
 		flex-direction: column;
 		align-items: center;
 		padding: 1.5rem 1.25rem 2rem;
-		gap: 1rem;
+		gap: 0.875rem;
 	}
 
 	.avatar-wrapper {
@@ -180,19 +197,20 @@
 	}
 
 	.avatar-shell {
-		width: 6rem;
-		height: 6rem;
+		width: 5.5rem;
+		height: 5.5rem;
 		border-radius: 9999px;
 		overflow: hidden;
 		background: hsl(var(--muted));
-		border: 1.5px solid hsl(var(--border) / 0.5);
+		border: 1.5px solid hsl(var(--border));
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		box-shadow: 0 2px 12px hsl(0 0% 0% / 0.08);
 	}
 
 	.avatar-initials {
-		font-size: 2rem;
+		font-size: 1.875rem;
 		font-weight: 600;
 		color: hsl(var(--muted-foreground));
 		line-height: 1;
@@ -203,8 +221,8 @@
 		position: absolute;
 		bottom: 2px;
 		right: 2px;
-		width: 1.875rem;
-		height: 1.875rem;
+		width: 1.75rem;
+		height: 1.75rem;
 		border-radius: 9999px;
 		background: hsl(var(--background));
 		border: 1.5px solid hsl(var(--border));
@@ -213,10 +231,8 @@
 		align-items: center;
 		justify-content: center;
 		cursor: pointer;
-		box-shadow: 0 1px 4px hsl(0 0% 0% / 0.1);
-		transition:
-			transform 0.1s,
-			background 0.12s;
+		box-shadow: 0 1px 4px hsl(0 0% 0% / 0.12);
+		transition: transform 0.1s, background 0.12s;
 		-webkit-tap-highlight-color: transparent;
 	}
 	.camera-trigger:active {
@@ -234,7 +250,7 @@
 		letter-spacing: -0.025em;
 		line-height: 1.2;
 		color: hsl(var(--foreground));
-		margin: 0 0 0.35rem;
+		margin: 0 0 0.3rem;
 	}
 
 	.identity-handle {
@@ -263,21 +279,20 @@
 
 	.form-card {
 		border-radius: 1.5rem;
-		border: 1px solid hsl(var(--border) / 0.5);
+		border: 1px solid hsl(var(--border));
 		background: hsl(var(--card));
 		overflow: hidden;
 	}
 
 	.field-divider {
 		height: 1px;
-		background: hsl(var(--border) / 0.4);
+		background: hsl(var(--border) / 0.5);
 		margin: 0 1.25rem;
 	}
 
 	/* ── Campos ──────────────────────────────────── */
 	.field {
 		padding: 1rem 1.25rem 0;
-		position: relative;
 	}
 
 	.field-label {
@@ -287,7 +302,7 @@
 		letter-spacing: 0.07em;
 		text-transform: uppercase;
 		color: hsl(var(--muted-foreground) / 0.55);
-		margin-bottom: 0.1rem;
+		margin-bottom: 0.15rem;
 		transition: color 0.15s;
 	}
 
@@ -295,23 +310,26 @@
 		color: hsl(var(--foreground));
 	}
 
-	:global(.field-input) {
-		height: 2.625rem !important;
-		border: none !important;
-		border-radius: 0 !important;
-		background: transparent !important;
-		padding-left: 0 !important;
-		padding-right: 0 !important;
-		font-size: 1rem !important;
-		font-weight: 500 !important;
-		letter-spacing: -0.01em !important;
-		color: hsl(var(--foreground)) !important;
-		box-shadow: none !important;
-		outline: none !important;
+	/* Input nativo — sem depender de shadcn */
+	.native-input {
+		display: block;
+		width: 100%;
+		height: 2.625rem;
+		border: none;
+		background: transparent;
+		padding: 0;
+		font-size: 1rem;
+		font-weight: 500;
+		letter-spacing: -0.01em;
+		color: hsl(var(--foreground));
+		outline: none;
+		box-shadow: none;
+		font-family: inherit;
 	}
-	:global(.field-input::placeholder) {
-		color: hsl(var(--muted-foreground) / 0.28) !important;
-		font-weight: 400 !important;
+
+	.native-input::placeholder {
+		color: hsl(var(--muted-foreground) / 0.3);
+		font-weight: 400;
 	}
 
 	.field-prefix-wrap {
@@ -325,18 +343,14 @@
 		letter-spacing: -0.01em;
 		color: hsl(var(--muted-foreground) / 0.45);
 		white-space: nowrap;
-		line-height: 2.625rem;
 		flex-shrink: 0;
+		line-height: 2.625rem;
 	}
 
-	:global(.field-input-prefixed) {
-		flex: 1 !important;
-		min-width: 0 !important;
-	}
-
+	/* Barra animada */
 	.field-bar {
 		height: 1px;
-		background: hsl(var(--border) / 0.35);
+		background: hsl(var(--border) / 0.4);
 		position: relative;
 		overflow: hidden;
 		margin-bottom: 0.75rem;
@@ -359,27 +373,34 @@
 
 	/* ── Botão salvar ─────────────────────────────── */
 	.save-btn {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 0.5rem;
-		height: 3.25rem;
-		width: 100%;
-		border-radius: 9999px;
-		border: none;
-		background: hsl(var(--foreground));
-		color: hsl(var(--background));
-		font-size: 15px;
-		font-weight: 600;
-		letter-spacing: 0.005em;
-		cursor: pointer;
-		transition:
-			transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1),
-			background 0.2s,
-			opacity 0.15s;
-		-webkit-tap-highlight-color: transparent;
-		margin-top: 0.25rem;
-	}
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        height: 3.25rem;
+        width: 100%;
+        border-radius: 9999px;
+        border: none;
+        
+        /* Cores fixas: bg-black e text-white */
+        background: #000000;
+        color: #ffffff;
+        
+        font-size: 15px;
+        font-weight: 600;
+        font-family: inherit;
+        letter-spacing: 0.005em;
+        cursor: pointer;
+        transition: 
+            transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), 
+            background 0.3s ease, 
+            opacity 0.15s;
+        -webkit-tap-highlight-color: transparent;
+        margin-top: 0.25rem;
+        
+        /* Sombra sutil para dar profundidade no fundo branco */
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
 
 	.save-btn:not(:disabled):active {
 		transform: scale(0.97);
@@ -400,9 +421,7 @@
 	}
 
 	@keyframes spin {
-		to {
-			transform: rotate(360deg);
-		}
+		to { transform: rotate(360deg); }
 	}
 
 	button {

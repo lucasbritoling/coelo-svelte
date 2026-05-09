@@ -492,83 +492,62 @@
 </button>
 
 <!-- DESKTOP -->
-<div class="mx-auto hidden max-w-lg sm:block">
-	<div class="mx-auto max-w-5xl p-8">
-		<div class="mb-8 flex items-center justify-between">
-			<div>
-				<h1 class="text-4xl font-semibold tracking-tight capitalize">
-					{headerLabel}
-				</h1>
+<div class="mx-auto hidden max-w-5xl p-8 sm:block">
+    <div class="mb-8 flex items-center justify-between">
+        <div>
+            <h1 class="text-4xl font-semibold tracking-tight capitalize">
+                {headerLabel}
+            </h1>
+            <p class="mt-2 text-muted-foreground">Visualize e gerencie seus atendimentos.</p>
+        </div>
 
-				<p class="mt-2 text-muted-foreground">Visualize e gerencie seus atendimentos.</p>
-			</div>
+        <Button
+            onclick={() => (showAppointmentModal = true)}
+            class="h-12 cursor-pointer rounded-2xl px-6"
+        >
+            <Plus class="mr-2 size-5" />
+            Novo Agendamento
+        </Button>
+    </div>
 
-			<Button
-				onclick={() => (showAppointmentModal = true)}
-				class="h-12 cursor-pointer rounded-2xl px-6"
-			>
-				<Plus class="mr-2 size-5" />
-				Novo Agendamento
-			</Button>
-		</div>
+    <div class="flex flex-col gap-4">
+        {#if data.appointments.length === 0}
+            <div class="flex flex-col items-center justify-center rounded-[28px] border border-dashed py-20">
+                <CalendarDays class="mb-3 size-10 text-muted-foreground/30" />
+                <p class="text-muted-foreground">Nenhum agendamento neste dia.</p>
+            </div>
+        {:else if isTodayView}
+            {#if nextAppointment}
+                <p class="section-label px-0">próximo</p>
+                {@render card(nextAppointment, true, false, true)}
+            {/if}
 
-		<div class="grid gap-4">
-			{#each data.appointments as appointment}
-				<div class="rounded-[30px] border bg-card p-6 transition-all hover:border-foreground/20">
-					<div class="flex items-start justify-between gap-6">
-						<div class="flex gap-5">
-							<div class="flex min-w-[54px] flex-col items-center">
-								<span class="text-lg font-semibold">
-									{appointment.start_at}
-								</span>
+            {#if laterAppointments.length > 0}
+                <p class="section-label px-0">mais tarde</p>
+                <div class="flex flex-col gap-3">
+                    {#each laterAppointments as appointment}
+                        {@render card(appointment)}
+                    {/each}
+                </div>
+            {/if}
 
-								<div class="my-2 w-px flex-1 bg-border" style="min-height:30px"></div>
-
-								<span class="text-sm text-muted-foreground">
-									{appointment.end_at}
-								</span>
-							</div>
-
-							<div>
-								<h3 class="text-lg font-semibold">
-									{appointment.customer_name}
-								</h3>
-
-								<p class="text-sm text-muted-foreground">
-									{appointment.service_name}
-								</p>
-
-								<div class="mt-4 flex items-center gap-2">
-									<Badge
-										class="rounded-full border-none px-3 py-1 text-[12px]"
-										style={`background:${STATUS[appointment.status].bg};color:${STATUS[appointment.status].text}`}
-									>
-										{STATUS[appointment.status].label}
-									</Badge>
-
-									{#if appointment.customer_phone}
-										<a
-											href="https://wa.me/{appointment.customer_phone.replace(/\D/g, '')}"
-											target="_blank"
-											class="flex items-center gap-2 text-sm text-muted-foreground"
-										>
-											<MessageCircle class="size-4" />
-											{appointment.customer_phone}
-										</a>
-									{/if}
-								</div>
-							</div>
-						</div>
-
-						<AppointmentCardAction
-							appointmentId={appointment.id}
-							appointmentStatus={appointment.status}
-						/>
-					</div>
-				</div>
-			{/each}
-		</div>
-	</div>
+            {#if pastAppointments.length > 0}
+                <p class="section-label px-0">anteriores</p>
+                <div class="flex flex-col gap-3">
+                    {#each pastAppointments as appointment}
+                        {@render card(appointment, false, true)}
+                    {/each}
+                </div>
+            {/if}
+        {:else}
+            <!-- Visualização de outros dias (sem hierarquia de horário atual) -->
+            <div class="flex flex-col gap-3">
+                {#each data.appointments as appointment}
+                    {@render card(appointment)}
+                {/each}
+            </div>
+        {/if}
+    </div>
 </div>
 
 <!-- MODAL -->

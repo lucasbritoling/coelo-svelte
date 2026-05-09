@@ -37,10 +37,7 @@
 	}
 </script>
 
-<div
-	class="page"
-	in:fly={{ y: 20, duration: 260, easing: cubicOut }}
->
+<div class="page" in:fly={{ y: 20, duration: 260, easing: cubicOut }}>
 	<!-- TOPBAR -->
 	<div class="topbar">
 		<button onclick={() => history.back()} class="back-btn" aria-label="Voltar">
@@ -68,17 +65,17 @@
 		<div class="avatar-identity">
 			<h1 class="identity-name">{fullName || 'Seu nome'}</h1>
 			<p class="identity-handle">
-				<span class="handle-domain">coelo.dev/</span><span class="handle-slug">{username || 'username'}</span>
+				<span class="handle-domain">coelo.dev/</span><span class="handle-slug"
+					>{username || 'username'}</span
+				>
 			</p>
 		</div>
 	</div>
 
 	<!-- FORM -->
 	<div class="form-body">
-
 		<!-- Card -->
 		<div class="form-card">
-
 			<!-- Campo Nome -->
 			<div class="field" class:is-focused={nameFocused}>
 				<label for="name" class="field-label">Nome completo</label>
@@ -116,7 +113,6 @@
 				</div>
 				<div class="field-bar" class:active={usernameFocused}></div>
 			</div>
-
 		</div>
 
 		<!-- Botão Salvar -->
@@ -166,7 +162,9 @@
 		background: transparent;
 		color: hsl(var(--foreground));
 		cursor: pointer;
-		transition: background 0.12s, transform 0.1s;
+		transition:
+			background 0.12s,
+			transform 0.1s;
 		-webkit-tap-highlight-color: transparent;
 	}
 	.back-btn:active {
@@ -231,7 +229,9 @@
 		justify-content: center;
 		cursor: pointer;
 		box-shadow: 0 1px 4px hsl(0 0% 0% / 0.12);
-		transition: transform 0.1s, background 0.12s;
+		transition:
+			transform 0.1s,
+			background 0.12s;
 		-webkit-tap-highlight-color: transparent;
 	}
 	.camera-trigger:active {
@@ -295,31 +295,31 @@
 	}
 
 	.field-label {
-    display: block;
-    font-size: 11px;
-    
-    /* 1. Peso: 600 ainda é forte. 500 ou 600 com menos opacidade 
-       ajuda a não "competir" com o texto principal */
-    font-weight: 600; 
-    
-    /* 2. Letter-spacing: 0.07em é bem aberto. 
-       0.04em ou 0.05em costuma ser o "sweet spot" para uppercase no mobile */
-    letter-spacing: 0.05em;
-    
-    text-transform: uppercase;
-    
-    /* 3. Saturação/Peso Visual: Reduzi de 0.55 para 0.4.
-       Isso faz o label "recuar" no layout, dando destaque ao dado do usuário */
-    color: hsl(var(--muted-foreground) / 0.4); 
-    
-    margin-bottom: 0.2rem;
-    transition: color 0.2s ease;
-}
+		display: block;
+		font-size: 11px;
 
-.field.is-focused .field-label {
-    /* No foco, trazemos ele para perto do preto total para dar feedback de atividade */
-    color: hsl(var(--foreground) / 0.85);
-}
+		/* 1. Peso: 600 ainda é forte. 500 ou 600 com menos opacidade 
+       ajuda a não "competir" com o texto principal */
+		font-weight: 600;
+
+		/* 2. Letter-spacing: 0.07em é bem aberto. 
+       0.04em ou 0.05em costuma ser o "sweet spot" para uppercase no mobile */
+		letter-spacing: 0.05em;
+
+		text-transform: uppercase;
+
+		/* 3. Saturação/Peso Visual: Reduzi de 0.55 para 0.4.
+       Isso faz o label "recuar" no layout, dando destaque ao dado do usuário */
+		color: hsl(var(--muted-foreground) / 0.4);
+
+		margin-bottom: 0.2rem;
+		transition: color 0.2s ease;
+	}
+
+	.field.is-focused .field-label {
+		/* No foco, trazemos ele para perto do preto total para dar feedback de atividade */
+		color: hsl(var(--foreground) / 0.85);
+	}
 
 	/* Input nativo — sem depender de shadcn */
 	.native-input {
@@ -384,34 +384,34 @@
 
 	/* ── Botão salvar ─────────────────────────────── */
 	.save-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        height: 3.25rem;
-        width: 100%;
-        border-radius: 9999px;
-        border: none;
-        
-        /* Cores fixas: bg-black e text-white */
-        background: #000000;
-        color: #ffffff;
-        
-        font-size: 15px;
-        font-weight: 600;
-        font-family: inherit;
-        letter-spacing: 0.005em;
-        cursor: pointer;
-        transition: 
-            transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), 
-            background 0.3s ease, 
-            opacity 0.15s;
-        -webkit-tap-highlight-color: transparent;
-        margin-top: 0.25rem;
-        
-        /* Sombra sutil para dar profundidade no fundo branco */
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		height: 3.25rem;
+		width: 100%;
+		border-radius: 9999px;
+		border: none;
+
+		/* Cores fixas: bg-black e text-white */
+		background: #000000;
+		color: #ffffff;
+
+		font-size: 15px;
+		font-weight: 600;
+		font-family: inherit;
+		letter-spacing: 0.005em;
+		cursor: pointer;
+		transition:
+			transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1),
+			background 0.3s ease,
+			opacity 0.15s;
+		-webkit-tap-highlight-color: transparent;
+		margin-top: 0.25rem;
+
+		/* Sombra sutil para dar profundidade no fundo branco */
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	}
 
 	.save-btn:not(:disabled):active {
 		transform: scale(0.97);
@@ -432,7 +432,9 @@
 	}
 
 	@keyframes spin {
-		to { transform: rotate(360deg); }
+		to {
+			transform: rotate(360deg);
+		}
 	}
 
 	button {

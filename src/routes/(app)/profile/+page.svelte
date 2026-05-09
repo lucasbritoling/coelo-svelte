@@ -9,6 +9,7 @@
 	let fullName = $state(data.user?.full_name ?? '');
 	let username = $state(data.user?.username ?? '');
 	let avatarUrl = $state(data.user?.avatar_url ?? '');
+	let uploading = $state(false);
 	let isSaving = $state(false);
 	let saved = $state(false);
 	let nameFocused = $state(false);
@@ -32,8 +33,41 @@
 		setTimeout(() => (saved = false), 2500);
 	}
 
-	function handleAvatarUpload() {
-		toast.info('Upload de imagem em breve');
+	async function handleAvatarUpload(event: Event) {
+		const target = event.target as HTMLInputElement;
+		if (!target.files || target.files.length === 0) return;
+
+		try {
+			uploading = true;
+			const file = target.files[0];
+			const fileExt = file.name.split('.').pop();
+			const filePath = `${data.user.id}/${Math.random()}.${fileExt}`;
+
+			// 1. Upload para o Storage
+			const { error: uploadError } = await data.supabase.storage
+				.from('avatars')
+				.upload(filePath, file, { upsert: true });
+
+			if (uploadError) throw uploadError;
+
+			// 2. Obter URL pública
+			const {
+				data: { publicUrl }
+			} = data.supabase.storage.from('avatars').getPublicUrl(filePath);
+
+			avatarUrl = publicUrl;
+
+			// 3. Atualizar metadados para latência zero no hook
+			await data.supabase.auth.updateUser({
+				data: { avatar_url: publicUrl }
+			});
+
+			toast.success('Foto atualizada!');
+		} catch (error) {
+			toast.error('Erro ao subir imagem');
+		} finally {
+			uploading = false;
+		}
 	}
 </script>
 

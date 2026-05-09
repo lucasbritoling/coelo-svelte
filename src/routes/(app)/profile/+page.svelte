@@ -54,7 +54,7 @@
 	}
 </script>
 
-<div class="page" in:fly={{ y: 20, duration: 260, easing: cubicOut }}>
+<div class="page max-w-3xl" in:fly={{ y: 20, duration: 260, easing: cubicOut }}>
 	<!-- TOPBAR -->
 	<div class="topbar">
 		<button onclick={() => history.back()} class="back-btn" aria-label="Voltar">
@@ -142,7 +142,7 @@
 	</div>
 
 	<!-- FORM -->
-	<div class="form-body">
+	<div class="form-body mx-auto max-w-sm">
 		<!-- Card -->
 		<div class="form-card">
 			<!-- Campo Nome -->
@@ -188,7 +188,7 @@
 		<button
 			onclick={handleSave}
 			disabled={isSaving || saved}
-			class="save-btn"
+			class="save-btn mx-auto max-w-xs"
 			class:is-done={saved}
 		>
 			{#if isSaving}
@@ -210,6 +210,10 @@
 		flex-direction: column;
 		min-height: 100%;
 		background: hsl(var(--background));
+
+		width: 100%; /* Garante que ocupe o espaço disponível */
+		max-width: 48rem; /* Equivalente ao max-w-3xl (768px) */
+		margin: 0 auto; /* Margem automática nas laterais */
 	}
 
 	/* ── Topbar ─────────────────────────────────── */

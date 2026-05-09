@@ -10,7 +10,7 @@
 	};
 </script>
 
-<div class="flex min-h-full flex-col pb-28" in:fly={{ x: -24, duration: 200 }}>
+<div class="mx-auto flex min-h-full max-w-xl flex-col pb-28" in:fly={{ x: -24, duration: 200 }}>
 	<div class="px-5 pt-6 pb-2">
 		<h1 class="text-[26px] leading-tight font-medium tracking-tight">Mais</h1>
 	</div>

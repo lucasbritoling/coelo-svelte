@@ -271,7 +271,7 @@
 			<div
 				class="mt-0.5 flex size-10 items-center justify-center rounded-full bg-muted text-sm font-semibold text-muted-foreground"
 			>
-				L
+				{data.user?.full_name?.charAt(0) ?? 'U'}
 			</div>
 		</div>
 

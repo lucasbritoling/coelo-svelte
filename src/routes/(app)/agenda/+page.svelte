@@ -22,10 +22,11 @@
 		return () => clearInterval(interval);
 	});
 	const timeFormatter = new Intl.DateTimeFormat('pt-BR', {
-		hour: '2-digit',
-		minute: '2-digit',
-		hour12: false
-	});
+    timeZone: 'America/Sao_Paulo',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false
+});
 
 	// Agora o 'now' será atualizado a cada minuto porque depende de 'ticker'
 	const reactiveNow = $derived(timeFormatter.format(new Date(ticker)));
@@ -41,7 +42,15 @@
 		return new Date(y, m - 1, d);
 	});
 
-	const todayStr = $derived(new Date(ticker).toISOString().split('T')[0]);
+		// refactor 'hoje'
+	const dateFormatter = new Intl.DateTimeFormat('sv-SE', { // 'sv-SE' cospe YYYY-MM-DD
+    timeZone: 'America/Sao_Paulo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+});
+
+	const todayStr = $derived(dateFormatter.format(new Date(ticker)));
 
 	const isTodayView = $derived(data.selectedDate === todayStr);
 
@@ -167,20 +176,36 @@
 	});
 
 	function soonLabel(t: string) {
-		if (!isTodayView) return '';
+    if (!isTodayView) return '';
 
-		const [h, m] = t.split(':').map(Number);
+    const [h, m] = t.split(':').map(Number);
+    
+    // Pegamos o momento atual no fuso de SP
+    const nowInSP = new Date(new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/Sao_Paulo',
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+        hour12: false
+    }).format(new Date(ticker)));
 
-		const target = new Date(ticker);
-		target.setHours(h, m, 0, 0);
+    const target = new Date(nowInSP);
+    target.setHours(h, m, 0, 0);
 
-		const diff = Math.floor((target.getTime() - ticker) / 60000);
+    const diff = Math.floor((target.getTime() - nowInSP.getTime()) / 60000);
 
-		if (diff <= 0) return 'agora';
-		if (diff < 60) return `em ${diff} min`;
+    if (diff <= 0 && diff > -30) return 'agora'; // janela de 30min para "agora"
+    if (diff <= -30) return '';
+    if (diff < 60) return `em ${diff} min`;
 
-		return `em ${Math.round(diff / 60)}h`;
-	}
+    return `em ${Math.round(diff / 60)}h`;
+}
+
+
+
 </script>
 
 <!-- MOBILE -->

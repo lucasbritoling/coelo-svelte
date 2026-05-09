@@ -10,13 +10,7 @@
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
-	import {
-		LoaderCircle,
-		CircleCheckBig,
-		CalendarX2,
-		ArrowLeft,
-		Share2
-	} from '@lucide/svelte';
+	import { LoaderCircle, CircleCheckBig, CalendarX2, ArrowLeft, Share2 } from '@lucide/svelte';
 
 	let { data, form } = $props();
 
@@ -68,55 +62,52 @@
 
 	let showCopiedFeedback = $state(false);
 	async function handleShare() {
-        if (!bookingSnapshot) return;
+		if (!bookingSnapshot) return;
 
-        // Mensagem ultra curta e direta
-        const message = `Confirmado: ${bookingSnapshot.serviceName}\n📅 ${bookingSnapshot.date} às ${bookingSnapshot.time}\n👤 ${professional.full_name}`;
-        const shareUrl = window.location.href;
+		// Mensagem ultra curta e direta
+		const message = `Confirmado: ${bookingSnapshot.serviceName}\n📅 ${bookingSnapshot.date} às ${bookingSnapshot.time}\n👤 ${professional.full_name}`;
+		const shareUrl = window.location.href;
 
-        if (navigator.share) {
-            try {
-                await navigator.share({
-                    title: 'Agendamento Confirmado',
-                    text: message,
-                    url: shareUrl
-                });
-            } catch (err) {
-                // Silencioso
-            }
-        } else {
-            // Fallback para clipboard combinando texto + link
-            await navigator.clipboard.writeText(`${message}\n🔗 ${shareUrl}`);
-            showCopiedFeedback = true;
-            setTimeout(() => (showCopiedFeedback = false), 3000);
-        }
-    }
+		if (navigator.share) {
+			try {
+				await navigator.share({
+					title: 'Agendamento Confirmado',
+					text: message,
+					url: shareUrl
+				});
+			} catch (err) {
+				// Silencioso
+			}
+		} else {
+			// Fallback para clipboard combinando texto + link
+			await navigator.clipboard.writeText(`${message}\n🔗 ${shareUrl}`);
+			showCopiedFeedback = true;
+			setTimeout(() => (showCopiedFeedback = false), 3000);
+		}
+	}
 
 	function getDayName(dateObj: any) {
-    if (!dateObj) return '';
-    
-    // Converte para um objeto Date nativo para pegar o dia da semana
-    const date = dateObj.toDate(getLocalTimeZone());
-    
-    const days = [
-        'Domingo', 'Segunda', 'Terça', 'Quarta', 
-        'Quinta', 'Sexta', 'Sábado'
-    ];
-    
-    return days[date.getDay()];
-}
+		if (!dateObj) return '';
+
+		// Converte para um objeto Date nativo para pegar o dia da semana
+		const date = dateObj.toDate(getLocalTimeZone());
+
+		const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+
+		return days[date.getDay()];
+	}
 </script>
 
 <svelte:head>
-    <title>Agendar com {professional.full_name}</title>
-    
-    <!-- Preview de compartilhamento limpo -->
-    <meta property="og:title" content="Agendamento Disponível" />
-    <meta property="og:description" content="Reserve seu horário com {professional.full_name}" />
-    <meta property="og:image" content="/icon-512-squared.png" />
-    
-    <!-- Para o Twitter/X não ocupar muito espaço -->
-    <meta name="twitter:card" content="summary" />
+	<title>Agendar com {professional.full_name}</title>
+
+	<!-- Preview de compartilhamento limpo -->
+	<meta property="og:title" content="Agendamento Disponível" />
+	<meta property="og:description" content="Reserve seu horário com {professional.full_name}" />
+	<meta property="og:image" content="/icon-512-squared.png" />
+
+	<!-- Para o Twitter/X não ocupar muito espaço -->
+	<meta name="twitter:card" content="summary" />
 </svelte:head>
 
 <div class="mx-auto p-6 {data.singleService ? 'max-w-sm' : 'max-w-sm lg:max-w-5xl'}">
@@ -294,27 +285,28 @@
 							method="POST"
 							action="?/finishSelfBooking"
 							use:enhance={() => {
-        isLoading = true;
-        return async ({ result, update }) => {
-            if (result.type === 'success') {
-                // Formatação simples para a mensagem de share
-                const day = String(calendarValue.day).padStart(2, '0');
-                const month = String(calendarValue.month).padStart(2, '0');
-                
-                bookingSnapshot = {
-                    serviceName: services.find((s) => s.id === data.selectedServiceId)?.name ?? '',
-					dayName: getDayName(calendarValue),
-                    date: `${day}/${month}`, // Ex: 11/05
-                    time: formatSlotTime(selectedSlot?.slot_start) // Usa sua função de limpeza
-                };
-                isLoading = false;
-                isSuccess = true;
-            } else {
-                await update();
-                isLoading = false;
-            }
-        };
-    }}
+								isLoading = true;
+								return async ({ result, update }) => {
+									if (result.type === 'success') {
+										// Formatação simples para a mensagem de share
+										const day = String(calendarValue.day).padStart(2, '0');
+										const month = String(calendarValue.month).padStart(2, '0');
+
+										bookingSnapshot = {
+											serviceName:
+												services.find((s) => s.id === data.selectedServiceId)?.name ?? '',
+											dayName: getDayName(calendarValue),
+											date: `${day}/${month}`, // Ex: 11/05
+											time: formatSlotTime(selectedSlot?.slot_start) // Usa sua função de limpeza
+										};
+										isLoading = false;
+										isSuccess = true;
+									} else {
+										await update();
+										isLoading = false;
+									}
+								};
+							}}
 							class="flex flex-1 animate-in flex-col space-y-4 fade-in slide-in-from-right-4"
 						>
 							<input type="hidden" name="selected_date" value={calendarValue?.toString() ?? ''} />

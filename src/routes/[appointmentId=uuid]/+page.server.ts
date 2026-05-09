@@ -3,11 +3,11 @@ import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, locals: { sql } }) => {
-    // O nome deve ser appointmentId conforme o nome da pasta [appointmentId]
-    const { appointmentId } = params;
+	// O nome deve ser appointmentId conforme o nome da pasta [appointmentId]
+	const { appointmentId } = params;
 
-    try {
-        const result = await sql`
+	try {
+		const result = await sql`
             SELECT 
                 a.id,
                 lower(a.slot) as start_timestamp,
@@ -21,31 +21,31 @@ export const load: PageServerLoad = async ({ params, locals: { sql } }) => {
             LIMIT 1
         `;
 
-        const row = result[0];
+		const row = result[0];
 
-        if (!row) {
-            throw error(404, 'Agendamento não encontrado.');
-        }
+		if (!row) {
+			throw error(404, 'Agendamento não encontrado.');
+		}
 
-        const startDate = new Date(row.start_timestamp);
+		const startDate = new Date(row.start_timestamp);
 
-        return {
-            appointment: {
-                id: row.id,
-                date: startDate.toLocaleDateString('pt-BR'),
-                time: startDate.toLocaleTimeString('pt-BR', { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                }),
-                service_name: row.service_name
-            },
-            professional: {
-                full_name: row.professional_full_name,
-                username: row.professional_username
-            }
-        };
-    } catch (err) {
-        console.error('Erro:', err);
-        throw error(404, 'Link de agendamento inválido.');
-    }
+		return {
+			appointment: {
+				id: row.id,
+				date: startDate.toLocaleDateString('pt-BR'),
+				time: startDate.toLocaleTimeString('pt-BR', {
+					hour: '2-digit',
+					minute: '2-digit'
+				}),
+				service_name: row.service_name
+			},
+			professional: {
+				full_name: row.professional_full_name,
+				username: row.professional_username
+			}
+		};
+	} catch (err) {
+		console.error('Erro:', err);
+		throw error(404, 'Link de agendamento inválido.');
+	}
 };

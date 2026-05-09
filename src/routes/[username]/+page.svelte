@@ -68,41 +68,42 @@
 	}
 
 	let showCopiedFeedback = $state(false);
-	function handleShare() {
-		if (!bookingSnapshot) return;
+	async function handleShare() {
+        if (!bookingSnapshot) return;
 
-		const shareData = {
-			title: 'Meu Agendamento',
-			text: `${bookingSnapshot.serviceName} com ${professional.full_name} dia ${bookingSnapshot.date} às ${bookingSnapshot.time}.`,
-			url: window.location.href
-		};
+        // Mensagem ultra curta e direta
+        const message = `Confirmado: ${bookingSnapshot.serviceName}\n📅 ${bookingSnapshot.date} às ${bookingSnapshot.time}\n👤 ${professional.full_name}`;
+        const shareUrl = window.location.href;
 
-		if (navigator.share) {
-			navigator.share(shareData).catch(() => {});
-		} else {
-			navigator.clipboard.writeText(`${shareData.text} ${shareData.url}`);
-
-			// Feedback visual com timeout
-			showCopiedFeedback = true;
-			setTimeout(() => {
-				showCopiedFeedback = false;
-			}, 3000);
-		}
-	}
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'Agendamento Confirmado',
+                    text: message,
+                    url: shareUrl
+                });
+            } catch (err) {
+                // Silencioso
+            }
+        } else {
+            // Fallback para clipboard combinando texto + link
+            await navigator.clipboard.writeText(`${message}\n🔗 ${shareUrl}`);
+            showCopiedFeedback = true;
+            setTimeout(() => (showCopiedFeedback = false), 3000);
+        }
+    }
 </script>
 
 <svelte:head>
-	<title>Agende com {professional.full_name}</title>
-	<meta name="description" content="Reserve seu horário com @{professional.username}." />
-
-	<!-- Configuração de Compartilhamento (Open Graph) -->
-	<meta property="og:type" content="website" />
-	<meta property="og:title" content="Agende com {professional.full_name}" />
-	<meta property="og:description" content="Confira os horários disponíveis." />
-	<!-- Forçando o ícone do app -->
-	<meta property="og:image" content="/icon-512-squared.png" />
-	<meta property="og:image:width" content="512" />
-	<meta property="og:image:height" content="512" />
+    <title>Agendar com {professional.full_name}</title>
+    
+    <!-- Preview de compartilhamento limpo -->
+    <meta property="og:title" content="Agendamento Disponível" />
+    <meta property="og:description" content="Reserve seu horário com {professional.full_name}" />
+    <meta property="og:image" content="/icon-512-squared.png" />
+    
+    <!-- Para o Twitter/X não ocupar muito espaço -->
+    <meta name="twitter:card" content="summary" />
 </svelte:head>
 
 <div class="mx-auto p-6 {data.singleService ? 'max-w-sm' : 'max-w-sm lg:max-w-5xl'}">
@@ -281,23 +282,26 @@
 							method="POST"
 							action="?/finishSelfBooking"
 							use:enhance={() => {
-								isLoading = true;
-								return async ({ result, update }) => {
-									if (result.type === 'success') {
-										bookingSnapshot = {
-											serviceName:
-												services.find((s) => s.id === data.selectedServiceId)?.name ?? '',
-											date: `${calendarValue?.day}/${calendarValue?.month}/${calendarValue?.year}`,
-											time: selectedSlot?.slot_start
-										};
-										isLoading = false;
-										isSuccess = true;
-									} else if (result.type === 'failure') {
-										await update();
-										isLoading = false;
-									}
-								};
-							}}
+        isLoading = true;
+        return async ({ result, update }) => {
+            if (result.type === 'success') {
+                // Formatação simples para a mensagem de share
+                const day = String(calendarValue.day).padStart(2, '0');
+                const month = String(calendarValue.month).padStart(2, '0');
+                
+                bookingSnapshot = {
+                    serviceName: services.find((s) => s.id === data.selectedServiceId)?.name ?? '',
+                    date: `${day}/${month}`, // Ex: 11/05
+                    time: formatSlotTime(selectedSlot?.slot_start) // Usa sua função de limpeza
+                };
+                isLoading = false;
+                isSuccess = true;
+            } else {
+                await update();
+                isLoading = false;
+            }
+        };
+    }}
 							class="flex flex-1 animate-in flex-col space-y-4 fade-in slide-in-from-right-4"
 						>
 							<input type="hidden" name="selected_date" value={calendarValue?.toString() ?? ''} />

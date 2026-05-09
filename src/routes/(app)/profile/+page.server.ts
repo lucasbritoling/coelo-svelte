@@ -20,11 +20,19 @@ export const actions: Actions = {
 				return fail(400);
 			}
 
-			// Geramos um nome único para o arquivo
+			// 1. BUSCAR O CAMINHO DO ARQUIVO ANTIGO
+			// Consultamos o banco antes da atualização para saber o que deletar
+			const currentProfile = await locals.sql`
+                SELECT avatar_url FROM public.profiles 
+                WHERE id = ${session.user.id}
+            `;
+			const oldFilePath = currentProfile[0]?.avatar_url;
+
+			// 2. PREPARAR NOVO ARQUIVO
 			const fileExt = file.name.split('.').pop();
 			const filePath = `${session.user.id}-${Date.now()}.${fileExt}`;
 
-			// 1. Upload para o Storage (Bucket 'avatars')
+			// 3. UPLOAD DO NOVO ARQUIVO
 			const { error: storageError } = await locals.supabase.storage
 				.from('avatars')
 				.upload(filePath, file, { upsert: true });
@@ -34,32 +42,40 @@ export const actions: Actions = {
 				return fail(500, { message: storageError.message });
 			}
 
-			// 2. ATUALIZAÇÃO DA TABELA PÚBLICA (Para a página de agendamento)
-			// Usamos o seu locals.sql (Postgres/Hyperdrive)
+			// 4. ATUALIZAÇÃO DA TABELA PÚBLICA
 			try {
 				await locals.sql`
                     UPDATE public.profiles 
                     SET avatar_url = ${filePath} 
                     WHERE id = ${session.user.id}
                 `;
-				console.log('Tabela public.profiles atualizada com o path:', filePath);
 			} catch (dbError) {
 				console.error('Erro ao atualizar tabela profiles:', dbError);
 				return fail(500, { message: 'Erro ao salvar no banco de dados.' });
 			}
 
-			// 3. UPDATE AUTH METADATA (Para a área logada interna)
-			// Dica: salve o filePath aqui também para manter o padrão
-			const { error: authError } = await locals.supabase.auth.updateUser({
+			// 5. UPDATE AUTH METADATA
+			await locals.supabase.auth.updateUser({
 				data: { avatar_url: filePath }
 			});
 
-			if (authError) {
-				console.error('Erro ao atualizar metadata do Auth:', authError);
-				// Não falhamos aqui pois o banco principal já foi atualizado
+			// 6. LIMPEZA: EXCLUSÃO DO ARQUIVO ANTIGO
+			// Só tentamos deletar se existia um arquivo anterior e se ele é diferente do novo
+			if (oldFilePath && oldFilePath !== filePath) {
+				const { error: deleteError } = await locals.supabase.storage
+					.from('avatars')
+					.remove([oldFilePath]);
+
+				if (deleteError) {
+					// Logamos o erro mas não interrompemos o sucesso,
+					// pois o novo upload já foi concluído com êxito.
+					console.warn('Aviso: Não foi possível remover o arquivo antigo:', deleteError.message);
+				} else {
+					console.log('Arquivo antigo removido com sucesso:', oldFilePath);
+				}
 			}
 
-			// 4. GERAÇÃO DA URL PÚBLICA PARA RESPOSTA IMEDIATA NA UI
+			// 7. GERAÇÃO DA URL PÚBLICA PARA RESPOSTA
 			const {
 				data: { publicUrl }
 			} = locals.supabase.storage.from('avatars').getPublicUrl(filePath);

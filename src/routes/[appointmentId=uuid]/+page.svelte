@@ -12,6 +12,7 @@
 		Download
 	} from '@lucide/svelte';
 	import { fade, fly } from 'svelte/transition';
+	import { getLocalTimeZone } from '@internationalized/date';
 
 	let { data } = $props();
 	const { appointment, professional } = data;
@@ -20,9 +21,11 @@
 	const firstName = $derived(appointment.customer_name.split(' ')[0]);
 
 	async function handleShare() {
+		const message = `${appointment.service_name} com ${professional.full_name} no dia ${appointment.date} (${getDayName(appointment.date)}) às ${appointment.time}`;
+
 		const shareData = {
 			title: 'Meu Agendamento',
-			text: `Confirmado: ${appointment.service_name} com ${professional.full_name}`,
+			text: message,
 			url: window.location.href
 		};
 
@@ -33,16 +36,32 @@
 				console.log('Share cancelled');
 			}
 		} else {
-			await navigator.clipboard.writeText(window.location.href);
+			// Para o Clipboard, somamos a mensagem + URL para não perder informação
+			const fullText = `${shareData.title}: ${message}\n\nLink: ${window.location.href}`;
+			await navigator.clipboard.writeText(fullText);
 			copied = true;
 			setTimeout(() => (copied = false), 2000);
 		}
+	}
+
+	function getDayName(dateStr: string) {
+		if (!dateStr) return '';
+
+		// Converte "12/05/2026" em ["12", "05", "2026"]
+		const [day, month, year] = dateStr.split('/').map(Number);
+
+		// O mês no JS começa em 0 (Janeiro = 0, Maio = 4)
+		const date = new Date(year, month - 1, day);
+
+		const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+
+		return days[date.getDay()];
 	}
 </script>
 
 <svelte:head>
 	<title>Confirmado • {appointment.service_name}</title>
-	<meta property="og:title" content="Agendamento Confirmado! ✅" />
+	<meta property="og:title" content="Agendamento Confirmado ✅" />
 	<meta
 		property="og:description"
 		content="{appointment.service_name} com {professional.full_name} em {appointment.date} às {appointment.time}."
@@ -119,21 +138,29 @@
 					</div>
 				</div>
 
-				<!-- Detalhes Grid -->
-				<div class="grid grid-cols-2 gap-6 pt-2">
-					<div class="space-y-1">
-						<div class="flex items-center gap-1.5 text-muted-foreground">
-							<Calendar class="size-3.5" />
-							<span class="text-[10px] font-bold tracking-tight uppercase">Data</span>
+				<!-- Detalhes Grid Refinado -->
+				<div class="mt-2 flex items-center justify-between border-t border-dashed pt-6">
+					<div class="flex flex-col gap-1">
+						<div class="flex items-center gap-2">
+							<Calendar class="size-3.5 text-muted-foreground" />
+							<span class="text-sm font-bold">{appointment.date}</span>
 						</div>
-						<p class="text-sm font-semibold">{appointment.date}</p>
+						<span class="text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
+							{getDayName(appointment.date)}
+						</span>
 					</div>
-					<div class="space-y-1 text-right">
-						<div class="flex items-center justify-end gap-1.5 text-muted-foreground">
-							<Clock class="size-3.5" />
-							<span class="text-[10px] font-bold tracking-tight uppercase">Horário</span>
+
+					<div class="h-8 w-px bg-border/50"></div>
+					<!-- Divisor vertical -->
+
+					<div class="flex flex-col items-end gap-1">
+						<div class="flex items-center gap-2">
+							<Clock class="size-3.5 text-muted-foreground" />
+							<span class="text-sm font-bold">{appointment.time}</span>
 						</div>
-						<p class="text-sm font-semibold">{appointment.time}</p>
+						<span class="text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
+							Horário local
+						</span>
 					</div>
 				</div>
 

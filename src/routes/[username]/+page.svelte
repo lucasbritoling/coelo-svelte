@@ -85,17 +85,6 @@
 			setTimeout(() => (showCopiedFeedback = false), 3000);
 		}
 	}
-
-	function getDayName(dateObj: any) {
-		if (!dateObj) return '';
-
-		// Converte para um objeto Date nativo para pegar o dia da semana
-		const date = dateObj.toDate(getLocalTimeZone());
-
-		const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
-
-		return days[date.getDay()];
-	}
 </script>
 
 <svelte:head>

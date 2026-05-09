@@ -24,6 +24,7 @@ declare global {
 				id: string;
 				email: string | undefined;
 				full_name: string;
+				username: string;
 			} | null;
 		}
 		interface PageData {

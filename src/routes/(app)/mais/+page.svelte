@@ -20,7 +20,7 @@
 	<div class="mx-3 overflow-hidden rounded-2xl border border-border/40 bg-card">
 		<button class="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-muted/50">
 			<div
-				class="flex bg-blue-50 text-blue-600 size-10 shrink-0 items-center justify-center rounded-full text-sm font-medium uppercase"
+				class="flex size-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-sm font-medium text-blue-600 uppercase"
 			>
 				{profile.name[0]}
 			</div>

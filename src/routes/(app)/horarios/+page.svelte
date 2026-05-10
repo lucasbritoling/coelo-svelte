@@ -182,12 +182,6 @@
                     maxlength={5}
                 />
             </div>
-
-            {#if !day.is_active}
-                <div class="flex-1 text-right shrink-0">
-                    <span class="text-[11px] font-bold text-muted-foreground/60 uppercase tracking-tighter">Fechado</span>
-                </div>
-            {/if}
         </div>
     {/each}
 </div>

@@ -52,24 +52,6 @@
 	let copied = $state(false);
 	let showCalendarPicker = $state(false);
 
-	function handleCalendarSelect(d: any) {
-		if (!d) return;
-
-		// Converte o objeto DateValue para YYYY-MM-DD
-		const newDateStr = d.toString();
-
-		const newUrl = new URL(page.url);
-		newUrl.searchParams.set('date', newDateStr);
-
-		goto(newUrl.search, {
-			replaceState: true,
-			keepFocus: true,
-			noScroll: true
-		});
-
-		showCalendarPicker = false;
-	}
-
 	const schedulingLink = $derived(`coelo.dev/${data.username}`);
 
 	// ── Datas ─────────────────────────────────────────────────────
@@ -95,15 +77,9 @@
 	function navigateDay(offset: number) {
 		const date = new Date(parsedDate);
 		date.setDate(date.getDate() + offset);
-
-		const newUrl = new URL(page.url);
-		newUrl.searchParams.set('date', date.toISOString().split('T')[0]);
-
-		goto(newUrl.search, {
-			keepFocus: true,
-			noScroll: true,
-			replaceState: true
-		});
+		// Usamos o formato ISO local (YYYY-MM-DD)
+		const dateStr = date.toLocaleDateString('sv-SE');
+		updateDate(dateStr);
 	}
 
 	// ── Strip de datas ────────────────────────────────────────────
@@ -266,6 +242,25 @@
 	const reactiveNow = $derived(fmt.time.format(new Date(ticker)));
 	const todayStr = $derived(fmt.iso.format(new Date(ticker)));
 	const isTodayView = $derived(data.selectedDate === todayStr);
+
+	// ── Navegação ─────────────────────────────────────────────────
+	function updateDate(newDate: string) {
+		if (!newDate || newDate === data.selectedDate) return;
+
+		const newUrl = new URL(page.url);
+		newUrl.searchParams.set('date', newDate);
+
+		goto(newUrl.search, {
+			replaceState: true,
+			keepFocus: true,
+			noScroll: true
+		});
+	}
+	function handleCalendarSelect(d: any) {
+		if (!d) return;
+		updateDate(d.toString());
+		showCalendarPicker = false;
+	}
 </script>
 
 <!-- MOBILE -->
@@ -325,16 +320,7 @@
 		>
 			{#each strip as day}
 				<button
-					onclick={() => {
-						const newUrl = new URL(page.url);
-						newUrl.searchParams.set('date', day.str);
-
-						goto(newUrl.search, {
-							replaceState: true,
-							keepFocus: true,
-							noScroll: true
-						});
-					}}
+					onclick={() => updateDate(day.str)}
 					class={`flex min-w-[58px] shrink-0 flex-col items-center rounded-full border py-3 transition-all ${
 						day.str === data.selectedDate
 							? 'border-black opacity-100'

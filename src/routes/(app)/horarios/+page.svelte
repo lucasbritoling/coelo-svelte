@@ -166,9 +166,7 @@
 										class="h-9 w-[70px] rounded-lg border-muted-foreground/10 bg-zinc-50 px-0 text-center text-sm font-semibold shadow-sm dark:bg-zinc-900"
 										maxlength={5}
 									/>
-									<span class="shrink-0 text-[10px] font-medium text-muted-foreground/50 uppercase"
-										>às</span
-									>
+									<span class="shrink-0 text-[8.5px] text-muted-foreground/50 uppercase">às</span>
 									<Input
 										type="text"
 										inputmode="numeric"

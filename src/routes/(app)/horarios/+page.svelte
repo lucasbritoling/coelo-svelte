@@ -9,9 +9,7 @@
 		Save,
 		CheckCircle2,
 		XCircle,
-
 		Utensils
-
 	} from '@lucide/svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
@@ -30,10 +28,10 @@
 		localDays = data.workingHours.map((d: any) => ({ ...d }));
 	});
 	let localLunch = $state({
-        has_lunch: data.user?.has_lunch ?? false,
-        lunch_start: data.user?.lunch_start?.slice(0, 5) ?? '12:00',
-        lunch_end: data.user?.lunch_end?.slice(0, 5) ?? '13:00'
-    });
+		has_lunch: data.user?.has_lunch ?? false,
+		lunch_start: data.user?.lunch_start?.slice(0, 5) ?? '12:00',
+		lunch_end: data.user?.lunch_end?.slice(0, 5) ?? '13:00'
+	});
 	let isSavingLunch = $state(false);
 	let isSavingSchedule = $state(false);
 
@@ -288,9 +286,9 @@
 ════════════════════════════════════════════════════ -->
 <div class="hidden min-h-full sm:flex sm:flex-col">
 	<div class="flex-1 p-6">
-		<div class="mx-auto grid max-w-4xl grid-cols-5 gap-6">
+		<div class="mx-auto grid max-w-4xl grid-cols-5 gap-8">
 			<div class="col-span-3">
-				<div class="max-w-md overflow-hidden rounded-2xl border bg-card shadow-sm">
+				<div class="overflow-hidden rounded-2xl border bg-card shadow-sm">
 					<div class="flex items-center justify-between border-b bg-muted/5 px-5 py-3">
 						<p class="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
 							Rotina Semanal
@@ -317,11 +315,10 @@
 								type="submit"
 								size="sm"
 								disabled={isSavingSchedule}
-								class="h-8 w-25 rounded-lg px-4 text-xs font-bold transition-all active:scale-95"
+								class="h-8 w-24 rounded-lg px-4 text-xs font-bold transition-all active:scale-95"
 							>
 								{#if isSavingSchedule}
 									<LoaderCircle class="mr-1.5 size-3.5 animate-spin" />
-									Salvando...
 								{:else}
 									Salvar
 								{/if}
@@ -338,7 +335,7 @@
 							>
 								<div class="flex shrink-0 items-center gap-4">
 									<Switch checked={day.is_active} onCheckedChange={(v) => (day.is_active = v)} />
-									<span class="w-28 text-sm font-bold capitalize">
+									<span class="w-28 text-sm font-bold text-zinc-700 capitalize dark:text-zinc-300">
 										{new Intl.DateTimeFormat('pt-BR', { weekday: 'long' }).format(
 											new Date(2024, 0, day.day_of_week + 1)
 										)}
@@ -351,10 +348,9 @@
 											<Input
 												type="text"
 												inputmode="numeric"
-												placeholder="09:00"
 												value={day.start_time}
 												oninput={(e) => handleTimeInput(e, day, 'start_time')}
-												class="h-9 w-20 rounded-lg border-muted-foreground/10 bg-background text-center text-sm font-medium"
+												class="h-9 w-20 rounded-lg border-muted-foreground/10 bg-background text-center text-sm font-semibold shadow-sm"
 												maxlength={5}
 											/>
 											<span class="text-[10px] font-bold text-muted-foreground/40 uppercase"
@@ -363,10 +359,9 @@
 											<Input
 												type="text"
 												inputmode="numeric"
-												placeholder="18:00"
 												value={day.end_time}
 												oninput={(e) => handleTimeInput(e, day, 'end_time')}
-												class="h-9 w-20 rounded-lg border-muted-foreground/10 bg-background text-center text-sm font-medium"
+												class="h-9 w-20 rounded-lg border-muted-foreground/10 bg-background text-center text-sm font-semibold shadow-sm"
 												maxlength={5}
 											/>
 										</div>
@@ -378,135 +373,152 @@
 				</div>
 			</div>
 
-			<section class="space-y-3">
-    <div class="flex items-center justify-between px-1">
-        <h2 class="text-[11px] font-bold tracking-widest text-muted-foreground uppercase">
-            Intervalo de Almoço
-        </h2>
-        
-        <form
-            method="POST"
-            action="?/updateLunchTime"
-            use:enhance={() => {
-                isSavingLunch = true;
-                return async ({ update }) => {
-                    await update();
-                    isSavingLunch = false;
-                    toast.success('Almoço atualizado');
-                };
-            }}
-        >
-            <input type="hidden" name="has_lunch" value={localLunch.has_lunch ? 'on' : ''} />
-            {#if !localLunch.has_lunch} <input type="hidden" name="has_lunch" value="" disabled /> {/if}
-            <input type="hidden" name="lunch_start" value={localLunch.lunch_start} />
-            <input type="hidden" name="lunch_end" value={localLunch.lunch_end} />
-            
-            <Button type="submit" size="sm" disabled={isSavingLunch} class="h-8 rounded-lg text-xs">
-                {isSavingLunch ? '...' : 'Salvar'}
-            </Button>
-        </form>
-    </div>
+			<div class="col-span-2 space-y-8">
+				<section class="space-y-3">
+					<div class="flex items-center justify-between px-1">
+						<p class="text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
+							Intervalo de Almoço
+						</p>
 
-    <div class="rounded-2xl border bg-card p-4 shadow-sm">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="flex size-9 items-center justify-center rounded-xl bg-orange-100 text-orange-600 dark:bg-orange-950/30">
-                    <Utensils class="size-5" />
-                </div>
-                <div>
-                    <p class="text-sm font-bold">Pausa para Almoço</p>
-                    <p class="text-[11px] text-muted-foreground">Bloqueia este horário em todos os dias ativos.</p>
-                </div>
-            </div>
-            <Switch 
-                checked={localLunch.has_lunch} 
-                onCheckedChange={(v) => localLunch.has_lunch = v} 
-            />
-        </div>
-
-        {#if localLunch.has_lunch}
-            <div class="mt-4 flex items-center gap-3 border-t pt-4 animate-in fade-in slide-in-from-top-2">
-                <div class="grid flex-1 gap-1.5">
-                    <Label class="text-[10px] font-bold text-muted-foreground uppercase">Início</Label>
-                    <Input 
-                        type="time" 
-                        bind:value={localLunch.lunch_start} 
-                        class="h-9 bg-muted/20" 
-                    />
-                </div>
-                <div class="flex items-end pb-2">
-                    <span class="text-[10px] font-bold text-muted-foreground/40">ATÉ</span>
-                </div>
-                <div class="grid flex-1 gap-1.5">
-                    <Label class="text-[10px] font-bold text-muted-foreground uppercase">Fim</Label>
-                    <Input 
-                        type="time" 
-                        bind:value={localLunch.lunch_end} 
-                        class="h-9 bg-muted/20" 
-                    />
-                </div>
-            </div>
-        {/if}
-    </div>
-</section>
-
-			<div class="col-span-2 space-y-3">
-				<p class="px-1 text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
-					Próximas Exceções
-				</p>
-
-				<Button
-					onclick={openNewDialog}
-					variant="outline"
-					class="h-9 w-full gap-2 border-dashed text-sm font-medium"
-				>
-					<Plus class="size-4" />
-					Nova Exceção
-				</Button>
-
-				{#if data.overrides.length === 0}
-					<div class="flex flex-col items-center gap-2 rounded-2xl border bg-background py-10">
-						<CalendarX class="size-7 text-muted-foreground/30" />
-						<p class="text-xs text-muted-foreground italic">Nenhuma exceção futura.</p>
-					</div>
-				{:else}
-					<div class="divide-y overflow-hidden rounded-2xl border bg-background shadow-sm">
-						{#each data.overrides as override (override.id)}
-							<div
-								class="group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/50"
+						<form
+							method="POST"
+							action="?/updateLunchTime"
+							use:enhance={({ formData }) => {
+								isSavingLunch = true;
+								formData.set('has_lunch', localLunch.has_lunch ? 'on' : '');
+								formData.set('lunch_start', localLunch.lunch_start);
+								formData.set('lunch_end', localLunch.lunch_end);
+								return async ({ update }) => {
+									await update();
+									isSavingLunch = false;
+								};
+							}}
+						>
+							<Button
+								type="submit"
+								size="sm"
+								disabled={isSavingLunch}
+								class="h-8 rounded-lg px-3 text-xs font-bold"
 							>
-								{#if override.is_available}
-									<CalendarCheck class="size-4 shrink-0 text-green-500" />
+								{#if isSavingLunch}
+									<LoaderCircle class="size-3 animate-spin" />
 								{:else}
-									<CalendarX class="size-4 shrink-0 text-destructive" />
+									Salvar
 								{/if}
-								<div class="min-w-0 flex-1">
-									<p class="truncate text-sm font-semibold capitalize">{fmtDate(override.date)}</p>
-									<p class="truncate text-[11px] text-muted-foreground">
-										{#if override.is_available}
-											{override.start_time.slice(0, 5)} – {override.end_time.slice(0, 5)}
-										{:else}
-											{override.start_time
-												? `${override.start_time.slice(0, 5)}–${override.end_time.slice(0, 5)}`
-												: ''}
-										{/if}
-										{#if override.note}<span class="italic"> · {override.note}</span>{/if}
-									</p>
-								</div>
-								<button
-									type="button"
-									onclick={() => openEditDialog(override)}
-									class="flex size-7 items-center justify-center rounded-md text-muted-foreground
-                                        opacity-0 transition-all
-                                        group-hover:opacity-100 hover:bg-muted hover:text-foreground"
-									aria-label="Editar"
-								>
-									<Pencil class="size-3.5" />
-								</button>
-							</div>
-						{/each}
+							</Button>
+						</form>
 					</div>
-				{/if}
+
+					<div class="rounded-2xl border bg-card p-4 shadow-sm">
+						<div class="flex items-center justify-between">
+							<div class="flex items-center gap-3">
+								<div
+									class="flex size-9 items-center justify-center rounded-xl bg-orange-100 text-orange-600 dark:bg-orange-950/30"
+								>
+									<Utensils class="size-5" />
+								</div>
+								<div class="space-y-0.5">
+									<p class="text-sm font-bold">Pausa Diária</p>
+									<p class="text-[11px] text-muted-foreground italic">Bloqueio recorrente.</p>
+								</div>
+							</div>
+							<Switch
+								checked={localLunch.has_lunch}
+								onCheckedChange={(v) => (localLunch.has_lunch = v)}
+							/>
+						</div>
+
+						{#if localLunch.has_lunch}
+							<div
+								class="mt-4 flex animate-in items-center gap-3 border-t pt-4 duration-300 fade-in slide-in-from-top-2"
+							>
+								<div class="grid flex-1 gap-1.5 text-center">
+									<Label class="text-[9px] font-bold text-muted-foreground uppercase">Início</Label>
+									<Input
+										type="time"
+										bind:value={localLunch.lunch_start}
+										class="h-9 rounded-lg border-muted-foreground/10 bg-muted/20 text-center text-sm font-semibold"
+									/>
+								</div>
+								<div class="flex items-end pb-2">
+									<span class="text-[10px] font-bold text-muted-foreground/30">ATÉ</span>
+								</div>
+								<div class="grid flex-1 gap-1.5 text-center">
+									<Label class="text-[9px] font-bold text-muted-foreground uppercase">Fim</Label>
+									<Input
+										type="time"
+										bind:value={localLunch.lunch_end}
+										class="h-9 rounded-lg border-muted-foreground/10 bg-muted/20 text-center text-sm font-semibold"
+									/>
+								</div>
+							</div>
+						{/if}
+					</div>
+				</section>
+
+				<div class="space-y-3">
+					<p class="px-1 text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
+						Próximas Exceções
+					</p>
+
+					<Button
+						onclick={openNewDialog}
+						variant="outline"
+						class="h-9 w-full gap-2 border-dashed text-sm font-medium transition-all hover:bg-muted"
+					>
+						<Plus class="size-4" />
+						Nova Exceção
+					</Button>
+
+					{#if data.overrides.length === 0}
+						<div class="flex flex-col items-center gap-2 rounded-2xl border bg-background/50 py-10">
+							<CalendarX class="size-7 text-muted-foreground/20" />
+							<p class="px-4 text-center text-[11px] text-muted-foreground italic">
+								Sem interrupções agendadas.
+							</p>
+						</div>
+					{:else}
+						<div class="divide-y overflow-hidden rounded-2xl border bg-card shadow-sm">
+							{#each data.overrides as override (override.id)}
+								<div
+									class="group flex items-center gap-3 px-4 py-3.5 transition-colors hover:bg-muted/30"
+								>
+									<div
+										class="flex size-8 shrink-0 items-center justify-center rounded-lg {override.is_available
+											? 'bg-green-100 text-green-600 dark:bg-green-950/40'
+											: 'bg-red-100 text-red-600 dark:bg-red-950/40'}"
+									>
+										{#if override.is_available}
+											<CalendarCheck class="size-4" />
+										{:else}
+											<CalendarX class="size-4" />
+										{/if}
+									</div>
+
+									<div class="min-w-0 flex-1">
+										<p class="truncate text-sm font-bold capitalize">{fmtDate(override.date)}</p>
+										<p class="truncate text-[11px] font-medium text-muted-foreground">
+											<span class={override.is_available ? 'text-green-600' : 'text-red-600'}>
+												{override.start_time?.slice(0, 5)} – {override.end_time?.slice(0, 5)}
+											</span>
+											{#if override.note}<span class="text-muted-foreground/60 italic">
+													· {override.note}</span
+												>{/if}
+										</p>
+									</div>
+
+									<button
+										type="button"
+										onclick={() => openEditDialog(override)}
+										class="flex size-7 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-all group-hover:opacity-100 hover:bg-muted hover:text-foreground"
+									>
+										<Pencil class="size-3.5" />
+									</button>
+								</div>
+							{/each}
+						</div>
+					{/if}
+				</div>
 			</div>
 		</div>
 	</div>

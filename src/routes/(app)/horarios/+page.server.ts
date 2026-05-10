@@ -163,7 +163,7 @@ export const actions: Actions = {
 		if (!user) return fail(401);
 
 		const formData = await request.formData();
-		const has_lunch = formData.has('has_lunch');
+		const has_lunch = formData.get('has_lunch') === 'true';
 		const lunch_start = formData.get('lunch_start')?.toString() || null;
 		const lunch_end = formData.get('lunch_end')?.toString() || null;
 

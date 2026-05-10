@@ -214,8 +214,9 @@
 					use:enhance={({ formData }) => {
 						isSavingLunch = true;
 
-						// Forçamos os valores do estado reativo no formData
-						formData.set('has_lunch', localLunch.has_lunch ? 'on' : '');
+						// Em vez de 'on' ou vazio, vamos enviar algo que o servidor
+						// consiga validar de forma inequívoca.
+						formData.set('has_lunch', localLunch.has_lunch ? 'true' : 'false');
 						formData.set('lunch_start', localLunch.lunch_start);
 						formData.set('lunch_end', localLunch.lunch_end);
 
@@ -470,12 +471,18 @@
 							action="?/updateLunchTime"
 							use:enhance={({ formData }) => {
 								isSavingLunch = true;
-								formData.set('has_lunch', localLunch.has_lunch ? 'on' : '');
+
+								// Em vez de 'on' ou vazio, vamos enviar algo que o servidor
+								// consiga validar de forma inequívoca.
+								formData.set('has_lunch', localLunch.has_lunch ? 'true' : 'false');
 								formData.set('lunch_start', localLunch.lunch_start);
 								formData.set('lunch_end', localLunch.lunch_end);
-								return async ({ update }) => {
-									await update();
+
+								return async ({ result, update }) => {
 									isSavingLunch = false;
+									if (result.type === 'success') {
+										await update({ invalidateAll: true });
+									}
 								};
 							}}
 						>

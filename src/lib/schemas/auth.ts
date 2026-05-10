@@ -53,6 +53,7 @@ const RESERVED_USERNAMES = new Set([
 	'payment',
 	'pricing',
 	'privacy',
+	'privacidade',
 	'profile',
 	'root',
 	'search',
@@ -74,7 +75,12 @@ const RESERVED_USERNAMES = new Set([
 	'serviço',
 	'serviços',
 	'agendas',
-	'forgot'
+	'forgot',
+	'callback',
+	'confirm-reset',
+	'horarios',
+	'mais',
+	'servicos'
 ]);
 
 export const usernameSchema = z

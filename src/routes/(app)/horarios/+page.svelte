@@ -404,8 +404,8 @@
 										{#if override.is_available}
 											{override.start_time.slice(0, 5)} – {override.end_time.slice(0, 5)}
 										{:else}
-											Indisponível{override.start_time
-												? ` · ${override.start_time.slice(0, 5)}–${override.end_time.slice(0, 5)}`
+											{override.start_time
+												? `${override.start_time.slice(0, 5)}–${override.end_time.slice(0, 5)}`
 												: ''}
 										{/if}
 										{#if override.note}<span class="italic"> · {override.note}</span>{/if}

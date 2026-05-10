@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Appointment, AppointmentStatus } from '$lib/types/appointment';
 	import { Plus, Copy, MessageCircle, Check, CalendarDays, Settings } from '@lucide/svelte';
 
 	import { Button } from '$lib/components/ui/button';

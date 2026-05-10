@@ -235,15 +235,20 @@
 							<div class="min-w-0 flex-1">
 								<p class="truncate text-sm font-bold capitalize">{fmtDate(override.date)}</p>
 								<p class="text-xs font-medium text-muted-foreground">
-									{#if override.is_available}
-										<span class="font-semibold text-green-600"
-											>{override.start_time.slice(0, 5)} – {override.end_time.slice(0, 5)}</span
-										>
-									{:else}
-										Indisponível
-									{/if}
+									<span
+										class="font-semibold {override.is_available
+											? 'text-green-600 dark:text-green-500'
+											: 'text-red-600 dark:text-red-500'}"
+									>
+										{override.start_time?.slice(0, 5) ?? '00:00'} – {override.end_time?.slice(
+											0,
+											5
+										) ?? '00:00'}
+									</span>
+
 									{#if override.note}
-										· <span class="text-[11px] font-normal italic">"{override.note}"</span>{/if}
+										<span class="text-[11px] font-normal italic">"{override.note}"</span>
+									{/if}
 								</p>
 							</div>
 
@@ -493,7 +498,9 @@
 						<span class="text-sm font-semibold text-red-800 dark:text-red-300">Indisponível</span>
 					{/if}
 				</div>
-				<input type="hidden" name="is_available" value={isAvailable ? 'on' : ''} />
+				{#if isAvailable}
+					<input type="hidden" name="is_available" value="on" />
+				{/if}
 				<Switch checked={isAvailable} onCheckedChange={(v) => (isAvailable = v)} />
 			</div>
 

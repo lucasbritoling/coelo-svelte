@@ -106,20 +106,21 @@ export const actions: Actions = {
 				profile_id: user.id,
 				date,
 				is_available,
-				start_time: is_available ? formData.get('start_time') : null,
-				end_time: is_available ? formData.get('end_time') : null,
+				// ALteração aqui: removida a checagem do is_available para sempre salvar o horário
+				start_time: formData.get('start_time')?.toString() || null,
+				end_time: formData.get('end_time')?.toString() || null,
 				note: formData.get('note')?.toString() || null
 			};
 
 			await sql`
-                INSERT INTO availability_overrides ${sql(payload)}
-                ON CONFLICT (profile_id, date) 
-                DO UPDATE SET
-                    is_available = EXCLUDED.is_available,
-                    start_time = EXCLUDED.start_time,
-                    end_time = EXCLUDED.end_time,
-                    note = EXCLUDED.note
-            `;
+            INSERT INTO availability_overrides ${sql(payload)}
+            ON CONFLICT (profile_id, date) 
+            DO UPDATE SET
+                is_available = EXCLUDED.is_available,
+                start_time = EXCLUDED.start_time,
+                end_time = EXCLUDED.end_time,
+                note = EXCLUDED.note
+        `;
 			return { success: true };
 		} catch (err: any) {
 			if (err.code === '23514') {

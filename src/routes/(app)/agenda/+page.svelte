@@ -243,6 +243,43 @@
 
 		return `em ${Math.round(diff / 60)}h`;
 	}
+
+	// ── Configurações de Data e Hora ────────────────────────────────
+	const fmt = {
+		// Para comparar com o banco/URL (2026-05-10)
+		iso: new Intl.DateTimeFormat('sv-SE', {
+			timeZone: 'America/Sao_Paulo',
+			year: 'numeric',
+			month: '2-digit',
+			day: '2-digit'
+		}),
+
+		// Para o relógio (12:08)
+		time: new Intl.DateTimeFormat('pt-BR', {
+			timeZone: 'America/Sao_Paulo',
+			hour: '2-digit',
+			minute: '2-digit',
+			hour12: false
+		}),
+
+		// Para o título da página (Dom, 10 de mai.)
+		header: new Intl.DateTimeFormat('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' }),
+
+		// Para o Strip de datas (DOM)
+		weekday: new Intl.DateTimeFormat('pt-BR', { weekday: 'short' }),
+
+		// Helper para o soonLabel (Cálculos de diferença)
+		fullSP: new Intl.DateTimeFormat('en-US', {
+			timeZone: 'America/Sao_Paulo',
+			year: 'numeric',
+			month: 'numeric',
+			day: 'numeric',
+			hour: 'numeric',
+			minute: 'numeric',
+			second: 'numeric',
+			hour12: false
+		})
+	};
 </script>
 
 <!-- MOBILE -->

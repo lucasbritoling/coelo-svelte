@@ -3,7 +3,7 @@
 	import * as Calendar from './index.js';
 	import { cn, type WithoutChildrenOrChild } from '$lib/utils.js';
 	import type { ButtonVariant } from '../button/button.svelte';
-	import { isEqualMonth, type DateValue } from '@internationalized/date';
+	import { getLocalTimeZone, isEqualMonth, today, type DateValue } from '@internationalized/date';
 	import type { Snippet } from 'svelte';
 
 	let {
@@ -38,6 +38,18 @@
 		if (captionLayout.startsWith('dropdown')) return 'short';
 		return 'long';
 	});
+
+	// Lógica para o botão "Hoje"
+    const currentToday = today(getLocalTimeZone());
+    
+    // Verifica se o placeholder (mês visível) é diferente do mês de hoje
+    const isNotCurrentMonth = $derived(
+        placeholder && (placeholder.month !== currentToday.month || placeholder.year !== currentToday.year)
+    );
+
+    function goToToday() {
+        placeholder = currentToday;
+    }
 </script>
 
 <!--

@@ -209,54 +209,7 @@
 
 			<div class="divide-y divide-border overflow-hidden rounded-xl border bg-card shadow-inner">
 				{#each localDays as day (day.id)}
-					<div
-						class="flex items-center gap-x-2 p-3.5 transition-colors {day.is_active
-							? 'bg-transparent'
-							: 'bg-muted/30'}"
-					>
-						<div class="flex shrink-0 items-center gap-2.5">
-							<Switch
-								id="switch-{day.id}"
-								checked={day.is_active}
-								onCheckedChange={(v) => (day.is_active = v)}
-								class="scale-95"
-							/>
-							<label
-								for="switch-{day.id}"
-								class="min-w-[36px] text-[13px] font-bold text-zinc-900 capitalize dark:text-white"
-							>
-								{new Intl.DateTimeFormat('pt-BR', { weekday: 'short' })
-									.format(new Date(2024, 0, day.day_of_week + 1))
-									.replace('.', '')}
-							</label>
-						</div>
-
-						<div class="relative flex h-9 flex-1 items-center justify-end">
-							{#if day.is_active}
-								<div class="flex animate-in items-center gap-x-1.5 transition-all fade-in">
-									<Input
-										type="text"
-										inputmode="numeric"
-										placeholder="00:00"
-										value={day.start_time}
-										oninput={(e) => handleTimeInput(e, day, 'start_time')}
-										class="h-9 w-[70px] rounded-lg border-muted-foreground/10 bg-zinc-50 px-0 text-center text-sm font-semibold shadow-sm dark:bg-zinc-900"
-										maxlength={5}
-									/>
-									<span class="shrink-0 text-[8.5px] text-muted-foreground/50 uppercase">às</span>
-									<Input
-										type="text"
-										inputmode="numeric"
-										placeholder="00:00"
-										value={day.end_time}
-										oninput={(e) => handleTimeInput(e, day, 'end_time')}
-										class="h-9 w-[70px] rounded-lg border-muted-foreground/10 bg-zinc-50 px-0 text-center text-sm font-semibold shadow-sm dark:bg-zinc-900"
-										maxlength={5}
-									/>
-								</div>
-							{/if}
-						</div>
-					</div>
+					{@render dayRow(day, false)}
 				{/each}
 			</div>
 		</section>
@@ -473,50 +426,7 @@
 
 					<div class="divide-y divide-border">
 						{#each localDays as day (day.id)}
-							<div
-								class="flex items-center gap-4 px-5 py-4 transition-colors {day.is_active
-									? 'bg-transparent'
-									: 'bg-muted/10'}"
-							>
-								<div class="flex shrink-0 items-center gap-4">
-									<Switch
-										checked={day.is_active}
-										onCheckedChange={(v) => (day.is_active = v)}
-										class="cursor-pointer"
-									/>
-									<span class="w-28 text-sm font-bold text-zinc-700 capitalize dark:text-zinc-300">
-										{new Intl.DateTimeFormat('pt-BR', { weekday: 'long' }).format(
-											new Date(2024, 0, day.day_of_week + 1)
-										)}
-									</span>
-								</div>
-
-								<div class="flex min-h-[32px] flex-1 items-center justify-end">
-									{#if day.is_active}
-										<div class="flex animate-in items-center gap-2 duration-200 fade-in">
-											<Input
-												type="text"
-												inputmode="numeric"
-												value={day.start_time}
-												oninput={(e) => handleTimeInput(e, day, 'start_time')}
-												class="h-9 w-20 rounded-lg border-muted-foreground/10 bg-background text-center text-sm font-semibold shadow-sm"
-												maxlength={5}
-											/>
-											<span class="text-[10px] font-bold text-muted-foreground/40 uppercase"
-												>até</span
-											>
-											<Input
-												type="text"
-												inputmode="numeric"
-												value={day.end_time}
-												oninput={(e) => handleTimeInput(e, day, 'end_time')}
-												class="h-9 w-20 rounded-lg border-muted-foreground/10 bg-background text-center text-sm font-semibold shadow-sm"
-												maxlength={5}
-											/>
-										</div>
-									{/if}
-								</div>
-							</div>
+							{@render dayRow(day, true)}
 						{/each}
 					</div>
 				</div>

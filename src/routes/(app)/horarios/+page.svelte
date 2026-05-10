@@ -20,6 +20,14 @@
 	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 
+	interface WorkingDay {
+		id: string;
+		day_of_week: number;
+		is_active: boolean;
+		start_time: string;
+		end_time: string;
+	}
+
 	let { data }: { data: PageData } = $props();
 
 	// ── Rotina semanal ─────────────────────────────────────────────
@@ -94,6 +102,57 @@
 		day[field] = value;
 	}
 </script>
+
+{#snippet dayRow(day: WorkingDay, isDesktop = false)}
+	<div
+		class="flex items-center gap-x-3 p-3.5 transition-colors {day.is_active
+			? 'bg-transparent'
+			: 'bg-muted/30'}"
+	>
+		<div class="flex shrink-0 items-center gap-2.5">
+			<Switch
+				id="switch-{day.id}"
+				checked={day.is_active}
+				onCheckedChange={(v) => (day.is_active = v)}
+				class="scale-95 cursor-pointer"
+			/>
+			<label
+				for="switch-{day.id}"
+				class="min-w-[40px] text-[13px] font-bold text-zinc-900 capitalize sm:w-28 sm:text-sm dark:text-white"
+			>
+				{new Intl.DateTimeFormat('pt-BR', { weekday: isDesktop ? 'long' : 'short' })
+					.format(new Date(2024, 0, day.day_of_week + 1))
+					.replace('.', '')}
+			</label>
+		</div>
+
+		<div class="relative flex h-9 flex-1 items-center justify-end">
+			{#if day.is_active}
+				<div class="flex animate-in items-center gap-x-1.5 transition-all fade-in">
+					<Input
+						type="text"
+						inputmode="numeric"
+						placeholder="00:00"
+						value={day.start_time}
+						oninput={(e) => handleTimeInput(e, day, 'start_time')}
+						class="h-9 w-[70px] rounded-lg border-muted-foreground/10 bg-zinc-50 px-0 text-center text-sm font-semibold shadow-sm sm:w-20 dark:bg-zinc-900"
+						maxlength={5}
+					/>
+					<span class="shrink-0 text-[8.5px] font-bold text-muted-foreground/40 uppercase">às</span>
+					<Input
+						type="text"
+						inputmode="numeric"
+						placeholder="00:00"
+						value={day.end_time}
+						oninput={(e) => handleTimeInput(e, day, 'end_time')}
+						class="h-9 w-[70px] rounded-lg border-muted-foreground/10 bg-zinc-50 px-0 text-center text-sm font-semibold shadow-sm sm:w-20 dark:bg-zinc-900"
+						maxlength={5}
+					/>
+				</div>
+			{/if}
+		</div>
+	</div>
+{/snippet}
 
 <!-- ═══════════════════════════════════════════════════
      MOBILE

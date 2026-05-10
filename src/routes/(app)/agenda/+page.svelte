@@ -16,15 +16,15 @@
 	import DatePicker from '$lib/components/date-picker.svelte';
 	import { parseDate, getLocalTimeZone } from '@internationalized/date';
 
-	let { data } = $props<{ 
-        data: { 
-            appointments: Appointment[],
-            username: string,
-            selectedDate: string,
-            customers: any[],
-            services: any[]
-        } 
-    }>();
+	let { data } = $props<{
+		data: {
+			appointments: Appointment[];
+			username: string;
+			selectedDate: string;
+			customers: any[];
+			services: any[];
+		};
+	}>();
 	let ticker = $state(Date.now());
 	$effect(() => {
 		let interval: ReturnType<typeof setInterval>;

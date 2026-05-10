@@ -241,33 +241,47 @@
 				<p class="px-1 text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
 					Rotina Semanal
 				</p>
-				<div class="max-w-md divide-y overflow-hidden rounded-2xl border bg-background">
+				<div class="max-w-md divide-y overflow-hidden rounded-2xl border bg-card shadow-sm">
 					{#each localDays as day (day.id)}
-						<div class="flex items-center gap-4 px-5 py-3">
-							<Switch checked={day.is_active} onCheckedChange={(v) => (day.is_active = v)} />
-							<span class="w-32 text-sm font-medium">{DAYS_FULL[day.day_of_week]}</span>
-							<div
-								class="flex flex-1 items-center gap-2 {!day.is_active
-									? 'pointer-events-none opacity-30'
-									: ''}"
-							>
-								<Input
-									type="time"
-									bind:value={day.start_time}
-									class="h-8 flex-1  text-sm"
-									disabled={!day.is_active}
-								/>
-								<span class="text-xs text-muted-foreground">–</span>
-								<Input
-									type="time"
-									bind:value={day.end_time}
-									class="h-8 flex-1  text-sm"
-									disabled={!day.is_active}
-								/>
+						<div
+							class="flex items-center gap-4 px-5 py-4 transition-colors {day.is_active
+								? 'bg-transparent'
+								: 'bg-muted/20'}"
+						>
+							<div class="flex shrink-0 items-center gap-4">
+								<Switch checked={day.is_active} onCheckedChange={(v) => (day.is_active = v)} />
+								<span class="w-28 text-sm font-bold capitalize">
+									{new Intl.DateTimeFormat('pt-BR', { weekday: 'long' }).format(
+										new Date(2024, 0, day.day_of_week + 1)
+									)}
+								</span>
 							</div>
-							{#if !day.is_active}
-								<span class="ml-auto text-xs text-muted-foreground">Fechado</span>
-							{/if}
+
+							<div class="flex min-h-[32px] flex-1 items-center justify-end">
+								{#if day.is_active}
+									<div class="flex items-center gap-2 transition-all">
+										<Input
+											type="text"
+											inputmode="numeric"
+											placeholder="09:00"
+											value={day.start_time}
+											oninput={(e) => handleTimeInput(e, day, 'start_time')}
+											class="h-9 w-20 bg-background text-center text-sm font-medium"
+											maxlength={5}
+										/>
+										<span class="text-xs font-medium text-muted-foreground/50">até</span>
+										<Input
+											type="text"
+											inputmode="numeric"
+											placeholder="18:00"
+											value={day.end_time}
+											oninput={(e) => handleTimeInput(e, day, 'end_time')}
+											class="h-9 w-20 bg-background text-center text-sm font-medium"
+											maxlength={5}
+										/>
+									</div>
+								{/if}
+							</div>
 						</div>
 					{/each}
 				</div>

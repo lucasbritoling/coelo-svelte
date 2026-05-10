@@ -103,15 +103,24 @@
 					action="?/updateWorkingDay"
 					use:enhance={({ formData }) => {
 						isSavingSchedule = true;
+
+						// Limpa o formData caso o Svelte tenha colocado algo automaticamente
+						// e popula com os nossos estados locais (Runes)
 						localDays.forEach((day, i) => {
 							formData.append(`days[${i}][id]`, day.id);
 							formData.append(`days[${i}][is_active]`, day.is_active ? '1' : '0');
 							formData.append(`days[${i}][start_time]`, day.start_time ?? '');
 							formData.append(`days[${i}][end_time]`, day.end_time ?? '');
 						});
-						return async ({ update }) => {
-							await update({ invalidateAll: true });
+
+						return async ({ result, update }) => {
 							isSavingSchedule = false;
+
+							if (result.type === 'success') {
+								await update({ invalidateAll: true });
+							} else if (result.type === 'failure') {
+								toast.error(result.data?.message ?? 'Erro ao salvar');
+							}
 						};
 					}}
 				>
@@ -119,10 +128,11 @@
 						type="submit"
 						size="sm"
 						disabled={isSavingSchedule}
-						class="h-8 w-20 rounded-lg px-3 text-[11px] font-bold transition-all active:scale-95"
+						class="h-8 w-24 rounded-lg px-3 text-[11px] font-bold transition-all active:scale-95"
 					>
 						{#if isSavingSchedule}
 							<LoaderCircle class="mr-1 size-3 animate-spin" />
+							Salvando
 						{:else}
 							Salvar
 						{/if}

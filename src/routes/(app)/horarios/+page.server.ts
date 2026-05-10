@@ -50,30 +50,45 @@ export const actions: Actions = {
 		if (!user) return fail(401);
 
 		const formData = await request.formData();
-		const id = formData.get('id')?.toString();
 
-		if (!id) return fail(400, { message: 'ID ausente.' });
+		// Criamos uma lista para armazenar os dias que vieram do form
+		const daysToUpdate = [];
+		let i = 0;
 
-		const start_time = formData.get('start_time')?.toString() || '09:00';
-		const end_time = formData.get('end_time')?.toString() || '18:00';
-		const is_active = formData.has('is_active');
+		// Percorremos o formData enquanto existirem índices (days[0], days[1]...)
+		while (formData.has(`days[${i}][id]`)) {
+			daysToUpdate.push({
+				id: formData.get(`days[${i}][id]`)?.toString(),
+				start_time: formData.get(`days[${i}][start_time]`)?.toString() || '09:00',
+				end_time: formData.get(`days[${i}][end_time]`)?.toString() || '18:00',
+				is_active: formData.get(`days[${i}][is_active]`) === '1'
+			});
+			i++;
+		}
+
+		if (daysToUpdate.length === 0) return fail(400, { message: 'Nenhum dado enviado.' });
 
 		try {
-			await sql`
-                UPDATE working_hours 
-                SET 
-                    start_time = ${start_time}, 
-                    end_time = ${end_time}, 
-                    is_active = ${is_active}
-                WHERE id = ${id} AND profile_id = ${user.id}
-            `;
+			// Executamos um update para cada dia dentro de uma transação
+			await sql.begin(async (sql) => {
+				for (const day of daysToUpdate) {
+					await sql`
+                    UPDATE working_hours 
+                    SET 
+                        start_time = ${day.start_time}, 
+                        end_time = ${day.end_time}, 
+                        is_active = ${day.is_active}
+                    WHERE id = ${day.id} AND profile_id = ${user.id}
+                `;
+				}
+			});
+
 			return { success: true };
 		} catch (err: any) {
-			// Tratamento da constraint valid_range check ((end_time > start_time))
 			if (err.code === '23514') {
-				return fail(400, { message: 'O horário de término deve ser maior que o de início.' });
+				return fail(400, { message: 'Um dos horários de término é inválido.' });
 			}
-			return fail(500, { message: 'Erro ao atualizar horário.' });
+			return fail(500, { message: 'Erro ao atualizar horários.' });
 		}
 	},
 

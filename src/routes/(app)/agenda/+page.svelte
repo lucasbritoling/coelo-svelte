@@ -16,7 +16,15 @@
 	import DatePicker from '$lib/components/date-picker.svelte';
 	import { parseDate, getLocalTimeZone } from '@internationalized/date';
 
-	let { data } = $props();
+	let { data } = $props<{ 
+        data: { 
+            appointments: Appointment[], 
+            username: string,
+            selectedDate: string,
+            customers: any[],
+            services: any[]
+        } 
+    }>();
 	let ticker = $state(Date.now());
 	$effect(() => {
 		let interval: ReturnType<typeof setInterval>;
@@ -117,7 +125,7 @@
 
 	// ── Status ────────────────────────────────────────────────────
 	const STATUS: Record<
-		string,
+		AppointmentStatus,
 		{
 			label: string;
 			bg: string;
@@ -149,12 +157,12 @@
 			return { next: [], later: appointments, past: [], all: appointments };
 		}
 
-		const next = appointments.find((a: any) => a.start_at >= reactiveNow) ?? null;
+		const next = appointments.find((a: Appointment) => a.start_at >= reactiveNow) ?? null;
 
 		return {
 			next: next ? [next] : [],
-			later: appointments.filter((a: any) => a !== next && a.start_at >= reactiveNow),
-			past: appointments.filter((a: any) => a.start_at < reactiveNow),
+			later: appointments.filter((a: Appointment) => a !== next && a.start_at >= reactiveNow),
+			past: appointments.filter((a: Appointment) => a.start_at < reactiveNow),
 			all: appointments
 		};
 	});
@@ -381,7 +389,7 @@
 	</div>
 </div>
 
-{#snippet section(title: string, list: any[], isHighlighted = false, isDimmed = false)}
+{#snippet section(title: string, list: Appointment[], isHighlighted = false, isDimmed = false)}
 	{#if list && list.length > 0}
 		<p class="section-label px-3 sm:px-0">{title}</p>
 		<div class="flex flex-col gap-2 px-3 sm:px-0">
@@ -393,7 +401,7 @@
 {/snippet}
 
 <!-- CARD -->
-{#snippet card(appt: any, highlighted = false, dimmed = false, showSoon = false)}
+{#snippet card(appt: Appointment, highlighted = false, dimmed = false, showSoon = false)}
 	{@const soon = soonLabel(appt.start_at)}
 
 	<div

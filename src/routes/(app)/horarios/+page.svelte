@@ -401,7 +401,7 @@
 								type="submit"
 								size="sm"
 								disabled={isSavingSchedule}
-								class="h-8 w-24 rounded-lg px-4 text-xs font-bold transition-all active:scale-95"
+								class="h-8 cursor-pointer w-24 rounded-lg px-4 text-xs font-bold transition-all active:scale-95"
 							>
 								{#if isSavingSchedule}
 									<LoaderCircle class="mr-1.5 size-3.5 animate-spin" />
@@ -420,7 +420,7 @@
 									: 'bg-muted/10'}"
 							>
 								<div class="flex shrink-0 items-center gap-4">
-									<Switch checked={day.is_active} onCheckedChange={(v) => (day.is_active = v)} />
+									<Switch checked={day.is_active} onCheckedChange={(v) => (day.is_active = v)} class="cursor-pointer"/>
 									<span class="w-28 text-sm font-bold text-zinc-700 capitalize dark:text-zinc-300">
 										{new Intl.DateTimeFormat('pt-BR', { weekday: 'long' }).format(
 											new Date(2024, 0, day.day_of_week + 1)
@@ -490,7 +490,7 @@
 								type="submit"
 								size="sm"
 								disabled={isSavingLunch}
-								class="h-8 rounded-lg px-3 text-xs font-bold"
+								class="h-8 w-19 cursor-pointer rounded-lg px-3 text-xs font-bold"
 							>
 								{#if isSavingLunch}
 									<LoaderCircle class="size-3 animate-spin" />
@@ -515,6 +515,7 @@
 								</div>
 							</div>
 							<Switch
+							class="cursor-pointer"
 								checked={localLunch.has_lunch}
 								onCheckedChange={(v) => (localLunch.has_lunch = v)}
 							/>
@@ -555,8 +556,7 @@
 
 					<Button
 						onclick={openNewDialog}
-						variant="outline"
-						class="h-9 w-full gap-2 border-dashed text-sm font-medium transition-all hover:bg-muted"
+						class="text-white bg-black h-9 w-full gap-2 text-sm font-medium cursor-pointer"
 					>
 						<Plus class="size-4" />
 						Nova Exceção
@@ -687,7 +687,7 @@
 				{#if isAvailable}
 					<input type="hidden" name="is_available" value="on" />
 				{/if}
-				<Switch checked={isAvailable} onCheckedChange={(v) => (isAvailable = v)} />
+				<Switch checked={isAvailable} onCheckedChange={(v) => (isAvailable = v)} class="cursor-pointer"/>
 			</div>
 
 			<!-- Horários — sempre visíveis -->
@@ -726,7 +726,7 @@
 			</div>
 
 			<!-- Botão salvar -->
-			<Button type="submit" disabled={isSavingOverride} class="h-9 w-full font-semibold">
+			<Button type="submit" disabled={isSavingOverride} class="h-9 w-full font-semibold cursor-pointer">
 				{#if isSavingOverride}
 					<LoaderCircle class="mr-2 size-4 animate-spin" />Salvando...
 				{:else}

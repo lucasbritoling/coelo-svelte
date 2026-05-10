@@ -401,7 +401,7 @@
 								type="submit"
 								size="sm"
 								disabled={isSavingSchedule}
-								class="h-8 cursor-pointer w-24 rounded-lg px-4 text-xs font-bold transition-all active:scale-95"
+								class="h-8 w-24 cursor-pointer rounded-lg px-4 text-xs font-bold transition-all active:scale-95"
 							>
 								{#if isSavingSchedule}
 									<LoaderCircle class="mr-1.5 size-3.5 animate-spin" />
@@ -420,7 +420,11 @@
 									: 'bg-muted/10'}"
 							>
 								<div class="flex shrink-0 items-center gap-4">
-									<Switch checked={day.is_active} onCheckedChange={(v) => (day.is_active = v)} class="cursor-pointer"/>
+									<Switch
+										checked={day.is_active}
+										onCheckedChange={(v) => (day.is_active = v)}
+										class="cursor-pointer"
+									/>
 									<span class="w-28 text-sm font-bold text-zinc-700 capitalize dark:text-zinc-300">
 										{new Intl.DateTimeFormat('pt-BR', { weekday: 'long' }).format(
 											new Date(2024, 0, day.day_of_week + 1)
@@ -515,7 +519,7 @@
 								</div>
 							</div>
 							<Switch
-							class="cursor-pointer"
+								class="cursor-pointer"
 								checked={localLunch.has_lunch}
 								onCheckedChange={(v) => (localLunch.has_lunch = v)}
 							/>
@@ -556,7 +560,7 @@
 
 					<Button
 						onclick={openNewDialog}
-						class="text-white bg-black h-9 w-full gap-2 text-sm font-medium cursor-pointer"
+						class="h-9 w-full cursor-pointer gap-2 bg-black text-sm font-medium text-white"
 					>
 						<Plus class="size-4" />
 						Nova Exceção
@@ -602,7 +606,7 @@
 									<button
 										type="button"
 										onclick={() => openEditDialog(override)}
-										class="flex size-7 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-all group-hover:opacity-100 hover:bg-muted hover:text-foreground cursor-pointer"
+										class="flex size-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground opacity-0 transition-all group-hover:opacity-100 hover:bg-muted hover:text-foreground"
 									>
 										<Pencil class="size-3.5" />
 									</button>
@@ -687,7 +691,11 @@
 				{#if isAvailable}
 					<input type="hidden" name="is_available" value="on" />
 				{/if}
-				<Switch checked={isAvailable} onCheckedChange={(v) => (isAvailable = v)} class="cursor-pointer"/>
+				<Switch
+					checked={isAvailable}
+					onCheckedChange={(v) => (isAvailable = v)}
+					class="cursor-pointer"
+				/>
 			</div>
 
 			<!-- Horários — sempre visíveis -->
@@ -726,7 +734,11 @@
 			</div>
 
 			<!-- Botão salvar -->
-			<Button type="submit" disabled={isSavingOverride} class="h-9 w-full font-semibold cursor-pointer">
+			<Button
+				type="submit"
+				disabled={isSavingOverride}
+				class="h-9 w-full cursor-pointer font-semibold"
+			>
 				{#if isSavingOverride}
 					<LoaderCircle class="mr-2 size-4 animate-spin" />Salvando...
 				{:else}
@@ -755,7 +767,7 @@
 						type="submit"
 						variant="ghost"
 						disabled={isDeletingOverride}
-						class="h-8 w-full gap-1.5 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive cursor-pointer"
+						class="h-8 w-full cursor-pointer gap-1.5 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
 					>
 						{#if isDeletingOverride}
 							<LoaderCircle class="size-3.5 animate-spin" />

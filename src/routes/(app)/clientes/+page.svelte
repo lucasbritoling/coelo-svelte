@@ -1,5 +1,14 @@
 <script lang="ts">
-	import { Plus, Search, Trash2, Pencil, LoaderCircle, ChevronRight, Phone, User } from '@lucide/svelte';
+	import {
+		Plus,
+		Search,
+		Trash2,
+		Pencil,
+		LoaderCircle,
+		ChevronRight,
+		Phone,
+		User
+	} from '@lucide/svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import { Button } from '$lib/components/ui/button';

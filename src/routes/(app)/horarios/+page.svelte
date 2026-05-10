@@ -8,7 +8,10 @@
 		Pencil,
 		Save,
 		CheckCircle2,
-		XCircle
+		XCircle,
+
+		Utensils
+
 	} from '@lucide/svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
@@ -17,14 +20,21 @@
 	import { Label } from '$lib/components/ui/label';
 	import { enhance } from '$app/forms';
 	import { toast } from 'svelte-sonner';
+	import type { PageData } from './$types';
 
-	let { data } = $props();
+	let { data }: { data: PageData } = $props();
 
 	// ── Rotina semanal ─────────────────────────────────────────────
 	let localDays = $state(data.workingHours.map((d: any) => ({ ...d })));
 	$effect(() => {
 		localDays = data.workingHours.map((d: any) => ({ ...d }));
 	});
+	let localLunch = $state({
+        has_lunch: data.user?.has_lunch ?? false,
+        lunch_start: data.user?.lunch_start?.slice(0, 5) ?? '12:00',
+        lunch_end: data.user?.lunch_end?.slice(0, 5) ?? '13:00'
+    });
+	let isSavingLunch = $state(false);
 	let isSavingSchedule = $state(false);
 
 	// ── Exceções ───────────────────────────────────────────────────
@@ -367,6 +377,78 @@
 					</div>
 				</div>
 			</div>
+
+			<section class="space-y-3">
+    <div class="flex items-center justify-between px-1">
+        <h2 class="text-[11px] font-bold tracking-widest text-muted-foreground uppercase">
+            Intervalo de Almoço
+        </h2>
+        
+        <form
+            method="POST"
+            action="?/updateLunchTime"
+            use:enhance={() => {
+                isSavingLunch = true;
+                return async ({ update }) => {
+                    await update();
+                    isSavingLunch = false;
+                    toast.success('Almoço atualizado');
+                };
+            }}
+        >
+            <input type="hidden" name="has_lunch" value={localLunch.has_lunch ? 'on' : ''} />
+            {#if !localLunch.has_lunch} <input type="hidden" name="has_lunch" value="" disabled /> {/if}
+            <input type="hidden" name="lunch_start" value={localLunch.lunch_start} />
+            <input type="hidden" name="lunch_end" value={localLunch.lunch_end} />
+            
+            <Button type="submit" size="sm" disabled={isSavingLunch} class="h-8 rounded-lg text-xs">
+                {isSavingLunch ? '...' : 'Salvar'}
+            </Button>
+        </form>
+    </div>
+
+    <div class="rounded-2xl border bg-card p-4 shadow-sm">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="flex size-9 items-center justify-center rounded-xl bg-orange-100 text-orange-600 dark:bg-orange-950/30">
+                    <Utensils class="size-5" />
+                </div>
+                <div>
+                    <p class="text-sm font-bold">Pausa para Almoço</p>
+                    <p class="text-[11px] text-muted-foreground">Bloqueia este horário em todos os dias ativos.</p>
+                </div>
+            </div>
+            <Switch 
+                checked={localLunch.has_lunch} 
+                onCheckedChange={(v) => localLunch.has_lunch = v} 
+            />
+        </div>
+
+        {#if localLunch.has_lunch}
+            <div class="mt-4 flex items-center gap-3 border-t pt-4 animate-in fade-in slide-in-from-top-2">
+                <div class="grid flex-1 gap-1.5">
+                    <Label class="text-[10px] font-bold text-muted-foreground uppercase">Início</Label>
+                    <Input 
+                        type="time" 
+                        bind:value={localLunch.lunch_start} 
+                        class="h-9 bg-muted/20" 
+                    />
+                </div>
+                <div class="flex items-end pb-2">
+                    <span class="text-[10px] font-bold text-muted-foreground/40">ATÉ</span>
+                </div>
+                <div class="grid flex-1 gap-1.5">
+                    <Label class="text-[10px] font-bold text-muted-foreground uppercase">Fim</Label>
+                    <Input 
+                        type="time" 
+                        bind:value={localLunch.lunch_end} 
+                        class="h-9 bg-muted/20" 
+                    />
+                </div>
+            </div>
+        {/if}
+    </div>
+</section>
 
 			<div class="col-span-2 space-y-3">
 				<p class="px-1 text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">

@@ -47,7 +47,6 @@
 	});
 
 	// Agora o 'now' será atualizado a cada minuto porque depende de 'ticker'
-	const reactiveNow = $derived(timeFormatter.format(new Date(ticker)));
 
 	let showAppointmentModal = $state(false);
 	let copied = $state(false);
@@ -88,18 +87,9 @@
 		day: '2-digit'
 	});
 
-	const todayStr = $derived(dateFormatter.format(new Date(ticker)));
-
-	const isTodayView = $derived(data.selectedDate === todayStr);
-
 	const headerLabel = $derived.by(() => {
 		if (isTodayView) return 'Hoje';
-
-		return new Intl.DateTimeFormat('pt-BR', {
-			weekday: 'short',
-			day: 'numeric',
-			month: 'short'
-		}).format(parsedDate);
+		return fmt.header.format(parsedDate);
 	});
 
 	function navigateDay(offset: number) {
@@ -121,17 +111,10 @@
 		return Array.from({ length: 7 }, (_, i) => {
 			const d = new Date(center);
 			d.setDate(center.getDate() - 3 + i);
-
 			return {
 				str: d.toISOString().split('T')[0],
 				day: d.getDate(),
-				wd: new Intl.DateTimeFormat('pt-BR', {
-					weekday: 'short'
-				})
-					.format(d)
-					.replace('.', '')
-					.slice(0, 3)
-					.toUpperCase()
+				wd: fmt.weekday.format(d).replace('.', '').slice(0, 3).toUpperCase()
 			};
 		});
 	}
@@ -280,6 +263,9 @@
 			hour12: false
 		})
 	};
+	const reactiveNow = $derived(fmt.time.format(new Date(ticker)));
+	const todayStr = $derived(fmt.iso.format(new Date(ticker)));
+	const isTodayView = $derived(data.selectedDate === todayStr);
 </script>
 
 <!-- MOBILE -->

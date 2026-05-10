@@ -57,7 +57,7 @@
 	"dependencies": {
 		"@supabase/ssr": "^0.10.3",
 		"@supabase/supabase-js": "^2.105.4",
-		"bits-ui": "1.0.0-next.98",
+		"bits-ui": "2.18.1",
 		"postgres": "^3.4.9",
 		"svelte-sonner": "^1.1.1",
 		"sveltekit-superforms": "^2.30.1",

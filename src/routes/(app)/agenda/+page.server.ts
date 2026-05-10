@@ -9,23 +9,20 @@ export const load: PageServerLoad = async ({ url, locals: { sql, user } }) => {
 	if (!user) throw redirect(303, '/login');
 
 	// 1. Pega o parâmetro da URL
-    const dateParam = url.searchParams.get('date');
+	const dateParam = url.searchParams.get('date');
 
-    // 2. Se NÃO existir o parâmetro, redireciona para a mesma página com o parâmetro de hoje
-    if (!dateParam) {
-        const todayStr = today(getLocalTimeZone()).toString();
-        const newUrl = new URL(url);
-        newUrl.searchParams.set('date', todayStr);
-        
-        // Redirecionamento 307 (Temporary Redirect) preserva o método, 
-        // mas 302/303 é o padrão para GET.
-        throw redirect(302, newUrl.pathname + newUrl.search);
-    }
+	// 2. Se NÃO existir o parâmetro, redireciona para a mesma página com o parâmetro de hoje
+	if (!dateParam) {
+		const todayBrazil = today('America/Sao_Paulo').toString();
+		const newUrl = new URL(url);
+		newUrl.searchParams.set('date', todayBrazil);
+		throw redirect(302, `${newUrl.pathname}${newUrl.search}`);
+	}
 
-    // 3. Validação estrita (agora temos certeza que dateParam existe)
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
-        throw error(400, 'Data inválida');
-    }
+	// 3. Validação estrita (agora temos certeza que dateParam existe)
+	if (!/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
+		throw error(400, 'Data inválida');
+	}
 
 	const searchQuery = url.searchParams.get('q')?.trim() ?? '';
 

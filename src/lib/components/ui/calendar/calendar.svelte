@@ -114,7 +114,7 @@ get along, so we shut typescript up by casting `value` to `never`.
 							<div transition:fade={{ duration: 150 }} class="flex w-full justify-center">
 								<button
 									onclick={goToToday}
-									class="cursor-pointer pb-1 text-[10px] font-bold tracking-wider text-muted-foreground/80 uppercase transition-colors hover:text-foreground"
+									class="mb-0 cursor-pointer pb-0 text-[10px] font-bold tracking-wider text-muted-foreground/80 uppercase transition-colors hover:text-foreground"
 								>
 									Ir para hoje
 								</button>

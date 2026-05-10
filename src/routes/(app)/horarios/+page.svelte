@@ -418,7 +418,7 @@
 									<Utensils class="size-5" />
 								</div>
 								<div class="space-y-0.5">
-									<p class="text-sm font-bold">Pausa Diária</p>
+									<p class="text-sm font-bold">Pausa de Almoço</p>
 									<p class="text-[11px] text-muted-foreground italic">Bloqueio recorrente.</p>
 								</div>
 							</div>

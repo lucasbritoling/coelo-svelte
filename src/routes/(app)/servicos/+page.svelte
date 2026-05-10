@@ -15,7 +15,7 @@
 	import Switch from '$lib/components/ui/switch/switch.svelte';
 	import { toast } from 'svelte-sonner';
 	import { enhance } from '$app/forms';
-	import ServiceForm from '$lib/components/dashboard/service-form.svelte';
+	import ServiceForm from '$lib/components/app/service-form.svelte';
 
 	let { data } = $props();
 

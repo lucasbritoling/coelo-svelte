@@ -6,8 +6,8 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import * as Dialog from '$lib/components/ui/dialog';
 
-	import AppointmentForm from '$lib/components/dashboard/appointment-form.svelte';
-	import AppointmentCardAction from '$lib/components/dashboard/appointment-card-action.svelte';
+	import AppointmentForm from '$lib/components/app/appointment-form.svelte';
+	import AppointmentCardAction from '$lib/components/app/appointment-card-action.svelte';
 
 	import { navigating, page } from '$app/state';
 	import { goto } from '$app/navigation';

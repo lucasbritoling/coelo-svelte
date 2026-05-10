@@ -92,28 +92,60 @@
 		}, 300); // 300ms de espera após o usuário parar de digitar
 	}
 	function handlePhoneInput(e: Event) {
-    const input = e.currentTarget as HTMLInputElement;
-    // Pega apenas os números
-    let value = input.value.replace(/\D/g, '');
-    
-    // Limita a 11 dígitos
-    if (value.length > 11) value = value.slice(0, 11);
+		const input = e.currentTarget as HTMLInputElement;
+		// Pega apenas os números
+		let value = input.value.replace(/\D/g, '');
 
-    // Aplica a máscara (XX) XXXXX-XXXX
-    let formatted = value;
-    if (value.length > 2) {
-        formatted = `(${value.slice(0, 2)}) ${value.slice(2)}`;
-    }
-    if (value.length > 7) {
-        formatted = `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
-    }
+		// Limita a 11 dígitos
+		if (value.length > 11) value = value.slice(0, 11);
 
-    // Atualiza o estado com os números puros (para o banco)
-    formState.phone = value;
-    // Atualiza o valor visual do input
-    input.value = formatted;
-}
+		// Aplica a máscara (XX) XXXXX-XXXX
+		let formatted = value;
+		if (value.length > 2) {
+			formatted = `(${value.slice(0, 2)}) ${value.slice(2)}`;
+		}
+		if (value.length > 7) {
+			formatted = `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
+		}
+
+		// Atualiza o estado com os números puros (para o banco)
+		formState.phone = value;
+		// Atualiza o valor visual do input
+		input.value = formatted;
+	}
+	function handleNameInput(e: Event) {
+		const input = e.currentTarget as HTMLInputElement;
+		let value = input.value.replace(/\d/g, ''); // Remove números
+
+		// Capitaliza a primeira letra de cada palavra
+		formState.name = value.replace(/\b\w/g, (l) => l.toUpperCase());
+	}
+	function formatPhone(v: string) {
+		if (!v) return '';
+		let value = v.replace(/\D/g, '');
+		if (value.length > 11) value = value.slice(0, 11);
+
+		let formatted = value;
+		if (value.length > 2) formatted = `(${value.slice(0, 2)}) ${value.slice(2)}`;
+		if (value.length > 7)
+			formatted = `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
+
+		return formatted;
+	}
 </script>
+
+{#snippet emptyState()}
+	<div class="py-16 text-center">
+		{#if isSearching}
+			<div class="flex flex-col items-center gap-2">
+				<LoaderCircle class="h-5 w-5 animate-spin text-primary" />
+				<p class="text-sm text-muted-foreground">Buscando clientes...</p>
+			</div>
+		{:else}
+			<p class="text-sm text-muted-foreground italic">Nenhum cliente encontrado.</p>
+		{/if}
+	</div>
+{/snippet}
 
 <!-- ───────────────────────── MOBILE ───────────────────────────── -->
 <div class="flex w-full flex-col gap-4 p-4 pb-28 sm:hidden">
@@ -159,7 +191,9 @@
 
 					<div class="min-w-0 flex-1">
 						<p class="truncate leading-snug font-semibold">{customer.name}</p>
-						<p class="mt-0.5 font-mono text-xs text-muted-foreground">{customer.phone}</p>
+						<p class="mt-0.5 font-mono text-xs text-muted-foreground">
+							{formatPhone(customer.phone)}
+						</p>
 					</div>
 
 					<ChevronRight class="size-4 shrink-0 text-muted-foreground/40" />
@@ -173,7 +207,7 @@
 						<p class="text-sm text-muted-foreground">Buscando clientes...</p>
 					</div>
 				{:else}
-					<p class="text-sm italic text-muted-foreground">Nenhum cliente encontrado.</p>
+					{@render emptyState()}
 				{/if}
 			</div>
 		{/each}
@@ -238,7 +272,7 @@
 				{#each filteredCustomers as customer (customer.id)}
 					<tr class="border-b transition-colors hover:bg-muted/30">
 						<td class="p-3 font-medium">{customer.name}</td>
-						<td class="p-3 font-mono text-muted-foreground">{customer.phone}</td>
+						<td class="p-3 font-mono text-muted-foreground">{formatPhone(customer.phone)}</td>
 						<td class="p-3 text-right">
 							<div class="flex justify-end gap-1">
 								<Button
@@ -262,15 +296,8 @@
 					</tr>
 				{:else}
 					<tr>
-						<td colspan="3" class="p-8 text-center">
-							{#if isSearching}
-								<div class="flex items-center justify-center gap-2 text-muted-foreground">
-									<LoaderCircle class="h-4 w-4 animate-spin text-primary" />
-									<span>Pesquisando na base...</span>
-								</div>
-							{:else}
-								<span class="italic text-muted-foreground">Nenhum cliente encontrado.</span>
-							{/if}
+						<td colspan="3">
+							{@render emptyState()}
 						</td>
 					</tr>
 				{/each}
@@ -328,12 +355,8 @@
 							bind:value={formState.name}
 							minlength={3}
 							required
-							oninput={(e) => {
-								formState.name = e.currentTarget.value.replace(/\d/g, '').replace(/\s{2,}/g, ' ');
-							}}
-							onblur={() => {
-								formState.name = formState.name.trim();
-							}}
+							oninput={handleNameInput}
+							onblur={() => (formState.name = formState.name.trim())}
 						/>
 					</div>
 				</div>
@@ -344,21 +367,15 @@
 						<Phone class="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
 						<Input
 							id="phone"
-							name="phone"
 							class="pl-9 font-mono"
-							bind:value={formState.phone}
+							value={formatPhone(formState.phone)}
+							oninput={handlePhoneInput}
 							inputmode="numeric"
 							required
-							maxlength={11}
-							minlength={11}
-							placeholder="11999999999"
-							oninput={(e) => {
-								formState.phone = e.currentTarget.value.replace(/\D/g, '');
-							}}
-							onblur={() => {
-								formState.phone = formState.phone.trim();
-							}}
+							placeholder="(11) 99999-9999"
+							/* name="phone" REMOVIDO DAQUI */
 						/>
+						<input type="hidden" name="phone" value={formState.phone} />
 					</div>
 				</div>
 			</div>

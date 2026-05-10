@@ -144,5 +144,27 @@ export const actions: Actions = {
 		} catch (err) {
 			return fail(500, { message: 'Erro ao remover exceção.' });
 		}
-	}
+	},
+	updateLunchTime: async ({ request, locals: { sql, user } }) => {
+    if (!user) return fail(401);
+
+    const formData = await request.formData();
+    const has_lunch = formData.has('has_lunch');
+    const lunch_start = formData.get('lunch_start')?.toString() || null;
+    const lunch_end = formData.get('lunch_end')?.toString() || null;
+
+    try {
+        await sql`
+            UPDATE public.profiles 
+            SET 
+                has_lunch = ${has_lunch},
+                lunch_start = ${lunch_start},
+                lunch_end = ${lunch_end}
+            WHERE id = ${user.id}
+        `;
+        return { success: true };
+    } catch (err) {
+        return fail(500, { message: 'Erro ao atualizar horário de almoço.' });
+    }
+}
 };

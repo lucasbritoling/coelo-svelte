@@ -39,12 +39,6 @@
 			if (interval) clearInterval(interval);
 		};
 	});
-	const timeFormatter = new Intl.DateTimeFormat('pt-BR', {
-		timeZone: 'America/Sao_Paulo',
-		hour: '2-digit',
-		minute: '2-digit',
-		hour12: false
-	});
 
 	let ui = $state({
 		modal: false,
@@ -60,15 +54,6 @@
 		return new Date(y, m - 1, d);
 	});
 
-	// refactor 'hoje'
-	const dateFormatter = new Intl.DateTimeFormat('sv-SE', {
-		// 'sv-SE' cospe YYYY-MM-DD
-		timeZone: 'America/Sao_Paulo',
-		year: 'numeric',
-		month: '2-digit',
-		day: '2-digit'
-	});
-
 	const headerLabel = $derived.by(() => {
 		if (isTodayView) return 'Hoje';
 		return fmt.header.format(parsedDate);
@@ -78,7 +63,7 @@
 		const date = new Date(parsedDate);
 		date.setDate(date.getDate() + offset);
 		// Usamos o formato ISO local (YYYY-MM-DD)
-		const dateStr = date.toLocaleDateString('sv-SE');
+		const dateStr = fmt.iso.format(date);
 		updateDate(dateStr);
 	}
 
@@ -88,7 +73,7 @@
 			const d = new Date(center);
 			d.setDate(center.getDate() - 3 + i);
 			return {
-				str: d.toISOString().split('T')[0],
+				str: fmt.iso.format(d),
 				day: d.getDate(),
 				wd: fmt.weekday.format(d).replace('.', '').slice(0, 3).toUpperCase()
 			};
@@ -178,18 +163,7 @@
 		const [h, m] = t.split(':').map(Number);
 
 		// Pegamos o momento atual no fuso de SP
-		const nowInSP = new Date(
-			new Intl.DateTimeFormat('en-US', {
-				timeZone: 'America/Sao_Paulo',
-				year: 'numeric',
-				month: 'numeric',
-				day: 'numeric',
-				hour: 'numeric',
-				minute: 'numeric',
-				second: 'numeric',
-				hour12: false
-			}).format(new Date(ticker))
-		);
+		const nowInSP = new Date(fmt.full.format(new Date(ticker)));
 
 		const target = new Date(nowInSP);
 		target.setHours(h, m, 0, 0);
@@ -205,7 +179,7 @@
 
 	// ── Configurações de Data e Hora ────────────────────────────────
 	const fmt = {
-		// Para comparar com o banco/URL (2026-05-10)
+		// Para comparar com o banco/URL (Ex: 2026-05-10)
 		iso: new Intl.DateTimeFormat('sv-SE', {
 			timeZone: 'America/Sao_Paulo',
 			year: 'numeric',
@@ -213,7 +187,7 @@
 			day: '2-digit'
 		}),
 
-		// Para o relógio (12:08)
+		// Para o relógio e reactiveNow (Ex: 12:08)
 		time: new Intl.DateTimeFormat('pt-BR', {
 			timeZone: 'America/Sao_Paulo',
 			hour: '2-digit',
@@ -221,14 +195,18 @@
 			hour12: false
 		}),
 
-		// Para o título da página (Dom, 10 de mai.)
-		header: new Intl.DateTimeFormat('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' }),
+		// Para o título da página (Ex: Dom, 10 de mai.)
+		header: new Intl.DateTimeFormat('pt-BR', {
+			weekday: 'short',
+			day: 'numeric',
+			month: 'short'
+		}),
 
-		// Para o Strip de datas (DOM)
+		// Para o Strip de datas (Ex: DOM)
 		weekday: new Intl.DateTimeFormat('pt-BR', { weekday: 'short' }),
 
-		// Helper para o soonLabel (Cálculos de diferença)
-		fullSP: new Intl.DateTimeFormat('en-US', {
+		// Para cálculos de diferença no soonLabel
+		full: new Intl.DateTimeFormat('en-US', {
 			timeZone: 'America/Sao_Paulo',
 			year: 'numeric',
 			month: 'numeric',

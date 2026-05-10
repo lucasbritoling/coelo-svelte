@@ -343,50 +343,12 @@
 
 	<!-- CONTENT -->
 	<div class="flex-1 overflow-y-auto pb-36">
-		{#if data.appointments.length === 0}
-			<div class="px-4 pt-10">
-				<div
-					class="flex flex-col items-center justify-center rounded-[28px] border border-dashed py-16"
-				>
-					<CalendarDays class="mb-3 size-9 text-muted-foreground/30" />
-
-					<p class="text-sm text-muted-foreground">Nenhum agendamento neste dia.</p>
-				</div>
-			</div>
-		{:else if isTodayView}
-			{#if nextAppointment}
-				<p class="section-label">próximo</p>
-
-				<div class="px-3">
-					{@render card(nextAppointment, true, false, true)}
-				</div>
-			{/if}
-
-			{#if laterAppointments.length > 0}
-				<p class="section-label">mais tarde</p>
-
-				<div class="flex flex-col gap-2 px-3">
-					{#each laterAppointments as appointment}
-						{@render card(appointment)}
-					{/each}
-				</div>
-			{/if}
-
-			{#if pastAppointments.length > 0}
-				<p class="section-label">anteriores</p>
-
-				<div class="flex flex-col gap-2 px-3">
-					{#each pastAppointments as appointment}
-						{@render card(appointment, false, true)}
-					{/each}
-				</div>
-			{/if}
+		{#if data.appointments.length === 0}{:else if isTodayView}
+			{@render section('próximo', nextAppointment ? [nextAppointment] : [], true)}
+			{@render section('mais tarde', laterAppointments)}
+			{@render section('anteriores', pastAppointments, false, true)}
 		{:else}
-			<div class="flex flex-col gap-2 px-3 pt-3">
-				{#each data.appointments as appointment}
-					{@render card(appointment)}
-				{/each}
-			</div>
+			{@render section('agendamentos', data.appointments)}
 		{/if}
 
 		<!-- LINK CARD -->
@@ -416,6 +378,17 @@
 		</div>
 	</div>
 </div>
+
+{#snippet section(title: string, list: any[], isHighlighted = false, isDimmed = false)}
+	{#if list && list.length > 0}
+		<p class="section-label px-3 sm:px-0">{title}</p>
+		<div class="flex flex-col gap-2 px-3 sm:px-0">
+			{#each list as appt}
+				{@render card(appt, isHighlighted, isDimmed, title === 'próximo')}
+			{/each}
+		</div>
+	{/if}
+{/snippet}
 
 <!-- CARD -->
 {#snippet card(appt: any, highlighted = false, dimmed = false, showSoon = false)}

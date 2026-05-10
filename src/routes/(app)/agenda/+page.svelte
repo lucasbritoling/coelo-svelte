@@ -18,7 +18,7 @@
 
 	let { data } = $props<{ 
         data: { 
-            appointments: Appointment[], 
+            appointments: Appointment[],
             username: string,
             selectedDate: string,
             customers: any[],

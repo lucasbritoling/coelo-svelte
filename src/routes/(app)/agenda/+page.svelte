@@ -46,11 +46,11 @@
 		hour12: false
 	});
 
-	// Agora o 'now' será atualizado a cada minuto porque depende de 'ticker'
-
-	let showAppointmentModal = $state(false);
-	let copied = $state(false);
-	let showCalendarPicker = $state(false);
+	let ui = $state({
+		modal: false,
+		picker: false,
+		copied: false
+	});
 
 	const schedulingLink = $derived(`coelo.dev/${data.username}`);
 
@@ -102,8 +102,8 @@
 		navigator.clipboard
 			.writeText(schedulingLink)
 			.then(() => {
-				copied = true;
-				setTimeout(() => (copied = false), 2000);
+				ui.copied = true;
+				setTimeout(() => (ui.copied = false), 2000);
 			})
 			.catch(() => toast.error('Erro ao copiar o link.'));
 	}
@@ -259,7 +259,7 @@
 	function handleCalendarSelect(d: any) {
 		if (!d) return;
 		updateDate(d.toString());
-		showCalendarPicker = false;
+		ui.picker = false;
 	}
 </script>
 
@@ -344,7 +344,7 @@
 					</span>
 				</button>
 			{/each}
-			<Dialog.Root bind:open={showCalendarPicker}>
+			<Dialog.Root bind:open={ui.picker}>
 				<Dialog.Trigger
 					ontouchstart={(e) => e.stopPropagation()}
 					ontouchend={(e) => e.stopPropagation()}
@@ -426,7 +426,7 @@
 					onclick={copyToClipboard}
 					class="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-2xl border bg-muted/40 text-[14px] font-medium transition-all active:scale-[0.98]"
 				>
-					{#if copied}
+					{#if ui.copied}
 						<Check class="size-4" />
 						Copiado!
 					{:else}
@@ -513,7 +513,7 @@
 
 <!-- FAB -->
 <button
-	onclick={() => (showAppointmentModal = true)}
+	onclick={() => (ui.modal = true)}
 	class="fixed right-5 bottom-24 z-30 flex size-16 items-center justify-center rounded-full bg-black text-white shadow-2xl transition-all active:scale-95 sm:hidden"
 >
 	<Plus class="size-7" strokeWidth={2.5} />
@@ -529,10 +529,7 @@
 			<p class="mt-2 text-muted-foreground">Visualize e gerencie seus atendimentos.</p>
 		</div>
 
-		<Button
-			onclick={() => (showAppointmentModal = true)}
-			class="h-12 cursor-pointer rounded-2xl px-6"
-		>
+		<Button onclick={() => (ui.modal = true)} class="h-12 cursor-pointer rounded-2xl px-6">
 			<Plus class="mr-2 size-5" />
 			Novo Agendamento
 		</Button>
@@ -581,7 +578,7 @@
 </div>
 
 <!-- MODAL -->
-<Dialog.Root bind:open={showAppointmentModal}>
+<Dialog.Root bind:open={ui.modal}>
 	<Dialog.Content
 		class="flex max-h-[90dvh] w-[95vw] flex-col gap-0 overflow-hidden rounded-[32px] p-0 sm:max-w-[420px]"
 	>
@@ -595,27 +592,16 @@
 
 		<div class="overflow-y-auto">
 			<AppointmentForm
-				open={showAppointmentModal}
+				open={ui.modal}
 				customers={data.customers}
 				services={data.services}
 				selectedDate={data.selectedDate}
 				{data}
-				onSuccess={() => (showAppointmentModal = false)}
+				onSuccess={() => (ui.modal = false)}
 			/>
 		</div>
 	</Dialog.Content>
 </Dialog.Root>
-
-{#if showCalendarPicker}
-	{console.log('clicado')}
-	<!-- Aqui entraria seu componente de Calendar. 
-         Ao selecionar, você rodaria algo como:
-         const newUrl = new URL(page.url);
-         newUrl.searchParams.set('date', selectedDateFromCalendar);
-         goto(newUrl.search);
-         showCalendarPicker = false;
-    -->
-{/if}
 
 <style>
 	.no-scrollbar::-webkit-scrollbar {

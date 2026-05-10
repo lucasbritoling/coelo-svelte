@@ -117,7 +117,7 @@
 			month: 'long'
 		});
 	}
-	function handleTimeInput(e: Event, day: any, field: 'start_time' | 'end_time') {
+	function handleTimeInput(e: Event, day: WorkingDay, field: 'start_time' | 'end_time') {
 		const input = e.target as HTMLInputElement;
 		let value = input.value.replace(/\D/g, ''); // Remove tudo que não é número
 

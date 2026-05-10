@@ -7,7 +7,7 @@ export const load: PageServerLoad = async ({ locals: { sql, user } }) => {
 	try {
 		// 1. Load paralelo com SQL nativo
 		// O gte (greater than or equal) em SQL é >=
-		const [workingHours, overrides] = await Promise.all([
+		const [workingHours, overrides, profileResult] = await Promise.all([
 			sql`
                 SELECT id, day_of_week, start_time, end_time, is_active 
                 FROM working_hours 
@@ -20,10 +20,24 @@ export const load: PageServerLoad = async ({ locals: { sql, user } }) => {
                 WHERE profile_id = ${user.id} 
                   AND date >= CURRENT_DATE
                 ORDER BY date ASC
+            `,
+			// Buscamos os campos de almoço
+			sql`
+                SELECT has_lunch, lunch_start, lunch_end, full_name, username, avatar_url
+                FROM public.profiles 
+                WHERE id = ${user.id}
             `
 		]);
 
+		const profile = profileResult[0];
+
 		return {
+			user: {
+				...user,
+				has_lunch: profile.has_lunch,
+				lunch_start: profile.lunch_start?.slice(0, 5) ?? '12:00',
+				lunch_end: profile.lunch_end?.slice(0, 5) ?? '13:00'
+			},
 			// O driver retorna objetos Date/Time.
 			// Para o <input type="time">, precisamos de HH:mm
 			workingHours: workingHours.map((wh) => ({

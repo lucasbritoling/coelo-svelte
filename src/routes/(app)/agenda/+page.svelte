@@ -141,20 +141,21 @@
 	};
 
 	// ── Organização ───────────────────────────────────────────────
-	const nextAppointment = $derived.by(() => {
-		if (!isTodayView) return null;
-		// Agora ele reage ao reactiveNow!
-		return data.appointments.find((a: any) => a.start_at >= reactiveNow) ?? null;
-	});
+	const groups = $derived.by(() => {
+		const appointments = data.appointments || [];
 
-	const laterAppointments = $derived.by(() => {
-		if (!isTodayView) return [];
-		return data.appointments.filter((a: any) => a !== nextAppointment && a.start_at >= reactiveNow);
-	});
+		if (!isTodayView) {
+			return { next: [], later: appointments, past: [], all: appointments };
+		}
 
-	const pastAppointments = $derived.by(() => {
-		if (!isTodayView) return [];
-		return data.appointments.filter((a: any) => a.start_at < reactiveNow);
+		const next = appointments.find((a: any) => a.start_at >= reactiveNow) ?? null;
+
+		return {
+			next: next ? [next] : [],
+			later: appointments.filter((a: any) => a !== next && a.start_at >= reactiveNow),
+			past: appointments.filter((a: any) => a.start_at < reactiveNow),
+			all: appointments
+		};
 	});
 
 	function soonLabel(t: string) {
@@ -344,9 +345,9 @@
 	<!-- CONTENT -->
 	<div class="flex-1 overflow-y-auto pb-36">
 		{#if data.appointments.length === 0}{:else if isTodayView}
-			{@render section('próximo', nextAppointment ? [nextAppointment] : [], true)}
-			{@render section('mais tarde', laterAppointments)}
-			{@render section('anteriores', pastAppointments, false, true)}
+			{@render section('próximo', groups.next, true)}
+			{@render section('mais tarde', groups.later)}
+			{@render section('anteriores', groups.past, false, true)}
 		{:else}
 			{@render section('agendamentos', data.appointments)}
 		{/if}
@@ -495,35 +496,11 @@
 				<p class="text-muted-foreground">Nenhum agendamento neste dia.</p>
 			</div>
 		{:else if isTodayView}
-			{#if nextAppointment}
-				<p class="section-label px-0">próximo</p>
-				{@render card(nextAppointment, true, false, true)}
-			{/if}
-
-			{#if laterAppointments.length > 0}
-				<p class="section-label px-0">mais tarde</p>
-				<div class="flex flex-col gap-3">
-					{#each laterAppointments as appointment}
-						{@render card(appointment)}
-					{/each}
-				</div>
-			{/if}
-
-			{#if pastAppointments.length > 0}
-				<p class="section-label px-0">anteriores</p>
-				<div class="flex flex-col gap-3">
-					{#each pastAppointments as appointment}
-						{@render card(appointment, false, true)}
-					{/each}
-				</div>
-			{/if}
+			{@render section('próximo', groups.next, true)}
+			{@render section('mais tarde', groups.later)}
+			{@render section('anteriores', groups.past, false, true)}
 		{:else}
-			<!-- Visualização de outros dias (sem hierarquia de horário atual) -->
-			<div class="flex flex-col gap-3">
-				{#each data.appointments as appointment}
-					{@render card(appointment)}
-				{/each}
-			</div>
+			{@render section('agendamentos', data.appointments)}
 		{/if}
 	</div>
 </div>

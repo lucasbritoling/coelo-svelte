@@ -602,7 +602,7 @@
 									<button
 										type="button"
 										onclick={() => openEditDialog(override)}
-										class="flex size-7 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-all group-hover:opacity-100 hover:bg-muted hover:text-foreground"
+										class="flex size-7 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-all group-hover:opacity-100 hover:bg-muted hover:text-foreground cursor-pointer"
 									>
 										<Pencil class="size-3.5" />
 									</button>
@@ -755,7 +755,7 @@
 						type="submit"
 						variant="ghost"
 						disabled={isDeletingOverride}
-						class="h-8 w-full gap-1.5 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
+						class="h-8 w-full gap-1.5 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive cursor-pointer"
 					>
 						{#if isDeletingOverride}
 							<LoaderCircle class="size-3.5 animate-spin" />

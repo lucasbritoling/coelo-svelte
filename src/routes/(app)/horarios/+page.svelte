@@ -205,6 +205,91 @@
 		<section>
 			<div class="mb-3 flex items-center justify-between px-1">
 				<h2 class="text-[11px] font-bold tracking-widest text-muted-foreground uppercase">
+					Intervalo de Almoço
+				</h2>
+
+				<form
+					method="POST"
+					action="?/updateLunchTime"
+					use:enhance={({ formData }) => {
+						isSavingLunch = true;
+
+						// Forçamos os valores do estado reativo no formData
+						formData.set('has_lunch', localLunch.has_lunch ? 'on' : '');
+						formData.set('lunch_start', localLunch.lunch_start);
+						formData.set('lunch_end', localLunch.lunch_end);
+
+						return async ({ result, update }) => {
+							isSavingLunch = false;
+							if (result.type === 'success') {
+								await update({ invalidateAll: true });
+							}
+						};
+					}}
+				>
+					<Button
+						type="submit"
+						size="sm"
+						disabled={isSavingLunch}
+						class="h-8 w-24 rounded-lg px-3 text-[11px] font-bold transition-all active:scale-95"
+					>
+						{#if isSavingLunch}
+							<LoaderCircle class="mr-1 size-3 animate-spin" />
+							Salvando
+						{:else}
+							Salvar
+						{/if}
+					</Button>
+				</form>
+			</div>
+
+			<div class="rounded-xl border bg-card p-4 shadow-sm">
+				<div class="flex items-center justify-between">
+					<div class="flex items-center gap-3">
+						<div
+							class="flex size-10 items-center justify-center rounded-xl bg-orange-100 text-orange-600 dark:bg-orange-950/30"
+						>
+							<Utensils class="size-5" />
+						</div>
+						<div class="space-y-0.5">
+							<p class="text-[13px] font-bold text-zinc-900 dark:text-white">Pausa Diária</p>
+							<p class="text-[11px] text-muted-foreground">Horário fixo de intervalo.</p>
+						</div>
+					</div>
+					<Switch
+						checked={localLunch.has_lunch}
+						onCheckedChange={(v) => (localLunch.has_lunch = v)}
+						class="scale-95"
+					/>
+				</div>
+
+				{#if localLunch.has_lunch}
+					<div
+						class="mt-4 flex animate-in items-center gap-2 border-t pt-4 duration-200 fade-in slide-in-from-top-1"
+					>
+						<div class="flex flex-1 items-center gap-2">
+							<Input
+								type="time"
+								bind:value={localLunch.lunch_start}
+								class="h-9 flex-1 rounded-lg border-muted-foreground/10 bg-zinc-50 text-center text-sm font-semibold shadow-sm dark:bg-zinc-900"
+							/>
+							<span class="text-center text-[10px] font-bold text-muted-foreground/40 uppercase"
+								>até</span
+							>
+							<Input
+								type="time"
+								bind:value={localLunch.lunch_end}
+								class="h-9 flex-1 rounded-lg border-muted-foreground/10 bg-zinc-50 text-center text-sm font-semibold shadow-sm dark:bg-zinc-900"
+							/>
+						</div>
+					</div>
+				{/if}
+			</div>
+		</section>
+
+		<section>
+			<div class="mb-3 flex items-center justify-between px-1">
+				<h2 class="text-[11px] font-bold tracking-widest text-muted-foreground uppercase">
 					Próximas Exceções
 				</h2>
 			</div>

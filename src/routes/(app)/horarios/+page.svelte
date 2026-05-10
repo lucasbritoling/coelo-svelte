@@ -71,25 +71,8 @@
 
 	// ── Exceções ───────────────────────────────────────────────────
 	let dialogOpen = $state(false);
-	let dialogMode = $state<'new' | 'edit'>('new');
-	let editingOverride = $state<any>(null);
-	let isAvailable = $state(true);
 	let isSavingOverride = $state(false);
 	let isDeletingOverride = $state(false);
-
-	function openNewDialog() {
-		dialogMode = 'new';
-		editingOverride = null;
-		isAvailable = true;
-		dialogOpen = true;
-	}
-
-	function openEditDialog(override: any) {
-		dialogMode = 'edit';
-		editingOverride = { ...override };
-		isAvailable = override.is_available;
-		dialogOpen = true;
-	}
 
 	const DAYS_SHORT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 	const DAYS_FULL = [
@@ -101,6 +84,44 @@
 		'Sexta-feira',
 		'Sábado'
 	];
+
+	// Estado único para o formulário de exceções
+	let overrideForm = $state({
+		id: null as string | null,
+		date: '',
+		is_available: true,
+		start_time: '09:00',
+		end_time: '18:00',
+		note: ''
+	});
+
+	// Derivamos o modo do diálogo baseados na presença de um ID
+	let dialogMode = $derived(overrideForm.id ? 'edit' : 'new');
+
+	function openDialog(override?: any) {
+		if (override) {
+			// Modo Edição: Popula com dados existentes
+			overrideForm = {
+				id: override.id,
+				date: override.date,
+				is_available: override.is_available,
+				start_time: override.start_time?.slice(0, 5) ?? '09:00',
+				end_time: override.end_time?.slice(0, 5) ?? '18:00',
+				note: override.note ?? ''
+			};
+		} else {
+			// Modo Novo: Reseta para o padrão
+			overrideForm = {
+				id: null,
+				date: new Date().toISOString().split('T')[0], // Data de hoje como sugestão
+				is_available: false, // Geralmente exceção é para fechar o dia
+				start_time: '09:00',
+				end_time: '18:00',
+				note: ''
+			};
+		}
+		dialogOpen = true;
+	}
 
 	function fmtDate(dateStr: string) {
 		return new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-BR', {
@@ -324,7 +345,7 @@
 					{#each data.overrides as override (override.id)}
 						<button
 							type="button"
-							onclick={() => openEditDialog(override)}
+							onclick={() => openDialog(override)}
 							class="flex w-full items-center gap-4 px-4 py-4 text-left transition-colors active:bg-muted/50"
 						>
 							<div
@@ -370,7 +391,7 @@
 
 <!-- FAB mobile -->
 <button
-	onclick={openNewDialog}
+	onclick={() => openDialog()}
 	class="fixed z-30 flex items-center gap-2 rounded-full bg-primary px-5 py-3.5 text-sm
 		font-semibold text-primary-foreground shadow-[0_4px_24px_rgba(0,0,0,0.18)]
 		transition-transform active:scale-95 sm:hidden"
@@ -513,7 +534,7 @@
 					</p>
 
 					<Button
-						onclick={openNewDialog}
+						onclick={() => openDialog()}
 						class="h-9 w-full cursor-pointer gap-2 bg-black text-sm font-medium text-white"
 					>
 						<Plus class="size-4" />
@@ -559,7 +580,7 @@
 
 									<button
 										type="button"
-										onclick={() => openEditDialog(override)}
+										onclick={() => openDialog(override)}
 										class="flex size-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground opacity-0 transition-all group-hover:opacity-100 hover:bg-muted hover:text-foreground"
 									>
 										<Pencil class="size-3.5" />
@@ -579,21 +600,19 @@
 ════════════════════════════════════════════════════ -->
 <Dialog.Root bind:open={dialogOpen}>
 	<Dialog.Content class="w-[calc(100vw-2rem)] gap-0 overflow-hidden rounded-2xl p-0 sm:max-w-sm">
-		<!-- Header do dialog -->
 		<div class="border-b px-5 pt-5 pb-4">
 			<Dialog.Title class="text-base font-bold">
 				{dialogMode === 'edit' ? 'Editar Exceção' : 'Nova Exceção'}
 			</Dialog.Title>
 			<Dialog.Description class="mt-0.5 text-xs text-muted-foreground">
-				{#if dialogMode === 'edit' && editingOverride}
-					{fmtDateLong(editingOverride.date)}
+				{#if dialogMode === 'edit'}
+					{fmtDateLong(overrideForm.date)}
 				{:else}
 					Feriado, folga ou horário especial.
 				{/if}
 			</Dialog.Description>
 		</div>
 
-		<!-- Formulário -->
 		<form
 			method="POST"
 			action="?/upsertOverride"
@@ -603,38 +622,27 @@
 				return async ({ result, update }) => {
 					await update({ invalidateAll: true });
 					isSavingOverride = false;
-					if (result.type === 'success') {
-						isAvailable = true;
-						dialogOpen = false;
-					}
+					if (result.type === 'success') dialogOpen = false;
 				};
 			}}
 		>
-			{#if dialogMode === 'edit'}
-				<input type="hidden" name="id" value={editingOverride?.id} />
+			{#if overrideForm.id}
+				<input type="hidden" name="id" value={overrideForm.id} />
 			{/if}
 
-			<!-- Data -->
 			<div class="grid gap-1.5">
 				<Label class="text-xs font-semibold text-muted-foreground">Data</Label>
-				<Input
-					type="date"
-					name="date"
-					required
-					value={dialogMode === 'edit' ? editingOverride?.date : ''}
-					class="h-9"
-				/>
+				<Input type="date" name="date" required bind:value={overrideForm.date} class="h-9" />
 			</div>
 
-			<!-- Disponibilidade (switch colorido) -->
 			<div
 				class="flex items-center justify-between gap-3 rounded-xl border p-3 transition-colors
-				{isAvailable
+    {overrideForm.is_available
 					? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/30'
 					: 'border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/30'}"
 			>
 				<div class="flex items-center gap-2.5">
-					{#if isAvailable}
+					{#if overrideForm.is_available}
 						<CheckCircle2 class="size-4 shrink-0 text-green-600" />
 						<span class="text-sm font-semibold text-green-800 dark:text-green-300">Disponível</span>
 					{:else}
@@ -642,25 +650,22 @@
 						<span class="text-sm font-semibold text-red-800 dark:text-red-300">Indisponível</span>
 					{/if}
 				</div>
-				{#if isAvailable}
+
+				{#if overrideForm.is_available}
 					<input type="hidden" name="is_available" value="on" />
 				{/if}
-				<Switch
-					checked={isAvailable}
-					onCheckedChange={(v) => (isAvailable = v)}
-					class="cursor-pointer"
-				/>
+
+				<Switch bind:checked={overrideForm.is_available} class="cursor-pointer" />
 			</div>
 
-			<!-- Horários — sempre visíveis -->
 			<div class="grid grid-cols-2 gap-3">
 				<div class="grid gap-1.5">
 					<Label class="text-xs font-semibold text-muted-foreground">Início</Label>
 					<Input
 						type="time"
 						name="start_time"
-						class="h-9  text-sm"
-						value={dialogMode === 'edit' ? (editingOverride?.start_time?.slice(0, 5) ?? '') : ''}
+						bind:value={overrideForm.start_time}
+						class="h-9 text-sm"
 					/>
 				</div>
 				<div class="grid gap-1.5">
@@ -668,26 +673,22 @@
 					<Input
 						type="time"
 						name="end_time"
-						class="h-9  text-sm"
-						value={dialogMode === 'edit' ? (editingOverride?.end_time?.slice(0, 5) ?? '') : ''}
+						bind:value={overrideForm.end_time}
+						class="h-9 text-sm"
 					/>
 				</div>
 			</div>
 
-			<!-- Observação -->
 			<div class="grid gap-1.5">
-				<Label class="text-xs font-semibold text-muted-foreground">
-					Observação <span class="font-normal opacity-60">(opcional)</span>
-				</Label>
+				<Label class="text-xs font-semibold text-muted-foreground">Observação</Label>
 				<Input
 					name="note"
 					placeholder="Ex: Feriado Municipal"
+					bind:value={overrideForm.note}
 					class="h-9"
-					value={dialogMode === 'edit' ? (editingOverride?.note ?? '') : ''}
 				/>
 			</div>
 
-			<!-- Botão salvar -->
 			<Button
 				type="submit"
 				disabled={isSavingOverride}
@@ -701,7 +702,6 @@
 			</Button>
 		</form>
 
-		<!-- Excluir (somente modo edição) -->
 		{#if dialogMode === 'edit'}
 			<div class="px-5 pb-5">
 				<form
@@ -716,12 +716,12 @@
 						};
 					}}
 				>
-					<input type="hidden" name="id" value={editingOverride?.id} />
+					<input type="hidden" name="id" value={overrideForm.id} />
 					<Button
 						type="submit"
 						variant="ghost"
 						disabled={isDeletingOverride}
-						class="h-8 w-full cursor-pointer gap-1.5 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
+						class="h-8 w-full gap-1.5 text-xs text-destructive"
 					>
 						{#if isDeletingOverride}
 							<LoaderCircle class="size-3.5 animate-spin" />

@@ -91,6 +91,28 @@
 			});
 		}, 300); // 300ms de espera após o usuário parar de digitar
 	}
+	function handlePhoneInput(e: Event) {
+    const input = e.currentTarget as HTMLInputElement;
+    // Pega apenas os números
+    let value = input.value.replace(/\D/g, '');
+    
+    // Limita a 11 dígitos
+    if (value.length > 11) value = value.slice(0, 11);
+
+    // Aplica a máscara (XX) XXXXX-XXXX
+    let formatted = value;
+    if (value.length > 2) {
+        formatted = `(${value.slice(0, 2)}) ${value.slice(2)}`;
+    }
+    if (value.length > 7) {
+        formatted = `(${value.slice(0, 2)}) ${value.slice(2, 7)}-${value.slice(7)}`;
+    }
+
+    // Atualiza o estado com os números puros (para o banco)
+    formState.phone = value;
+    // Atualiza o valor visual do input
+    input.value = formatted;
+}
 </script>
 
 <!-- ───────────────────────── MOBILE ───────────────────────────── -->

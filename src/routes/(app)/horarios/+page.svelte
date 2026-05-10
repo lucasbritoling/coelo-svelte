@@ -91,50 +91,6 @@
      MOBILE
 ════════════════════════════════════════════════════ -->
 <div class="flex min-h-screen flex-col bg-[#fafafa] sm:hidden dark:bg-zinc-950">
-	<header
-		class="top-0 z-30 flex items-center justify-between border-b bg-background/80 px-5 py-4 backdrop-blur-md"
-	>
-		<div>
-			<h1 class="text-xl font-extrabold tracking-tight">Horários</h1>
-			<p class="text-[11px] font-medium tracking-wider text-muted-foreground/80 uppercase">
-				Configurações de Agenda
-			</p>
-		</div>
-
-		<form
-			method="POST"
-			action="?/updateWorkingDay"
-			use:enhance={({ formData }) => {
-				isSavingSchedule = true;
-				localDays.forEach((day, i) => {
-					formData.append(`days[${i}][id]`, day.id);
-					formData.append(`days[${i}][is_active]`, day.is_active ? '1' : '0');
-					formData.append(`days[${i}][start_time]`, day.start_time ?? '');
-					formData.append(`days[${i}][end_time]`, day.end_time ?? '');
-				});
-				return async ({ update }) => {
-					await update({ invalidateAll: true });
-					isSavingSchedule = false;
-					toast.success('Alterações salvas');
-				};
-			}}
-		>
-			<Button
-				type="submit"
-				disabled={isSavingSchedule}
-				size="sm"
-				class="h-9 rounded-full px-4 font-bold transition-all active:scale-95"
-			>
-				{#if isSavingSchedule}
-					<LoaderCircle class="size-4 animate-spin" />
-				{:else}
-					<Save class="mr-1.5 size-4" />
-					Salvar
-				{/if}
-			</Button>
-		</form>
-	</header>
-
 	<main class="flex flex-col gap-8 p-5 pb-32">
 		<section>
 			<div class="mb-3 flex items-center justify-between px-1">
@@ -143,48 +99,60 @@
 				</h2>
 			</div>
 
-			<div class="rounded-xl border bg-card divide-y divide-border overflow-hidden shadow-inner">
-    {#each localDays as day (day.id)}
-        <div class="flex items-center p-3.5 transition-colors gap-x-2 {day.is_active ? 'bg-transparent' : 'bg-muted/30'}">
-            
-            <div class="flex items-center gap-2.5 shrink-0">
-                <Switch 
-                    id="switch-{day.id}"
-                    checked={day.is_active} 
-                    onCheckedChange={(v) => (day.is_active = v)} 
-                    class="scale-95"
-                />
-                <label for="switch-{day.id}" class="text-[13px] font-bold capitalize min-w-[36px] text-zinc-900 dark:text-white">
-                    {new Intl.DateTimeFormat('pt-BR', { weekday: 'short' }).format(new Date(2024, 0, day.day_of_week + 1)).replace('.', '')}
-                </label>
-            </div>
+			<div class="divide-y divide-border overflow-hidden rounded-xl border bg-card shadow-inner">
+				{#each localDays as day (day.id)}
+					<div
+						class="flex items-center gap-x-2 p-3.5 transition-colors {day.is_active
+							? 'bg-transparent'
+							: 'bg-muted/30'}"
+					>
+						<div class="flex shrink-0 items-center gap-2.5">
+							<Switch
+								id="switch-{day.id}"
+								checked={day.is_active}
+								onCheckedChange={(v) => (day.is_active = v)}
+								class="scale-95"
+							/>
+							<label
+								for="switch-{day.id}"
+								class="min-w-[36px] text-[13px] font-bold text-zinc-900 capitalize dark:text-white"
+							>
+								{new Intl.DateTimeFormat('pt-BR', { weekday: 'short' })
+									.format(new Date(2024, 0, day.day_of_week + 1))
+									.replace('.', '')}
+							</label>
+						</div>
 
-            <div class="flex-1 flex items-center justify-end gap-x-1.5 transition-opacity duration-200 {day.is_active ? 'opacity-100' : 'opacity-0 pointer-events-none'}">
-                <Input 
-                    type="text"
-                    inputmode="numeric"
-                    placeholder="00:00"
-                    value={day.start_time}
-                    oninput={(e) => handleTimeInput(e, day, 'start_time')}
-                    class="h-9 w-[70px] text-center text-sm font-semibold rounded-lg bg-zinc-50 dark:bg-zinc-900 border-muted-foreground/10 px-0 shadow-sm focus:border-primary/30 focus:ring-1 focus:ring-primary/20"
-                    maxlength={5}
-                />
-                
-                <span class="text-[10px] font-medium text-muted-foreground/50 shrink-0">às</span>
+						<div
+							class="flex flex-1 items-center justify-end gap-x-1.5 transition-opacity duration-200 {day.is_active
+								? 'opacity-100'
+								: 'pointer-events-none opacity-0'}"
+						>
+							<Input
+								type="text"
+								inputmode="numeric"
+								placeholder="00:00"
+								value={day.start_time}
+								oninput={(e) => handleTimeInput(e, day, 'start_time')}
+								class="h-9 w-[70px] rounded-lg border-muted-foreground/10 bg-zinc-50 px-0 text-center text-sm font-semibold shadow-sm focus:border-primary/30 focus:ring-1 focus:ring-primary/20 dark:bg-zinc-900"
+								maxlength={5}
+							/>
 
-                <Input 
-                    type="text"
-                    inputmode="numeric"
-                    placeholder="00:00"
-                    value={day.end_time}
-                    oninput={(e) => handleTimeInput(e, day, 'end_time')}
-                    class="h-9 w-[70px] text-center text-sm font-semibold rounded-lg bg-zinc-50 dark:bg-zinc-900 border-muted-foreground/10 px-0 shadow-sm focus:border-primary/30 focus:ring-1 focus:ring-primary/20"
-                    maxlength={5}
-                />
-            </div>
-        </div>
-    {/each}
-</div>
+							<span class="shrink-0 text-[10px] font-medium text-muted-foreground/50">às</span>
+
+							<Input
+								type="text"
+								inputmode="numeric"
+								placeholder="00:00"
+								value={day.end_time}
+								oninput={(e) => handleTimeInput(e, day, 'end_time')}
+								class="h-9 w-[70px] rounded-lg border-muted-foreground/10 bg-zinc-50 px-0 text-center text-sm font-semibold shadow-sm focus:border-primary/30 focus:ring-1 focus:ring-primary/20 dark:bg-zinc-900"
+								maxlength={5}
+							/>
+						</div>
+					</div>
+				{/each}
+			</div>
 		</section>
 
 		<section>
@@ -247,13 +215,6 @@
 			{/if}
 		</section>
 	</main>
-
-	<button
-		onclick={openNewOverrideDialog}
-		class="fixed right-6 bottom-6 z-40 flex size-14 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/30 transition-transform active:scale-90"
-	>
-		<Plus class="size-6" />
-	</button>
 </div>
 
 <!-- FAB mobile -->
@@ -272,43 +233,6 @@
      DESKTOP
 ════════════════════════════════════════════════════ -->
 <div class="hidden min-h-full sm:flex sm:flex-col">
-	<!-- Sticky header -->
-	<header
-		class="top-0 z-20 flex items-center justify-between gap-4 border-b bg-background/95 px-6 py-4 backdrop-blur-sm"
-	>
-		<div>
-			<h1 class="text-xl leading-none font-bold tracking-tight">Horários</h1>
-			<p class="mt-0.5 text-xs text-muted-foreground">Rotina semanal e datas excepcionais</p>
-		</div>
-		<form
-			method="POST"
-			action="?/updateWorkingDay"
-			use:enhance={({ formData }) => {
-				isSavingSchedule = true;
-				localDays.forEach((day: any, i: number) => {
-					formData.append(`days[${i}][id]`, day.id);
-					formData.append(`days[${i}][is_active]`, day.is_active ? '1' : '0');
-					formData.append(`days[${i}][start_time]`, day.start_time ?? '');
-					formData.append(`days[${i}][end_time]`, day.end_time ?? '');
-				});
-				return async ({ update }) => {
-					await update({ invalidateAll: true });
-					isSavingSchedule = false;
-					toast.success('Horários salvos');
-				};
-			}}
-		>
-			<Button type="submit" size="sm" disabled={isSavingSchedule} class="gap-2 font-semibold">
-				{#if isSavingSchedule}
-					<LoaderCircle class="size-4 animate-spin" />
-				{:else}
-					<Save class="size-4" />
-				{/if}
-				Salvar alterações
-			</Button>
-		</form>
-	</header>
-
 	<!-- Grid principal -->
 	<div class="flex-1 p-6">
 		<div class="mx-auto grid max-w-4xl grid-cols-5 gap-6">
@@ -317,7 +241,7 @@
 				<p class="px-1 text-[10px] font-semibold tracking-widest text-muted-foreground uppercase">
 					Rotina Semanal
 				</p>
-				<div class="divide-y overflow-hidden rounded-2xl border bg-background">
+				<div class="max-w-md divide-y overflow-hidden rounded-2xl border bg-background">
 					{#each localDays as day (day.id)}
 						<div class="flex items-center gap-4 px-5 py-3">
 							<Switch checked={day.is_active} onCheckedChange={(v) => (day.is_active = v)} />

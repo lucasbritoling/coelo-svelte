@@ -31,10 +31,16 @@
 	let { data }: { data: PageData } = $props();
 
 	// ── Rotina semanal ─────────────────────────────────────────────
-	let localDays = $state(data.workingHours.map((d: any) => ({ ...d })));
-	$effect(() => {
-		localDays = data.workingHours.map((d: any) => ({ ...d }));
-	});
+	const mapDays = (days: any[]) =>
+		days.map((d) => ({
+			...d,
+			start_time: d.start_time?.slice(0, 5) ?? '09:00',
+			end_time: d.end_time?.slice(0, 5) ?? '18:00'
+		}));
+
+	// 2. Inicialize o estado diretamente
+	let localDays = $state(mapDays(data.workingHours));
+
 	let localLunch = $state({
 		has_lunch: data.user?.has_lunch ?? false,
 		lunch_start: data.user?.lunch_start?.slice(0, 5) ?? '12:00',
@@ -42,6 +48,26 @@
 	});
 	let isSavingLunch = $state(false);
 	let isSavingSchedule = $state(false);
+
+	const submitSchedule = ({ formData }: { formData: FormData }) => {
+		isSavingSchedule = true;
+
+		// Centraliza a construção do payload
+		localDays.forEach((day, i) => {
+			formData.append(`days[${i}][id]`, day.id);
+			formData.append(`days[${i}][is_active]`, day.is_active ? '1' : '0');
+			formData.append(`days[${i}][start_time]`, day.start_time);
+			formData.append(`days[${i}][end_time]`, day.end_time);
+		});
+
+		return async ({ result, update }: any) => {
+			isSavingSchedule = false;
+			if (result.type === 'success') {
+				toast.success('Agenda atualizada!');
+				await update({ invalidateAll: true });
+			}
+		};
+	};
 
 	// ── Exceções ───────────────────────────────────────────────────
 	let dialogOpen = $state(false);
@@ -165,32 +191,7 @@
 					Rotina Semanal
 				</h2>
 
-				<form
-					method="POST"
-					action="?/updateWorkingDay"
-					use:enhance={({ formData }) => {
-						isSavingSchedule = true;
-
-						// Limpa o formData caso o Svelte tenha colocado algo automaticamente
-						// e popula com os nossos estados locais (Runes)
-						localDays.forEach((day, i) => {
-							formData.append(`days[${i}][id]`, day.id);
-							formData.append(`days[${i}][is_active]`, day.is_active ? '1' : '0');
-							formData.append(`days[${i}][start_time]`, day.start_time ?? '');
-							formData.append(`days[${i}][end_time]`, day.end_time ?? '');
-						});
-
-						return async ({ result, update }) => {
-							isSavingSchedule = false;
-
-							if (result.type === 'success') {
-								await update({ invalidateAll: true });
-							} else if (result.type === 'failure') {
-								toast.error(result.data?.message ?? 'Erro ao salvar');
-							}
-						};
-					}}
-				>
+				<form method="POST" action="?/updateWorkingDay" use:enhance={submitSchedule}>
 					<Button
 						type="submit"
 						size="sm"
@@ -392,23 +393,7 @@
 							Rotina Semanal
 						</p>
 
-						<form
-							method="POST"
-							action="?/updateWorkingDay"
-							use:enhance={({ formData }) => {
-								isSavingSchedule = true;
-								localDays.forEach((day, i) => {
-									formData.append(`days[${i}][id]`, day.id);
-									formData.append(`days[${i}][is_active]`, day.is_active ? '1' : '0');
-									formData.append(`days[${i}][start_time]`, day.start_time ?? '');
-									formData.append(`days[${i}][end_time]`, day.end_time ?? '');
-								});
-								return async ({ update }) => {
-									await update({ invalidateAll: true });
-									isSavingSchedule = false;
-								};
-							}}
-						>
+						<form method="POST" action="?/updateWorkingDay" use:enhance={submitSchedule}>
 							<Button
 								type="submit"
 								size="sm"

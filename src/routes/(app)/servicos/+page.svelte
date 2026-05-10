@@ -1,5 +1,14 @@
 <script lang="ts">
-	import { Plus, Search, Trash2, LoaderCircle, ChevronRight, Pencil } from '@lucide/svelte';
+	import {
+		Plus,
+		Search,
+		Trash2,
+		LoaderCircle,
+		ChevronRight,
+		Pencil,
+		Clock,
+		ShieldAlert
+	} from '@lucide/svelte';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -10,6 +19,7 @@
 
 	let { data } = $props();
 
+	// Sincroniza estado com os dados do servidor
 	let services = $state<any[]>(data.services);
 	$effect(() => {
 		services = data.services;
@@ -26,7 +36,8 @@
 		services.filter((s: any) => s.name.toLowerCase().includes(searchQuery.toLowerCase()))
 	);
 
-	// ── Actions ────────────────────────────────────────────────────
+	// ── Lógica de Negócio ──────────────────────────────────────────
+
 	function startCreate() {
 		selectedService = null;
 		openForm = true;
@@ -42,179 +53,127 @@
 		openDelete = true;
 	}
 
-	function toggleActive(serviceId: string, newValue: boolean) {
-		const input = document.getElementById(`check-${serviceId}`) as HTMLInputElement;
-		if (!input) return;
-		input.value = String(newValue);
-		setTimeout(() => {
-			(document.getElementById(`form-status-${serviceId}`) as HTMLFormElement)?.requestSubmit();
-		}, 50);
-	}
-
+	// Toggle de Status Refatorado (Sem manipulação de DOM)
 	let servicePendingToggle = $state<any>(null);
 	let openConfirmToggle = $state(false);
 
-	function handleToggleAttempt(service: any, newValue: boolean) {
-		const activeServices = services.filter((s: any) => s.is_active);
+	async function handleToggle(service: any, newValue: boolean) {
+		// Validação: Não permitir que o profissional fique sem nenhum serviço ativo
+		const activeServices = services.filter((s) => s.is_active);
 		if (!newValue && activeServices.length === 1 && activeServices[0].id === service.id) {
 			servicePendingToggle = service;
 			openConfirmToggle = true;
-			const idx = services.findIndex((s: any) => s.id === service.id);
-			if (idx !== -1) services[idx] = { ...services[idx], is_active: false };
 			return;
 		}
-		const idx = services.findIndex((s: any) => s.id === service.id);
-		if (idx !== -1) services[idx] = { ...services[idx], is_active: newValue };
-		toggleActive(service.id, newValue);
+
+		await executeToggle(service.id, newValue);
 	}
 
-	function confirmToggle() {
-		if (servicePendingToggle) {
-			toggleActive(servicePendingToggle.id, false);
-			servicePendingToggle = null;
-			openConfirmToggle = false;
-		}
-	}
+	async function executeToggle(id: string, is_active: boolean) {
+		// Atualização Otimista (UI muda na hora)
+		const idx = services.findIndex((s) => s.id === id);
+		const previousValue = services[idx].is_active;
+		services[idx].is_active = is_active;
 
-	function cancelToggle() {
-		if (servicePendingToggle) {
-			const idx = services.findIndex((s: any) => s.id === servicePendingToggle.id);
-			if (idx !== -1) services[idx] = { ...services[idx], is_active: true };
-			servicePendingToggle = null;
+		const formData = new FormData();
+		formData.append('id', id);
+		formData.append('is_active', String(is_active));
+
+		try {
+			const response = await fetch('?/updateStatus', {
+				method: 'POST',
+				body: formData
+			});
+
+			if (!response.ok) throw new Error();
+			toast.success(is_active ? 'Serviço visível' : 'Serviço oculto');
+		} catch (err) {
+			// Reverte em caso de erro no servidor
+			services[idx].is_active = previousValue;
+			toast.error('Não foi possível atualizar o status.');
 		}
-		openConfirmToggle = false;
 	}
 </script>
 
-<!-- ───────────────────────── MOBILE ───────────────────────────── -->
+{#snippet serviceDetails(service)}
+	<div class="min-w-0 flex-1">
+		<p class="truncate leading-snug font-semibold">{service.name}</p>
+		<div class="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+			<span class="flex items-center gap-1"><Clock class="size-3" /> {service.duration} min</span>
+			{#if service.buffer_after_min > 0}
+				<span
+					class="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+				>
+					+{service.buffer_after_min}m intervalo
+				</span>
+			{/if}
+			{#if service.min_notice_hours}
+				<span class="rounded-full bg-muted px-2 py-0.5">
+					{service.min_notice_hours}h antecedência
+				</span>
+			{/if}
+		</div>
+	</div>
+{/snippet}
+
 <div class="flex w-full flex-col gap-4 p-4 pb-28 sm:hidden">
-	<!-- Header -->
 	<div>
 		<h1 class="text-2xl font-bold tracking-tight">Serviços</h1>
 		<p class="text-sm text-muted-foreground">Regras e tempos de atendimento.</p>
 	</div>
 
-	<!-- Search -->
 	<div class="relative">
 		<Search class="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
 		<Input type="search" placeholder="Procurar serviço..." class="pl-9" bind:value={searchQuery} />
 	</div>
 
-	<!-- Hint -->
-	{#if services.length > 0}
-		<p class="text-center select-none">Toque para editar</p>
-	{/if}
-
-	<!-- Lista Simples -->
 	<div class="overflow-hidden rounded-2xl border bg-background shadow-sm">
 		{#each filteredServices as service (service.id)}
 			<div class="relative border-b last:border-b-0">
 				<div
-					class="flex items-center gap-3 bg-background px-4 py-3.5 transition-colors active:bg-muted/50"
+					class="flex items-center gap-3 px-4 py-3.5 transition-colors active:bg-muted/50"
 					class:opacity-40={!service.is_active}
 					role="button"
 					tabindex="0"
 					onclick={() => startEdit(service)}
-					onkeydown={(e) => e.key === 'Enter' && startEdit(service)}
 				>
-					<!-- Info -->
-					<div class="min-w-0 flex-1">
-						<p class="truncate leading-snug font-semibold">{service.name}</p>
-						<div class="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-							<span>{service.duration} min</span>
-							{#if service.buffer_after_min > 0}
-								<span
-									class="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
-								>
-									+{service.buffer_after_min} min
-								</span>
-							{/if}
-							{#if service.min_notice_hours}
-								<span class="rounded-full bg-muted px-2 py-0.5">
-									{service.min_notice_hours}h antecedência
-								</span>
-							{/if}
-						</div>
+					{@render serviceDetails(service)}
+
+					<div onclick={(e) => e.stopPropagation()} role="presentation">
+						<Switch checked={service.is_active} onCheckedChange={(v) => handleToggle(service, v)} />
 					</div>
-
-					<form
-						id="form-status-{service.id}"
-						method="POST"
-						action="?/updateStatus"
-						use:enhance={() =>
-							async ({ result }) => {
-								if (result.type === 'failure') {
-									toast.error('Erro ao atualizar status.');
-									const idx = services.findIndex((s) => s.id === service.id);
-									if (idx !== -1)
-										services[idx] = { ...services[idx], is_active: !services[idx].is_active };
-								}
-							}}
-						onclick={(e) => e.stopPropagation()}
-					>
-						<input type="hidden" name="id" value={service.id} />
-						<input
-							type="hidden"
-							name="is_active"
-							id="check-{service.id}"
-							value={service.is_active}
-						/>
-						<Switch
-							checked={service.is_active}
-							onCheckedChange={(v) => handleToggleAttempt(service, v)}
-						/>
-					</form>
-
 					<ChevronRight class="size-4 shrink-0 text-muted-foreground/40" />
 				</div>
 			</div>
 		{:else}
-			<div class="flex flex-col items-center gap-2 py-16 text-center">
-				<p class="text-sm italic text-muted-foreground">Nenhum serviço encontrado.</p>
+			<div class="py-16 text-center italic text-muted-foreground text-sm">
+				Nenhum serviço encontrado.
 			</div>
 		{/each}
 	</div>
 </div>
 
-<!-- FAB -->
-<button
-	onclick={startCreate}
-	class="
-        fixed right-4 z-30 flex items-center gap-2
-        rounded-full bg-primary px-5 py-3.5 text-sm font-semibold text-primary-foreground
-        shadow-[0_4px_20px_rgba(0,0,0,0.25)] transition-all duration-150
-        active:scale-95 active:shadow-sm sm:hidden
-    "
-	style="bottom: calc(4rem + 1rem + env(safe-area-inset-bottom))"
-	aria-label="Novo Serviço"
->
-	<Plus class="size-5" />
-	Novo Serviço
-</button>
-
-<!-- ─────────────────────── DESKTOP ────────────────────────────── -->
 <div class="mx-auto hidden w-full max-w-lg flex-col gap-6 p-6 sm:flex">
 	<div class="flex items-center justify-between gap-4">
 		<div>
 			<h1 class="text-2xl font-bold tracking-tight">Serviços</h1>
 			<p class="text-sm text-muted-foreground">Regras e tempos de atendimento.</p>
 		</div>
-		<Button onclick={startCreate} size="sm" class="h-9 shrink-0 cursor-pointer">
+		<Button onclick={startCreate} size="sm" class="h-9 cursor-pointer">
 			<Plus class="mr-2 h-4 w-4" /> Novo Serviço
 		</Button>
 	</div>
 
 	<div class="relative">
 		<Search class="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
-		<Input type="search" placeholder="Procurar serviço..." class="pl-9" bind:value={searchQuery} />
+		<Input type="search" placeholder="Procurar..." class="pl-9" bind:value={searchQuery} />
 	</div>
 
-	<div class="overflow-x-auto rounded-md border">
+	<div class="overflow-hidden rounded-md border">
 		<table class="w-full text-sm">
-			<thead>
-				<tr class="border-b bg-muted/50 text-left font-medium">
-					<th class="p-3">Nome</th>
-					<th class="p-3">Duração</th>
+			<thead class="bg-muted/50 font-medium">
+				<tr class="border-b">
+					<th class="p-3 text-left">Serviço</th>
 					<th class="p-3 text-center">Visível</th>
 					<th class="p-3 text-right">Ações</th>
 				</tr>
@@ -225,110 +184,77 @@
 						class="border-b transition-colors hover:bg-muted/30"
 						class:opacity-50={!service.is_active}
 					>
-						<td class="p-3 font-medium">
-							{service.name}
-							{#if service.min_notice_hours}
-								<p class="text-[11px] font-normal text-muted-foreground">
-									{service.min_notice_hours}h de antecedência
-								</p>
-							{/if}
-						</td>
 						<td class="p-3">
-							<div class="flex items-center gap-2 text-muted-foreground">
-								{service.duration} min
-								{#if service.buffer_after_min > 0}
-									<span class="rounded bg-amber-100 px-1 text-[10px] font-medium text-amber-700"
-										>+{service.buffer_after_min} min</span
-									>
-								{/if}
+							<div class="font-medium">{service.name}</div>
+							<div class="text-[11px] text-muted-foreground">
+								{service.duration}min + {service.buffer_after_min}m
 							</div>
 						</td>
-						<td class="p-3">
-							<form
-								id="form-status-{service.id}"
-								method="POST"
-								action="?/updateStatus"
-								use:enhance={() =>
-									async ({ result }) => {
-										if (result.type === 'failure') {
-											toast.error('Erro ao atualizar status.');
-											const idx = services.findIndex((s) => s.id === service.id);
-											if (idx !== -1)
-												services[idx] = { ...services[idx], is_active: !services[idx].is_active };
-										}
-									}}
-								class="flex justify-center"
-							>
-								<input type="hidden" name="id" value={service.id} />
-								<input
-									type="hidden"
-									name="is_active"
-									id="check-{service.id}"
-									value={service.is_active}
-								/>
+						<td class="p-3 text-center">
+							<div class="flex justify-center">
 								<Switch
-									class="cursor-pointer"
 									checked={service.is_active}
-									onCheckedChange={(v) => handleToggleAttempt(service, v)}
+									onCheckedChange={(v) => handleToggle(service, v)}
 								/>
-							</form>
+							</div>
 						</td>
 						<td class="p-3 text-right">
 							<div class="flex justify-end gap-1">
+								<Button variant="ghost" size="icon" onclick={() => startEdit(service)}
+									><Pencil class="h-4 w-4" /></Button
+								>
 								<Button
 									variant="ghost"
 									size="icon"
-									class="cursor-pointer"
-									onclick={() => startEdit(service)}
+									class="text-destructive hover:bg-destructive/10"
+									onclick={() => confirmDelete(service)}><Trash2 class="h-4 w-4" /></Button
 								>
-									<Pencil class="h-4 w-4" />
-								</Button>
-								<Button
-									variant="ghost"
-									size="icon"
-									class="cursor-pointer text-destructive hover:bg-destructive/10"
-									onclick={() => confirmDelete(service)}
-								>
-									<Trash2 class="h-4 w-4" />
-								</Button>
 							</div>
 						</td>
 					</tr>
 				{:else}
-					<tr>
-						<td colspan="4" class="p-8 text-center italic text-muted-foreground"
-							>Nenhum serviço encontrado.</td
-						>
-					</tr>
+					<tr
+						><td colspan="3" class="p-8 text-center italic text-muted-foreground"
+							>Nenhum serviço.</td
+						></tr
+					>
 				{/each}
 			</tbody>
 		</table>
 	</div>
 </div>
 
-<!-- ─────────────────── Dialogs ──────────────────────── -->
+<button
+	onclick={startCreate}
+	class="fixed right-4 z-30 flex items-center gap-2 rounded-full bg-primary px-5 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg active:scale-95 sm:hidden"
+	style="bottom: calc(4rem + 1rem + env(safe-area-inset-bottom))"
+>
+	<Plus class="size-5" /> Novo Serviço
+</button>
+
 <ServiceForm formData={data.form} service={selectedService} bind:open={openForm} />
 
-<AlertDialog.Root
-	bind:open={openConfirmToggle}
-	onOpenChange={(open) => {
-		if (!open && servicePendingToggle) cancelToggle();
-	}}
->
+<AlertDialog.Root bind:open={openConfirmToggle}>
 	<AlertDialog.Content>
 		<AlertDialog.Header>
-			<AlertDialog.Title>Desativar visibilidade?</AlertDialog.Title>
+			<AlertDialog.Title>Desativar sua agenda?</AlertDialog.Title>
 			<AlertDialog.Description>
-				Se você deixar invisíveis todos os seus serviços, sua agenda pública ficará offline até você
-				reativar um.
+				Este é seu único serviço ativo. Se desativá-lo, ninguém conseguirá agendar horários com
+				você.
 			</AlertDialog.Description>
 		</AlertDialog.Header>
-		<AlertDialog.Footer class="flex-col-reverse gap-2 sm:flex-row">
-			<AlertDialog.Cancel onclick={cancelToggle} class="w-full cursor-pointer sm:w-auto">
-				Manter Ativo
-			</AlertDialog.Cancel>
-			<Button variant="destructive" onclick={confirmToggle} class="w-full cursor-pointer sm:w-auto">
-				Confirmar e Desativar
+		<AlertDialog.Footer>
+			<AlertDialog.Cancel onclick={() => (openConfirmToggle = false)}
+				>Manter Online</AlertDialog.Cancel
+			>
+			<Button
+				variant="destructive"
+				onclick={() => {
+					executeToggle(servicePendingToggle.id, false);
+					openConfirmToggle = false;
+				}}
+			>
+				Ocultar Agenda
 			</Button>
 		</AlertDialog.Footer>
 	</AlertDialog.Content>
@@ -338,45 +264,27 @@
 	<AlertDialog.Content>
 		<AlertDialog.Header>
 			<AlertDialog.Title>Excluir serviço?</AlertDialog.Title>
-			<AlertDialog.Description>
-				Esta ação não pode ser desfeita. Remover <strong>{serviceToDelete?.name}</strong>?
-			</AlertDialog.Description>
-		</AlertDialog.Header>
-		<AlertDialog.Footer class="flex-col-reverse gap-2 sm:flex-row">
-			<AlertDialog.Cancel disabled={isLoading} class="w-full cursor-pointer sm:w-auto"
-				>Cancelar</AlertDialog.Cancel
+			<AlertDialog.Description
+				>Remover <strong>{serviceToDelete?.name}</strong> permanentemente?</AlertDialog.Description
 			>
+		</AlertDialog.Header>
+		<AlertDialog.Footer>
+			<AlertDialog.Cancel disabled={isLoading}>Cancelar</AlertDialog.Cancel>
 			<form
 				method="POST"
 				action="?/delete"
-				class="w-full sm:w-auto"
 				use:enhance={() => {
 					isLoading = true;
 					return async ({ result, update }) => {
 						await update();
 						isLoading = false;
-						if (result.type === 'success') {
-							openDelete = false;
-							toast.success('Ok');
-						} else if (result.type === 'failure') {
-							// @ts-ignore
-							toast.error(result.data?.message ?? 'Erro ao excluir.');
-						}
+						if (result.type === 'success') openDelete = false;
 					};
 				}}
 			>
 				<input type="hidden" name="id" value={serviceToDelete?.id} />
-				<Button
-					type="submit"
-					variant="destructive"
-					disabled={isLoading}
-					class="w-full cursor-pointer sm:min-w-36"
-				>
-					{#if isLoading}
-						<LoaderCircle class="mr-2 size-4 animate-spin" /> Removendo...
-					{:else}
-						Confirmar Exclusão
-					{/if}
+				<Button type="submit" variant="destructive" disabled={isLoading} class="w-full sm:min-w-36">
+					{isLoading ? 'Removendo...' : 'Confirmar Exclusão'}
 				</Button>
 			</form>
 		</AlertDialog.Footer>

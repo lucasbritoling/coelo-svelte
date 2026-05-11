@@ -369,9 +369,9 @@
 		>
 			{#if isLoading}
 				<LoaderCircle class="mr-2 size-4 animate-spin" />
-				Salvando...
+				Salvando
 			{:else}
-				Salvar Agendamento
+				Salvar
 			{/if}
 		</Button>
 	</div>

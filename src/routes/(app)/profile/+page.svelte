@@ -197,7 +197,7 @@
 		>
 			{#if isSaving}
 				<Loader2 size={18} strokeWidth={2.5} class="spin-icon" />
-				<span>Salvando...</span>
+				<span>Salvando</span>
 			{:else if saved}
 				<Check size={18} strokeWidth={2.5} />
 				<span>Salvo!</span>

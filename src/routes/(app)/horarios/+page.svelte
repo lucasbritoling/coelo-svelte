@@ -618,9 +618,9 @@
 				class="h-9 w-full cursor-pointer font-semibold"
 			>
 				{#if isSavingOverride}
-					<LoaderCircle class="mr-2 size-4 animate-spin" />Salvando...
+					<LoaderCircle class="mr-2 size-4 animate-spin" />Salvando
 				{:else}
-					{dialogMode === 'edit' ? 'Atualizar' : 'Salvar Exceção'}
+					{dialogMode === 'edit' ? 'Atualizar' : 'Salvar'}
 				{/if}
 			</Button>
 		</form>

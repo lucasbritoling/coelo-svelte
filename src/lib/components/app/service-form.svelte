@@ -198,9 +198,9 @@
 					class="cursor-pointer {formState.id ? 'flex-[2] sm:w-full' : 'w-full'}"
 				>
 					{#if isLoading}
-						<LoaderCircle class="mr-2 h-4 w-4 animate-spin" /> Salvando...
+						<LoaderCircle class="mr-2 h-4 w-4 animate-spin" /> Salvando
 					{:else}
-						{isConfirmingDelete ? 'Cancelar' : formState.id ? 'Salvar' : 'Criar Serviço'}
+						{isConfirmingDelete ? 'Cancelar' : formState.id ? 'Salvar' : 'Salvar'}
 					{/if}
 					<!-- Se o usuário clicar em "Cancelar" (botão principal) enquanto estiver confirmando, voltamos o estado -->
 					<button type="button" class="hidden" onclick={() => (isConfirmingDelete = false)}

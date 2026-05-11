@@ -117,9 +117,9 @@
 				<Button type="submit" disabled={isLoading}>
 					{#if isLoading}
 						<LoaderCircle class="mr-2 h-4 w-4 animate-spin" />
-						Salvando...
+						Salvando
 					{:else}
-						Salvar Cliente
+						Salvar
 					{/if}
 				</Button>
 			</Dialog.Footer>

@@ -98,7 +98,7 @@
 
 			<div class="flex flex-1 flex-col gap-5 overflow-y-auto px-6 py-5">
 				<div class="grid gap-2">
-					<Label for="name">Nome do serviço</Label>
+					<Label for="name">Nome</Label>
 					<Input
 						id="name"
 						name="name"

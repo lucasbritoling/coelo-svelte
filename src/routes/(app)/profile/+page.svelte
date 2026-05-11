@@ -151,7 +151,7 @@
 		<div class="form-card">
 			<!-- Campo Nome -->
 			<div class="field" class:is-focused={nameFocused}>
-				<label for="name" class="field-label">Nome completo</label>
+				<label for="name" class="field-label">Nome</label>
 				<input
 					id="name"
 					type="text"

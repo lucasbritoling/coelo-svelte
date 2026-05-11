@@ -76,7 +76,7 @@
 			{/if}
 
 			<div class="grid gap-2">
-				<Label for="name">Nome completo</Label>
+				<Label for="name">Nome</Label>
 				<Input
 					id="name"
 					name="name"

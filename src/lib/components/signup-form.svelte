@@ -52,7 +52,7 @@
 
 				<Field.Group>
 					<Field.Field>
-						<Field.Label for="full_name">Nome Completo</Field.Label>
+						<Field.Label for="full_name">Nome</Field.Label>
 						<Input name="full_name" bind:value={$form.full_name} placeholder="Maria Oliveira" />
 						{#if $errors.full_name}<span class="text-xs text-destructive">{$errors.full_name}</span
 							>{/if}

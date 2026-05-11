@@ -345,7 +345,7 @@
 				<input type="hidden" name="id" value={formState.id} />
 
 				<div class="grid gap-2">
-					<Label for="name">Nome completo</Label>
+					<Label for="name">Nome</Label>
 					<div class="relative">
 						<User class="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
 						<Input

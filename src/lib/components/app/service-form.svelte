@@ -128,7 +128,7 @@
 					</div>
 				</div>
 
-				<div class="flex items-center gap-2 mt-2 text-sm font-semibold text-muted-foreground">
+				<div class="mt-2 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
 					<CalendarClock class="h-4 w-4" /> Regras de Agendamento
 				</div>
 
@@ -159,7 +159,9 @@
 				</div>
 			</div>
 
-			<div class="flex shrink-0 gap-3 border-t px-6 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+			<div
+				class="flex shrink-0 gap-3 border-t px-6 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))]"
+			>
 				{#if formState.id}
 					<div use:focusButton class="flex-1 sm:hidden">
 						{#if !isConfirmingDelete}
@@ -177,7 +179,7 @@
 								variant="destructive"
 								formaction="/servicos?/delete"
 								disabled={isLoading}
-								class="w-full animate-in zoom-in-95 fade-in cursor-pointer"
+								class="w-full animate-in cursor-pointer zoom-in-95 fade-in"
 							>
 								{#if isLoading}
 									<LoaderCircle class="h-4 w-4 animate-spin" />

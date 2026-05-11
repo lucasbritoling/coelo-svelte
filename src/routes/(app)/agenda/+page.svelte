@@ -12,7 +12,7 @@
 
 	import AgendaHeader from '$lib/components/app/agenda/agenda-header.svelte';
 	import AgendaStrip from '$lib/components/app/agenda/agenda-strip.svelte';
-	import AppointmentForm from '$lib/components/app/appointment-form.svelte';
+	import AppointmentForm from '$lib/components/app/new-appointment-form.svelte';
 	import AppointmentCard from '$lib/components/app/agenda/appointment-card.svelte';
 	import GhostSlot from '$lib/components/app/agenda/ghost-slot.svelte';
 
@@ -277,27 +277,16 @@
 		</div>
 	</div>
 </div>
-<Dialog.Root bind:open={ui.modal}>
-	<Dialog.Content
-		class="flex max-h-[92dvh] w-[94vw] flex-col overflow-hidden rounded-[32px] p-0 shadow-2xl"
-	>
-		<div class="border-b px-6 py-5">
-			<h2 class="text-xl font-bold">Novo Agendamento</h2>
-			<p class="text-sm text-zinc-500 capitalize">{headerLabel}</p>
-		</div>
-		<div class="overflow-y-auto">
-			<AppointmentForm
-				open={ui.modal}
-				customers={data.customers}
-				services={data.services}
-				selectedDate={data.selectedDate}
-				{data}
-				onSuccess={() => (ui.modal = false)}
-				initialTime={selectedTime}
-			/>
-		</div>
-	</Dialog.Content>
-</Dialog.Root>
+
+<AppointmentForm
+	{data}
+	bind:open={ui.modal}
+	initialTime={selectedTime}
+	onSuccess={() => {
+		selectedTime = ''; // Limpa o horário sugerido após sucesso
+		// O modal fecha sozinho pelo bind:open interno ou pelo onSuccess
+	}}
+/>
 
 <style>
 	button {

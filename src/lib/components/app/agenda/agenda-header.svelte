@@ -23,7 +23,7 @@
 </script>
 
 <header
-	class="sticky top-0 z-20 border-b border-transparent bg-background/80 backdrop-blur-xl transition-colors"
+	class="sticky top-0 z-20 border-b border-transparent bg-background/80 backdrop-blur-xl transition-all"
 	class:border-border={!isPickerOpen}
 >
 	<div class="flex items-center justify-between px-5 pt-6 pb-4">
@@ -35,14 +35,17 @@
 		</button>
 
 		<Dialog.Root bind:open={isPickerOpen}>
-			<Dialog.Trigger class="group flex items-center gap-1">
+			<Dialog.Trigger class="group flex items-center gap-1 outline-none">
 				<h1
-					class="text-[1.1rem] font-bold tracking-tight capitalize transition-opacity group-active:opacity-60"
+					class="text-[1.15rem] font-bold tracking-tight capitalize transition-opacity group-active:opacity-60"
 					class:opacity-40={navigating.to}
 				>
 					{headerLabel}
 				</h1>
-				<ChevronDown size={16} class="text-zinc-400 transition-transform group-active:rotate-180" />
+				<ChevronDown
+					size={16}
+					class="text-zinc-400 transition-transform group-active:translate-y-0.5"
+				/>
 			</Dialog.Trigger>
 
 			<Dialog.Content
@@ -52,7 +55,7 @@
 			</Dialog.Content>
 		</Dialog.Root>
 
-		<div class="flex items-center gap-2">
+		<div class="flex items-center gap-1">
 			<button
 				onclick={onOpenAppointment}
 				class="p-2 text-zinc-900 transition-transform active:scale-90"
@@ -60,7 +63,7 @@
 				<Plus size={26} strokeWidth={2.5} />
 			</button>
 
-			<a href="/mais" class="relative size-8 transition-transform active:scale-90">
+			<a href="/mais" class="relative ml-1 size-9 transition-transform active:scale-90">
 				<div
 					class="flex size-full items-center justify-center overflow-hidden rounded-full border border-zinc-200 bg-zinc-100 shadow-sm"
 				>
@@ -70,11 +73,11 @@
 						<span class="text-[10px] font-bold uppercase">{user?.full_name?.charAt(0) ?? 'U'}</span>
 					{/if}
 				</div>
-				<div
-					class="absolute -right-0.5 -bottom-0.5 flex size-3 items-center justify-center rounded-full bg-white shadow-xs"
-				>
-					<Settings size={8} class="text-zinc-600" />
-				</div>
+				<Settings
+					size={10}
+					strokeWidth={3}
+					class="absolute -right-0.5 -bottom-0.5 text-zinc-600 drop-shadow-[0_0_2px_rgba(255,255,255,1)]"
+				/>
 			</a>
 		</div>
 	</div>

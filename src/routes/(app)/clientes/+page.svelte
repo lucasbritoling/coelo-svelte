@@ -341,18 +341,29 @@
 			class="flex flex-1 flex-col overflow-hidden"
 			use:enhance={() => {
 				isLoading = true;
+				// Capturamos se é edição ou criação ANTES do servidor responder
+				const isEditing = !!formState.id;
+
 				return async ({ result, update }) => {
 					await update({ reset: false });
 					isLoading = false;
 
 					if (result.type === 'success') {
-						toast.success('Cliente excluído');
+						// Diferencia o toast baseado na ação realizada
+						if (isConfirmingDelete) {
+							toast.success('Cliente excluído');
+						} else {
+							toast.success(isEditing ? 'Cliente atualizado' : 'Cliente criado');
+						}
 						open = false;
 					} else if (result.type === 'failure') {
-						// Captura a mensagem enviada pelo fail() no servidor
-						const message = result.data?.message ?? 'Ocorreu um erro ao excluir.';
+						// Aqui tratamos os erros de integridade (23503) ou validação
+						const message = result.data?.message ?? 'Ocorreu um erro inesperado';
 						toast.error(message);
 						isConfirmingDelete = false;
+					} else if (result.type === 'error') {
+						// Erros 500 (crash de rede ou banco fora do ar)
+						toast.error('Erro de conexão com o servidor');
 					}
 				};
 			}}
@@ -473,8 +484,15 @@
 					return async ({ result, update }) => {
 						await update();
 						isLoading = false;
+
 						if (result.type === 'success') {
+							toast.success('Cliente removido');
 							openDelete = false;
+						} else if (result.type === 'failure') {
+							// Exibe o erro de chave estrangeira (ForeignKey 23503)
+							toast.error(result.data?.message ?? 'Erro ao excluir cliente');
+						} else if (result.type === 'error') {
+							toast.error('Erro interno no servidor');
 						}
 					};
 				}}

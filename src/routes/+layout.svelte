@@ -1,8 +1,21 @@
 <script lang="ts">
 	import './layout.css';
 	import { Toaster } from 'svelte-sonner';
+	import { onMount } from 'svelte';
 
 	let { children } = $props();
+
+	let isMobile = $state(false);
+
+	onMount(() => {
+		const checkMobile = () => {
+			isMobile = window.innerWidth < 640; // 640px é o breakpoint 'sm' do Tailwind
+		};
+
+		checkMobile();
+		window.addEventListener('resize', checkMobile);
+		return () => window.removeEventListener('resize', checkMobile);
+	});
 </script>
 
 <svelte:head>
@@ -13,16 +26,18 @@
 <Toaster
 	richColors
 	expand={false}
-	position="bottom-center"
+	position={isMobile ? 'top-center' : 'bottom-center'}
+	visibleToasts={1}
 	toastOptions={{
-		class: 'border-border/50 bg-background shadow-lg font-sans'
+		// w-fit + mx-auto garante que ele fique "magrinho" e centralizado
+		class: 'w-fit mx-auto border-border/50 bg-background shadow-lg font-sans'
 	}}
 />
 
 {@render children()}
 
 <style>
-	/* Lógica Mobile (max-width: 479px) */
+	/* Customização para manter o Toast "magrinho" e no topo no mobile */
 	@media (max-width: 479px) {
 		:global([data-sonner-toaster]) {
 			top: 0 !important;
@@ -38,8 +53,13 @@
 		:global([data-sonner-toast]) {
 			--y: 0px !important;
 			position: relative !important;
+			/* Garante que o toast não estique para 100% da largura do container */
+			width: fit-content !important;
+			margin-left: auto !important;
+			margin-right: auto !important;
 		}
 
+		/* Efeito de deslize lateral ao remover */
 		:global([data-sonner-toast][data-removed='true']) {
 			transform: translateX(100%) !important;
 			opacity: 0;

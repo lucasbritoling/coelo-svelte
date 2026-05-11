@@ -1,18 +1,17 @@
 <script lang="ts">
 	import { ui as globalUI } from '$lib/state/ui.svelte';
 	import type { Appointment, AppointmentStatus } from '$lib/types/appointment';
-	import { Copy, MessageCircle, Check, CalendarDays, Plus } from '@lucide/svelte';
+	import { Copy, MessageCircle, Check, CalendarDays } from '@lucide/svelte';
 
 	import { Badge } from '$lib/components/ui/badge';
 	import * as Dialog from '$lib/components/ui/dialog';
 
-	import { navigating, page } from '$app/state';
+	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
 
-	import { parseDate } from '@internationalized/date';
-
 	import AgendaHeader from '$lib/components/app/agenda/agenda-header.svelte';
+	import AgendaStrip from '$lib/components/app/agenda/agenda-strip.svelte';
 	import AppointmentForm from '$lib/components/app/appointment-form.svelte';
 	import AppointmentCardAction from '$lib/components/app/appointment-card-action.svelte';
 
@@ -27,36 +26,30 @@
 		};
 	}>();
 
-	// ── Lógica de Tempo Real ──────────────────────────────────────
+	// ── Lógica de Tempo ──────────────────────────────────────────
 	let ticker = $state(Date.now());
 	$effect(() => {
-		const now = Date.now();
-		const msUntilNextMinute = 60000 - (now % 60000);
-
-		const timeout = setTimeout(() => {
-			ticker = Date.now();
-			const interval = setInterval(() => {
+		const timeout = setTimeout(
+			() => {
 				ticker = Date.now();
-			}, 60000);
-			return () => clearInterval(interval);
-		}, msUntilNextMinute);
-
+				const interval = setInterval(() => {
+					ticker = Date.now();
+				}, 60000);
+				return () => clearInterval(interval);
+			},
+			60000 - (Date.now() % 60000)
+		);
 		return () => clearTimeout(timeout);
 	});
 
-	let ui = $state({
-		modal: false,
-		copied: false
-	});
-
-	// Sincroniza com o estado global para travar scroll se necessário
+	let ui = $state({ modal: false, copied: false });
 	$effect(() => {
 		globalUI.isModalOpen = ui.modal;
 	});
 
 	const schedulingLink = $derived(`coelo.dev/${data.username}`);
 
-	// ── Datas & Formatação ────────────────────────────────────────
+	// ── Formatação Local (Somente o necessário para a página) ────
 	const fmt = {
 		iso: new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Sao_Paulo' }),
 		time: new Intl.DateTimeFormat('pt-BR', {
@@ -66,7 +59,6 @@
 			hour12: false
 		}),
 		header: new Intl.DateTimeFormat('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' }),
-		weekday: new Intl.DateTimeFormat('pt-BR', { weekday: 'short' }),
 		full: new Intl.DateTimeFormat('en-US', {
 			timeZone: 'America/Sao_Paulo',
 			year: 'numeric',
@@ -80,17 +72,15 @@
 	};
 
 	const reactiveNow = $derived(fmt.time.format(new Date(ticker)));
-	const todayStr = $derived(fmt.iso.format(new Date(ticker)));
-	const isTodayView = $derived(data.selectedDate === todayStr);
+	const isTodayView = $derived(data.selectedDate === fmt.iso.format(new Date(ticker)));
 
-	const parsedDate = $derived.by(() => {
+	const headerLabel = $derived.by(() => {
+		if (isTodayView) return 'Hoje';
 		const [y, m, d] = data.selectedDate.split('-').map(Number);
-		return new Date(y, m - 1, d);
+		return fmt.header.format(new Date(y, m - 1, d));
 	});
 
-	const headerLabel = $derived(isTodayView ? 'Hoje' : fmt.header.format(parsedDate));
-
-	// ── Navegação & Gestos ────────────────────────────────────────
+	// ── Navegação ────────────────────────────────────────────────
 	function updateDate(newDate: string) {
 		if (!newDate || newDate === data.selectedDate) return;
 		const newUrl = new URL(page.url);
@@ -99,37 +89,23 @@
 	}
 
 	function navigateDay(offset: number) {
-		const date = new Date(parsedDate);
+		const [y, m, d] = data.selectedDate.split('-').map(Number);
+		const date = new Date(y, m - 1, d);
 		date.setDate(date.getDate() + offset);
 		updateDate(fmt.iso.format(date));
 	}
 
-	const strip = $derived.by(() => {
-		return Array.from({ length: 7 }, (_, i) => {
-			const d = new Date(parsedDate);
-			d.setDate(parsedDate.getDate() - 3 + i);
-			return {
-				str: fmt.iso.format(d),
-				day: d.getDate(),
-				wd: fmt.weekday.format(d).replace('.', '').slice(0, 3).toUpperCase()
-			};
-		});
-	});
-
+	// Gestos
 	let touchStartX = 0;
-	function handleTouchStart(e: TouchEvent) {
-		touchStartX = e.changedTouches[0].screenX;
-	}
 	function handleTouchEnd(e: TouchEvent) {
 		const dx = touchStartX - e.changedTouches[0].screenX;
 		if (Math.abs(dx) > 80) navigateDay(dx > 0 ? 1 : -1);
 	}
 
-	// ── Organização de Dados ──────────────────────────────────────
+	// ── Organização ──────────────────────────────────────────────
 	const groups = $derived.by(() => {
 		const appointments = data.appointments || [];
 		if (!isTodayView) return { next: [], later: appointments, past: [] };
-
 		const next = appointments.find((a) => a.start_at >= reactiveNow) ?? null;
 		return {
 			next: next ? [next] : [],
@@ -137,6 +113,12 @@
 			past: appointments.filter((a) => a.start_at < reactiveNow)
 		};
 	});
+
+	const STATUS: Record<AppointmentStatus, { label: string; bg: string; text: string }> = {
+		confirmed: { label: 'confirmado', bg: '#EAF3DE', text: '#3B6D11' },
+		pending: { label: 'pendente', bg: '#FAEEDA', text: '#854F0B' },
+		cancelled: { label: 'cancelado', bg: '#FEE2E2', text: '#991B1B' }
+	};
 
 	function soonLabel(t: string) {
 		if (!isTodayView) return '';
@@ -149,25 +131,12 @@
 		if (diff < 60 && diff > 0) return `em ${diff} min`;
 		return '';
 	}
-
-	const STATUS: Record<AppointmentStatus, { label: string; bg: string; text: string }> = {
-		confirmed: { label: 'confirmado', bg: '#EAF3DE', text: '#3B6D11' },
-		pending: { label: 'pendente', bg: '#FAEEDA', text: '#854F0B' },
-		cancelled: { label: 'cancelado', bg: '#FEE2E2', text: '#991B1B' }
-	};
-
-	function copyToClipboard() {
-		navigator.clipboard.writeText(schedulingLink).then(() => {
-			ui.copied = true;
-			setTimeout(() => (ui.copied = false), 2000);
-		});
-	}
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
 	class="flex h-full touch-pan-y flex-col"
-	ontouchstart={handleTouchStart}
+	ontouchstart={(e) => (touchStartX = e.changedTouches[0].screenX)}
 	ontouchend={handleTouchEnd}
 >
 	<AgendaHeader
@@ -179,33 +148,21 @@
 		onOpenSearch={() => toast('Busca em breve!')}
 	/>
 
-	<div class="no-scrollbar flex gap-2 overflow-x-auto px-5 pt-1 pb-4">
-		{#each strip as day}
-			<button
-				onclick={() => updateDate(day.str)}
-				class="flex min-w-[54px] shrink-0 flex-col items-center rounded-2xl border py-3 transition-all active:scale-90 {day.str ===
-				data.selectedDate
-					? 'border-zinc-900 bg-zinc-900 text-white'
-					: 'border-transparent bg-zinc-100 text-zinc-500'}"
-			>
-				<span class="text-[9px] font-bold tracking-widest uppercase">{day.wd}</span>
-				<span class="mt-0.5 text-[15px] font-semibold">{day.day}</span>
-			</button>
-		{/each}
-	</div>
+	<AgendaStrip selectedDate={data.selectedDate} onSelect={updateDate} />
 
 	<div class="flex-1 space-y-6 overflow-y-auto px-4 pb-10">
 		{#if data.appointments.length === 0}
 			<div class="flex flex-col items-center justify-center py-20 text-center">
-				<div class="mb-4 rounded-full bg-zinc-100 p-4">
-					<CalendarDays class="size-8 text-zinc-400" />
+				<div class="mb-4 rounded-full bg-zinc-100 p-4 text-zinc-400">
+					<CalendarDays size={32} />
 				</div>
 				<p class="font-medium text-zinc-500">Nenhum agendamento</p>
 				<button
 					onclick={() => (ui.modal = true)}
 					class="mt-4 text-sm font-bold text-zinc-900 underline underline-offset-4"
-					>Criar um agora</button
 				>
+					Criar um agora
+				</button>
 			</div>
 		{:else if isTodayView}
 			{@render section('próximo', groups.next, true)}
@@ -222,8 +179,12 @@
 				</p>
 				<p class="mt-2 truncate font-mono text-sm text-zinc-600">{schedulingLink}</p>
 				<button
-					onclick={copyToClipboard}
-					class="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-zinc-100 text-sm font-bold transition-all active:scale-[0.97]"
+					onclick={() => {
+						navigator.clipboard.writeText(schedulingLink);
+						ui.copied = true;
+						setTimeout(() => (ui.copied = false), 2000);
+					}}
+					class="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-zinc-100 text-sm font-bold transition-all active:scale-95"
 				>
 					{#if ui.copied}
 						<Check size={16} /> Copiado!
@@ -252,9 +213,8 @@
 {#snippet card(appt: Appointment, highlighted = false, dimmed = false, showSoon = false)}
 	{@const soon = soonLabel(appt.start_at)}
 	<div
-		class="flex gap-4 rounded-[30px] border bg-card px-5 py-5 transition-all active:scale-[0.985] {highlighted
-			? 'border-zinc-200 shadow-md'
-			: 'border-zinc-100 opacity-100'}"
+		class="flex gap-4 rounded-[30px] border bg-card px-5 py-5 transition-all active:scale-[0.985]
+        {highlighted ? 'border-zinc-200 shadow-md' : 'border-zinc-100'}"
 		class:opacity-40={dimmed}
 	>
 		<div class="flex min-w-[52px] flex-col items-center pt-0.5">
@@ -269,9 +229,7 @@
 					<p class="truncate text-[17px] leading-tight font-bold">{appt.customer_name}</p>
 					<p class="mt-1 text-[13px] text-zinc-500">{appt.service_name}</p>
 				</div>
-				<div class="shrink-0">
-					<AppointmentCardAction appointmentId={appt.id} appointmentStatus={appt.status} />
-				</div>
+				<AppointmentCardAction appointmentId={appt.id} appointmentStatus={appt.status} />
 			</div>
 
 			<div class="mt-4 flex items-center gap-2">
@@ -324,13 +282,6 @@
 </Dialog.Root>
 
 <style>
-	.no-scrollbar::-webkit-scrollbar {
-		display: none;
-	}
-	.no-scrollbar {
-		-ms-overflow-style: none;
-		scrollbar-width: none;
-	}
 	button {
 		-webkit-tap-highlight-color: transparent;
 	}

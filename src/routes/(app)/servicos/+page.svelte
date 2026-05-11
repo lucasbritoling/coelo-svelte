@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { ui } from '$lib/state/ui.svelte';
 	import {
 		Plus,
 		Search,
@@ -57,6 +58,21 @@
 	// Toggle de Status Refatorado (Sem manipulação de DOM)
 	let servicePendingToggle = $state<any>(null);
 	let openConfirmToggle = $state(false);
+
+	// 1. Sincroniza Local -> Global
+	// Se qualquer um dos três estiver aberto, o Layout saberá que deve "sequestrar" o botão voltar
+	$effect(() => {
+		ui.isModalOpen = openForm || openConfirmToggle || openDelete;
+	});
+
+	// 2. Sincroniza Global -> Local (Reação ao botão voltar do celular/gesto iOS)
+	$effect(() => {
+		if (!ui.isModalOpen) {
+			openForm = false;
+			openConfirmToggle = false;
+			openDelete = false;
+		}
+	});
 
 	async function handleToggle(service: any, newValue: boolean) {
 		// Validação: Não permitir que o profissional fique sem nenhum serviço ativo

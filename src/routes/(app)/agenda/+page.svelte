@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { ui as globalUI } from '$lib/state/ui.svelte';
 	import type { Appointment, AppointmentStatus } from '$lib/types/appointment';
 	import { Plus, Copy, MessageCircle, Check, CalendarDays, Settings } from '@lucide/svelte';
 
@@ -50,9 +51,23 @@
 	});
 
 	let ui = $state({
-		modal: false,
-		picker: false,
+		modal: false, // AppointmentForm
+		picker: false, // DatePicker
 		copied: false
+	});
+
+	// 1. Sincroniza Local -> Global
+	$effect(() => {
+		// Se o modal de agendamento ou o picker de data estiverem abertos
+		globalUI.isModalOpen = ui.modal || ui.picker;
+	});
+
+	// 2. Sincroniza Global -> Local (Reação ao 'Voltar')
+	$effect(() => {
+		if (!globalUI.isModalOpen) {
+			ui.modal = false;
+			ui.picker = false;
+		}
 	});
 
 	const schedulingLink = $derived(`coelo.dev/${data.username}`);

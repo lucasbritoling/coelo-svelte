@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { ui } from '$lib/state/ui.svelte';
 	import {
 		Plus,
 		Trash2,
@@ -73,6 +74,19 @@
 
 	// ── Exceções ───────────────────────────────────────────────────
 	let dialogOpen = $state(false);
+
+	// 1. Sincroniza Local -> Global
+	$effect(() => {
+		ui.isModalOpen = dialogOpen;
+	});
+
+	// 2. Sincroniza Global -> Local (Botão voltar)
+	$effect(() => {
+		if (!ui.isModalOpen) {
+			dialogOpen = false;
+		}
+	});
+
 	let isSavingOverride = $state(false);
 	let isDeletingOverride = $state(false);
 

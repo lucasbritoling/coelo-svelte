@@ -102,7 +102,7 @@ export const actions: Actions = {
 			if (err.code === '23514') {
 				return fail(400, { message: 'Um dos horários de término é inválido.' });
 			}
-			return fail(500, { message: 'Erro ao atualizar horários.' });
+			return fail(500, { message: 'Erro interno ao atualizar horários.' });
 		}
 	},
 
@@ -140,7 +140,7 @@ export const actions: Actions = {
 			if (err.code === '23514') {
 				return fail(400, { message: 'Horário inválido: término deve ser após o início.' });
 			}
-			return fail(500, { message: 'Erro ao salvar exceção.' });
+			return fail(500, { message: 'Erro interno ao salvar exceção.' });
 		}
 	},
 
@@ -156,7 +156,7 @@ export const actions: Actions = {
             `;
 			return { success: true };
 		} catch (err) {
-			return fail(500, { message: 'Erro ao remover exceção.' });
+			return fail(500, { message: 'Erro interno ao remover exceção.' });
 		}
 	},
 	updateLunchTime: async ({ request, locals: { sql, user } }) => {
@@ -178,7 +178,7 @@ export const actions: Actions = {
         `;
 			return { success: true };
 		} catch (err) {
-			return fail(500, { message: 'Erro ao atualizar horário de almoço.' });
+			return fail(500, { message: 'Erro interno ao atualizar horário de almoço.' });
 		}
 	}
 };

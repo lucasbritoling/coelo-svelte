@@ -5,6 +5,7 @@
 	import { Label } from '$lib/components/ui/label';
 	import { Clock, LoaderCircle, CalendarClock, Coffee, Trash2 } from '@lucide/svelte';
 	import { enhance } from '$app/forms';
+	import { toast } from 'svelte-sonner';
 
 	// Definição de interface para melhor DX
 	interface Service {
@@ -81,16 +82,30 @@
 			action="/servicos?/upsert"
 			use:enhance={() => {
 				isLoading = true;
+				const isEditing = !!formState.id; // Captura o estado antes da resposta
+
 				return async ({ result, update }) => {
-					// reset: false impede que os inputs limpem antes do modal fechar
 					await update({ reset: false });
 					isLoading = false;
 
 					if (result.type === 'success') {
-						// Tipagem segura sem @ts-ignore
+						// Lógica de Toast para Sucesso
+						if (isConfirmingDelete) {
+							toast.success('Serviço excluído');
+						} else {
+							toast.success(isEditing ? 'Serviço atualizado' : 'Serviço criado');
+						}
+
 						const data = result.data as { service?: Service };
 						if (data?.service) onSuccess?.(data.service);
 						open = false;
+					} else if (result.type === 'failure') {
+						// Lógica de Toast para Erro (Chave estrangeira ou validação)
+						const message = result.data?.message ?? 'Erro ao salvar serviço';
+						toast.error(message);
+						isConfirmingDelete = false; // Volta o botão para o estado original
+					} else if (result.type === 'error') {
+						toast.error('Erro de conexão com o servidor');
 					}
 				};
 			}}

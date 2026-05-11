@@ -52,7 +52,7 @@ export const actions: Actions = {
 			return { success: true };
 		} catch (e: any) {
 			if (e.code === '23514') return fail(400, { message: 'Término deve ser maior que o início.' });
-			return fail(500, { message: 'Erro ao salvar.' });
+			return fail(500, { message: 'Erro interno ao salvar.' });
 		}
 	},
 
@@ -92,7 +92,7 @@ export const actions: Actions = {
 			return { success: true, service: svc };
 		} catch (e) {
 			console.error(e);
-			return fail(500, { message: 'Erro ao salvar serviço.' });
+			return fail(500, { message: 'Erro interno ao salvar serviço.' });
 		}
 	},
 
@@ -122,7 +122,7 @@ export const actions: Actions = {
 		} catch (e: any) {
 			if (e.code === '23503')
 				return fail(400, { message: 'Serviço vinculado a agendamentos existentes.' });
-			return fail(500, { message: 'Erro ao excluir.' });
+			return fail(500, { message: 'Erro interno ao excluir.' });
 		}
 	}
 };

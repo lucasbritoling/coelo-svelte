@@ -163,7 +163,7 @@ export const actions: Actions = {
 
 			return { success: true };
 		} catch (err) {
-			return fail(500, { message: 'Erro ao alterar status.' });
+			return fail(500, { message: 'Erro interno ao alterar status.' });
 		}
 	},
 
@@ -179,7 +179,7 @@ export const actions: Actions = {
             `;
 			return { success: true };
 		} catch (err) {
-			return fail(500, { message: 'Erro ao cancelar.' });
+			return fail(500, { message: 'Erro interno ao cancelar.' });
 		}
 	},
 
@@ -191,7 +191,7 @@ export const actions: Actions = {
 			await sql`DELETE FROM appointments WHERE id = ${id} AND profile_id = ${user.id}`;
 			return { success: true };
 		} catch (err) {
-			return fail(500, { message: 'Erro ao excluir.' });
+			return fail(500, { message: 'Erro interno ao excluir.' });
 		}
 	}
 };

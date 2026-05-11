@@ -96,9 +96,9 @@ export const actions: Actions = {
 		} catch (err: any) {
 			// Tratamento de Foreign Key (ex: serviço em uso em agendamentos)
 			if (err.code === '23503') {
-				return fail(400, { message: 'Serviço vinculado a agendamentos existentes.' });
+				return fail(400, { message: 'Serviço possui agendamentos' });
 			}
-			return fail(500, { message: 'Erro ao excluir serviço.' });
+			return fail(500, { message: 'Erro interno ao excluir serviço' });
 		}
 	},
 
@@ -126,7 +126,7 @@ export const actions: Actions = {
 
 			return { success: true };
 		} catch (err) {
-			return fail(500, { message: 'Erro ao atualizar status.' });
+			return fail(500, { message: 'Erro interno ao atualizar status.' });
 		}
 	}
 };

@@ -51,7 +51,7 @@ export const actions: Actions = {
                 `;
 			} catch (dbError) {
 				console.error('Erro ao atualizar tabela profiles:', dbError);
-				return fail(500, { message: 'Erro ao salvar no banco de dados.' });
+				return fail(500, { message: 'Erro interno ao salvar no banco de dados.' });
 			}
 
 			// 5. UPDATE AUTH METADATA

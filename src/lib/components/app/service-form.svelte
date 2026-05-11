@@ -5,26 +5,32 @@
 	import { Label } from '$lib/components/ui/label';
 	import { Clock, LoaderCircle, CalendarClock, Coffee, Trash2 } from '@lucide/svelte';
 	import { enhance } from '$app/forms';
-	import { toast } from 'svelte-sonner';
+
+	// Definição de interface para melhor DX
+	interface Service {
+		id?: string;
+		name: string;
+		duration: number;
+		min_notice_hours: number;
+		buffer_after_min: number;
+	}
 
 	let {
 		service = null,
 		open = $bindable(),
-		formData,
 		initialName = '',
 		onSuccess
 	} = $props<{
-		service?: any;
+		service?: Service | null;
 		open: boolean;
-		formData?: any;
 		initialName?: string;
-		onSuccess?: (newService: any) => void;
+		onSuccess?: (newService: Service) => void;
 	}>();
 
 	let isLoading = $state(false);
+	let isConfirmingDelete = $state(false);
 
-	// Estado local do formulário usando Runes
-	let formState = $state({
+	let formState = $state<Service>({
 		id: '',
 		name: '',
 		duration: 30,
@@ -32,49 +38,31 @@
 		buffer_after_min: 0
 	});
 
-	let isConfirmingDelete = $state(false);
-
-	// --- Lógica de Foco ---
+	// --- Utilitários ---
 	const isMobile = () => typeof window !== 'undefined' && window.innerWidth < 640;
 
 	const handleOpenAutoFocus = (e: Event) => {
-		if (formState.id && isMobile()) {
-			e.preventDefault();
-		}
+		if (formState.id && isMobile()) e.preventDefault();
 	};
 
 	const focusButton = (node: HTMLElement) => {
-		const btn = node.querySelector('button');
-		btn?.focus();
+		node.querySelector('button')?.focus();
 	};
-	// ---------------------
 
+	// --- Efeitos ---
 	$effect(() => {
-		if (!open) {
-			isConfirmingDelete = false;
-		}
+		if (!open) isConfirmingDelete = false;
 	});
 
-	// Sincroniza o estado quando o modal abre ou o serviço muda
 	$effect(() => {
 		if (open) {
-			if (service) {
-				formState = {
-					id: service.id ?? '',
-					name: service.name ?? '',
-					duration: service.duration ?? 30,
-					min_notice_hours: service.min_notice_hours ?? 2,
-					buffer_after_min: service.buffer_after_min ?? 0
-				};
-			} else {
-				formState = {
-					id: '',
-					name: initialName || '',
-					duration: 30,
-					min_notice_hours: 2,
-					buffer_after_min: 0
-				};
-			}
+			formState = {
+				id: service?.id ?? '',
+				name: service?.name ?? initialName,
+				duration: service?.duration ?? 30,
+				min_notice_hours: service?.min_notice_hours ?? 2,
+				buffer_after_min: service?.buffer_after_min ?? 0
+			};
 		}
 	});
 </script>
@@ -82,7 +70,7 @@
 <Dialog.Root bind:open>
 	<Dialog.Content
 		onOpenAutoFocus={handleOpenAutoFocus}
-		class="flex max-h-[90dvh] flex-col gap-0 p-0 sm:max-w-100"
+		class="flex max-h-[90dvh] flex-col gap-0 p-0 sm:max-w-[400px]"
 	>
 		<Dialog.Header class="shrink-0 border-b px-6 py-4">
 			<Dialog.Title>{formState.id ? 'Editar Serviço' : 'Novo Serviço'}</Dialog.Title>
@@ -94,20 +82,15 @@
 			use:enhance={() => {
 				isLoading = true;
 				return async ({ result, update }) => {
+					// reset: false impede que os inputs limpem antes do modal fechar
 					await update({ reset: false });
 					isLoading = false;
 
 					if (result.type === 'success') {
-						// Agora o dado está exatamente onde a Action colocou: em result.data.service
-						// @ts-ignore
-						const newService = result.data?.service;
-
-						if (newService) {
-							onSuccess?.(newService);
-						}
+						// Tipagem segura sem @ts-ignore
+						const data = result.data as { service?: Service };
+						if (data?.service) onSuccess?.(data.service);
 						open = false;
-					} else if (result.type === 'failure') {
-						// ... erro
 					}
 				};
 			}}
@@ -145,7 +128,7 @@
 					</div>
 				</div>
 
-				<div class="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+				<div class="flex items-center gap-2 mt-2 text-sm font-semibold text-muted-foreground">
 					<CalendarClock class="h-4 w-4" /> Regras de Agendamento
 				</div>
 
@@ -154,9 +137,8 @@
 					<Input
 						id="min_notice_hours"
 						name="min_notice_hours"
-						inputmode="numeric"
-						min={0}
 						type="number"
+						inputmode="numeric"
 						bind:value={formState.min_notice_hours}
 					/>
 				</div>
@@ -170,7 +152,6 @@
 							name="buffer_after_min"
 							type="number"
 							inputmode="numeric"
-							min={0}
 							class="pl-9"
 							bind:value={formState.buffer_after_min}
 						/>
@@ -178,32 +159,25 @@
 				</div>
 			</div>
 
-			<div
-				class="flex shrink-0 gap-3 border-t px-6 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))]"
-			>
+			<div class="flex shrink-0 gap-3 border-t px-6 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
 				{#if formState.id}
-					{#if !isConfirmingDelete}
-						<!-- Primeiro toque: Ativa o estado de confirmação -->
-						<div use:focusButton class="flex-1 sm:hidden">
+					<div use:focusButton class="flex-1 sm:hidden">
+						{#if !isConfirmingDelete}
 							<Button
 								type="button"
 								variant="outline"
 								onclick={() => (isConfirmingDelete = true)}
-								class="flex-1 cursor-pointer border-destructive/20 text-destructive sm:hidden"
+								class="w-full cursor-pointer border-destructive/20 text-destructive"
 							>
-								<Trash2 class="mr-2 h-4 w-4" />
-								Excluir
+								<Trash2 class="mr-2 h-4 w-4" /> Excluir
 							</Button>
-						</div>
-					{:else}
-						<!-- Segundo toque: Executa a exclusão de fato -->
-						<div use:focusButton class="flex-1 sm:hidden">
+						{:else}
 							<Button
 								type="submit"
 								variant="destructive"
 								formaction="/servicos?/delete"
 								disabled={isLoading}
-								class="flex-1 animate-in cursor-pointer duration-200 zoom-in-95 fade-in sm:hidden"
+								class="w-full animate-in zoom-in-95 fade-in cursor-pointer"
 							>
 								{#if isLoading}
 									<LoaderCircle class="h-4 w-4 animate-spin" />
@@ -211,8 +185,8 @@
 									Confirmar?
 								{/if}
 							</Button>
-						</div>
-					{/if}
+						{/if}
+					</div>
 				{/if}
 
 				<Button
@@ -220,14 +194,15 @@
 					disabled={isLoading}
 					onclick={(e) => {
 						if (isConfirmingDelete) {
-							e.preventDefault(); // Garante que não submeta o form
+							e.preventDefault();
 							isConfirmingDelete = false;
 						}
 					}}
 					class="cursor-pointer {formState.id ? 'flex-[2] sm:w-full' : 'w-full'}"
 				>
 					{#if isLoading}
-						<LoaderCircle class="mr-2 h-4 w-4 animate-spin" /> Salvando
+						<LoaderCircle class="mr-2 h-4 w-4 animate-spin" />
+						Salvando
 					{:else}
 						{isConfirmingDelete ? 'Cancelar' : 'Salvar'}
 					{/if}

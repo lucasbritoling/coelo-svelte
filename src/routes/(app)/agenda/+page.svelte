@@ -1,9 +1,9 @@
 <script lang="ts">
+	import { dateUtils } from '$lib/utils/date';
 	import { ui as globalUI } from '$lib/state/ui.svelte';
-	import type { Appointment, AppointmentStatus } from '$lib/types/appointment';
-	import { Copy, MessageCircle, Check, CalendarDays } from '@lucide/svelte';
+	import type { Appointment } from '$lib/types/appointment';
+	import { Copy, Check, CalendarDays } from '@lucide/svelte';
 
-	import { Badge } from '$lib/components/ui/badge';
 	import * as Dialog from '$lib/components/ui/dialog';
 
 	import { page } from '$app/state';
@@ -14,7 +14,6 @@
 	import AgendaStrip from '$lib/components/app/agenda/agenda-strip.svelte';
 	import AppointmentForm from '$lib/components/app/appointment-form.svelte';
 	import AppointmentCard from '$lib/components/app/agenda/appointment-card.svelte';
-	import AppointmentCardAction from '$lib/components/app/appointment-card-action.svelte';
 
 	let { data } = $props<{
 		data: {
@@ -72,14 +71,9 @@
 		})
 	};
 
-	const reactiveNow = $derived(fmt.time.format(new Date(ticker)));
-	const isTodayView = $derived(data.selectedDate === fmt.iso.format(new Date(ticker)));
-
-	const headerLabel = $derived.by(() => {
-		if (isTodayView) return 'Hoje';
-		const [y, m, d] = data.selectedDate.split('-').map(Number);
-		return fmt.header.format(new Date(y, m - 1, d));
-	});
+	const reactiveNow = $derived(dateUtils.toTime(ticker));
+	const isTodayView = $derived(data.selectedDate === dateUtils.today());
+	const headerLabel = $derived(dateUtils.getHeaderLabel(data.selectedDate));
 
 	// ── Navegação ────────────────────────────────────────────────
 	function updateDate(newDate: string) {
@@ -90,10 +84,9 @@
 	}
 
 	function navigateDay(offset: number) {
-		const [y, m, d] = data.selectedDate.split('-').map(Number);
-		const date = new Date(y, m - 1, d);
+		const date = dateUtils.parseISO(data.selectedDate);
 		date.setDate(date.getDate() + offset);
-		updateDate(fmt.iso.format(date));
+		updateDate(dateUtils.fmt.iso.format(date)); // Usa o formatador centralizado
 	}
 
 	// Gestos
@@ -114,12 +107,6 @@
 			past: appointments.filter((a) => a.start_at < reactiveNow)
 		};
 	});
-
-	const STATUS: Record<AppointmentStatus, { label: string; bg: string; text: string }> = {
-		confirmed: { label: 'confirmado', bg: '#EAF3DE', text: '#3B6D11' },
-		pending: { label: 'pendente', bg: '#FAEEDA', text: '#854F0B' },
-		cancelled: { label: 'cancelado', bg: '#FEE2E2', text: '#991B1B' }
-	};
 
 	function soonLabel(t: string) {
 		if (!isTodayView) return '';
@@ -206,7 +193,7 @@
 						{appt}
 						highlighted={isHighlighted}
 						dimmed={isDimmed}
-						soon={title === 'próximo' ? soonLabel(appt.start_at) : null}
+						soon={title === 'próximo' ? dateUtils.getSoonLabel(appt.start_at, ticker) : null}
 					/>
 				{/each}
 			</div>

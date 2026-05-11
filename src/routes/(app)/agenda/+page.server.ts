@@ -1,3 +1,4 @@
+import { dateUtils } from '$lib/utils/date';
 import { fail, redirect, error } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 import { today, getLocalTimeZone } from '@internationalized/date';
@@ -9,14 +10,12 @@ export const load: PageServerLoad = async ({ url, locals: { sql, user } }) => {
 	if (!user) throw redirect(303, '/login');
 
 	// 1. Pega o parâmetro da URL
-	const dateParam = url.searchParams.get('date');
+	const dateParam = url.searchParams.get('date') || dateUtils.today();
 
 	// 2. Se NÃO existir o parâmetro, redireciona para a mesma página com o parâmetro de hoje
 	if (!dateParam) {
-		const todayBrazil = today('America/Sao_Paulo').toString();
-		const newUrl = new URL(url);
-		newUrl.searchParams.set('date', todayBrazil);
-		throw redirect(302, `${newUrl.pathname}${newUrl.search}`);
+		// Caso precise forçar redirecionamento
+		throw redirect(302, `${url.pathname}?date=${dateUtils.today()}`);
 	}
 
 	// 3. Validação estrita (agora temos certeza que dateParam existe)
@@ -80,20 +79,6 @@ export const load: PageServerLoad = async ({ url, locals: { sql, user } }) => {
 		throw error(500, 'Não foi possível carregar a agenda.');
 	}
 };
-
-function formatarHora(val: any): string {
-	if (!val) return '';
-	// Se o Postgres devolver objeto Date
-	if (val instanceof Date) {
-		return val.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-	}
-	// Se devolver string (ex: "2024-05-20 09:00:00")
-	if (typeof val === 'string') {
-		const match = val.match(/(\d{2}:\d{2})/);
-		return match ? match[1] : val;
-	}
-	return String(val);
-}
 
 export const actions: Actions = {
 	create: async ({ request, locals: { sql, user } }) => {

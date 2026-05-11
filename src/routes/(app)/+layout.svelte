@@ -7,7 +7,7 @@
 	<div
 		class="relative flex h-full w-full max-w-md flex-col overflow-hidden bg-background shadow-2xl"
 	>
-		<main class="flex-1 overflow-x-hidden overflow-y-auto pb-32">
+		<main class="flex-1 overflow-x-hidden overflow-y-auto pb-0">
 			{@render children()}
 		</main>
 

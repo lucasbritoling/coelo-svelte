@@ -27,7 +27,7 @@
 	});
 </script>
 
-<div class="no-scrollbar flex gap-2 overflow-x-auto px-5 pt-1 pb-4">
+<div class="no-scrollbar flex gap-2 overflow-x-auto px-5 pt-1 pb-0">
 	{#each strip as day}
 		<button
 			onclick={() => onSelect(day.str)}

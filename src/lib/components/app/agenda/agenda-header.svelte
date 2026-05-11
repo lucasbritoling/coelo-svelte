@@ -26,7 +26,7 @@
 	class="sticky top-0 z-20 border-b border-transparent bg-background/80 backdrop-blur-xl transition-all"
 	class:border-border={!isPickerOpen}
 >
-	<div class="flex items-center justify-between px-5 pt-6 pb-4">
+	<div class="flex items-center justify-between px-5 pt-6 pb-0">
 		<button
 			onclick={onOpenSearch}
 			class="-ml-2 p-2 text-zinc-900 transition-transform active:scale-90"

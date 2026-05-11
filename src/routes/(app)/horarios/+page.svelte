@@ -102,7 +102,8 @@
 
 	function openDialog(override?: any) {
 		if (override) {
-			// Modo Edição: Popula com dados existentes
+			// Edição: o override.date vem do banco como "YYYY-MM-DD",
+			// então o bind no <input type="date"> funciona direto.
 			overrideForm = {
 				id: override.id,
 				date: override.date,
@@ -112,11 +113,17 @@
 				note: override.note ?? ''
 			};
 		} else {
-			// Modo Novo: Reseta para o padrão
+			// NOVO: Pegando "hoje" no fuso de Brasília/Local
+			const now = new Date();
+			const y = now.getFullYear();
+			const m = String(now.getMonth() + 1).padStart(2, '0');
+			const d = String(now.getDate()).padStart(2, '0');
+			const localDate = `${y}-${m}-${d}`;
+
 			overrideForm = {
 				id: null,
-				date: new Date().toISOString().split('T')[0], // Data de hoje como sugestão
-				is_available: false, // Geralmente exceção é para fechar o dia
+				date: localDate, // Agora nunca pula para amanhã às 21h
+				is_available: false,
 				start_time: '09:00',
 				end_time: '18:00',
 				note: ''
@@ -125,8 +132,15 @@
 		dialogOpen = true;
 	}
 
+	function parseLocalDate(dateStr: string) {
+		// dateStr é "YYYY-MM-DD" vindo do Postgres
+		const [year, month, day] = dateStr.split('-').map(Number);
+		// Mês no JS começa em 0, por isso month - 1
+		return new Date(year, month - 1, day);
+	}
+
 	function fmtDate(dateStr: string) {
-		return new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-BR', {
+		return parseLocalDate(dateStr).toLocaleDateString('pt-BR', {
 			weekday: 'short',
 			day: '2-digit',
 			month: 'short'
@@ -134,7 +148,7 @@
 	}
 
 	function fmtDateLong(dateStr: string) {
-		return new Date(dateStr + 'T00:00:00').toLocaleDateString('pt-BR', {
+		return parseLocalDate(dateStr).toLocaleDateString('pt-BR', {
 			weekday: 'long',
 			day: '2-digit',
 			month: 'long'

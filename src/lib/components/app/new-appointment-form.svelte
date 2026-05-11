@@ -1,148 +1,168 @@
 <script lang="ts">
-	import * as Dialog from '$lib/components/ui/dialog';
+	import { enhance } from '$app/forms';
+	import { LoaderCircle, User, Briefcase, Clock, Calendar as CalendarIcon } from '@lucide/svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { Label } from '$lib/components/ui/label';
 	import { Input } from '$lib/components/ui/input';
 	import { Textarea } from '$lib/components/ui/textarea';
-	import { enhance } from '$app/forms';
-	import { LoaderCircle, Calendar as CalendarIcon, User, Briefcase } from '@lucide/svelte';
+	import { dateUtils } from '$lib/utils/date';
 
-	// Importamos o componente B e o estado global de UI
-	import TimePicker from '$lib/components/app/time-picker.svelte';
-	import { ui } from '$lib/state/ui.svelte';
+	// Props que vêm da página pai
+	let {
+		data,
+		initialTime = '',
+		onSuccess
+	} = $props<{
+		data: any;
+		initialTime?: string;
+		onSuccess: () => void;
+	}>();
 
-	let { data } = $props();
-
-	// Estado do formulário usando Runes
+	// Estado do formulário com Runes
 	let formState = $state({
 		customerId: '',
 		serviceId: '',
-		date: data.selectedDate || new Date().toISOString().split('T')[0],
-		time: '',
+		date: data.selectedDate || dateUtils.today(),
+		start_at: initialTime || '',
 		notes: ''
 	});
 
 	let isSubmitting = $state(false);
 
-	// Sincronização com o estado global para o botão "voltar" nativo
-	$effect(() => {
-		ui.isModalOpen = ui.isAppointmentModalOpen;
+	// Lógica reativa para encontrar o serviço selecionado e calcular o fim
+	const selectedService = $derived(data.services.find((s) => s.id === formState.serviceId));
+
+	const end_at = $derived.by(() => {
+		if (!formState.start_at || !selectedService) return '';
+		const [h, m] = formState.start_at.split(':').map(Number);
+		const totalMinutes = h * 60 + m + selectedService.duration;
+		const fh = Math.floor(totalMinutes / 60)
+			.toString()
+			.padStart(2, '0');
+		const fm = (totalMinutes % 60).toString().padStart(2, '0');
+		return `${fh}:${fm}`;
 	});
 </script>
 
-<Dialog.Root bind:open={ui.isAppointmentModalOpen}>
-	<Dialog.Content class="gap-0 overflow-hidden rounded-2xl p-0 sm:max-w-[425px]">
-		<div class="border-b bg-muted/5 p-6">
-			<Dialog.Title class="text-xl font-bold tracking-tight">Novo Agendamento</Dialog.Title>
-			<Dialog.Description class="text-xs">
-				Preencha os detalhes para reservar o horário.
-			</Dialog.Description>
+<form
+	method="POST"
+	action="?/create"
+	use:enhance={() => {
+		isSubmitting = true;
+		return async ({ result }) => {
+			isSubmitting = false;
+			if (result.type === 'success') onSuccess();
+		};
+	}}
+	class="no-scrollbar flex flex-col space-y-6 p-6"
+>
+	<input type="hidden" name="end_at" value={end_at} />
+
+	<div class="space-y-3">
+		<div class="flex items-center gap-2 px-1 text-zinc-400">
+			<User size={14} />
+			<Label class="text-[10px] font-bold tracking-widest uppercase">Cliente</Label>
+		</div>
+		<select
+			name="customer_id"
+			bind:value={formState.customerId}
+			class="h-12 w-full rounded-2xl border border-zinc-100 bg-zinc-50/50 px-4 text-sm font-medium transition-all focus:border-zinc-300 focus:bg-white focus:ring-0"
+			required
+		>
+			<option value="">Quem vai atender?</option>
+			{#each data.customers as customer}
+				<option value={customer.id}>{customer.name}</option>
+			{/each}
+		</select>
+	</div>
+
+	<div class="space-y-3">
+		<div class="flex items-center gap-2 px-1 text-zinc-400">
+			<Briefcase size={14} />
+			<Label class="text-[10px] font-bold tracking-widest uppercase">Serviço</Label>
+		</div>
+		<div class="grid grid-cols-1 gap-2">
+			{#each data.services as service}
+				<button
+					type="button"
+					onclick={() => (formState.serviceId = service.id)}
+					class="flex items-center justify-between rounded-2xl border px-4 py-3 transition-all
+                    {formState.serviceId === service.id
+						? 'border-zinc-900 bg-zinc-900 text-white'
+						: 'border-zinc-100 bg-white text-zinc-600 hover:border-zinc-200'}"
+				>
+					<div class="flex items-center gap-3">
+						<div class="size-2 rounded-full" style="background: {service.color || '#e4e4e7'}"></div>
+						<span class="text-sm font-bold">{service.name}</span>
+					</div>
+					<span class="text-xs opacity-60">{service.duration} min</span>
+				</button>
+			{/each}
+			<input type="hidden" name="service_id" value={formState.serviceId} />
+		</div>
+	</div>
+
+	<hr class="border-zinc-100" />
+
+	<div class="grid grid-cols-2 gap-4">
+		<div class="space-y-2">
+			<Label class="px-1 text-[10px] font-bold text-zinc-400 uppercase">Data</Label>
+			<div class="relative">
+				<Input
+					type="date"
+					name="date"
+					bind:value={formState.date}
+					class="h-12 rounded-2xl border-zinc-100 bg-zinc-50/50 pl-10"
+				/>
+				<CalendarIcon size={14} class="absolute top-1/2 left-4 -translate-y-1/2 text-zinc-400" />
+			</div>
 		</div>
 
-		<form
-			method="POST"
-			action="?/createAppointment"
-			use:enhance={() => {
-				isSubmitting = true;
-				return async ({ result, update }) => {
-					isSubmitting = false;
-					if (result.type === 'success') {
-						ui.isAppointmentModalOpen = false;
-						await update();
-					}
-				};
-			}}
-			class="no-scrollbar max-h-[70vh] space-y-6 overflow-y-auto p-6"
-		>
-			<div class="space-y-3">
-				<div class="flex items-center gap-2 text-muted-foreground">
-					<User class="size-4" />
-					<Label class="text-xs font-bold tracking-wider uppercase">Cliente</Label>
-				</div>
-				<select
-					name="customerId"
-					bind:value={formState.customerId}
-					class="h-10 w-full rounded-lg border bg-background px-3 text-sm focus:ring-2 focus:ring-primary"
-					required
-				>
-					<option value="">Selecionar cliente...</option>
-					{#each data.customers as customer}
-						<option value={customer.id}>{customer.name}</option>
-					{/each}
-				</select>
-			</div>
-
-			<div class="space-y-3">
-				<div class="flex items-center gap-2 text-muted-foreground">
-					<Briefcase class="size-4" />
-					<Label class="text-xs font-bold tracking-wider uppercase">Serviço</Label>
-				</div>
-				<select
-					name="serviceId"
-					bind:value={formState.serviceId}
-					class="h-10 w-full rounded-lg border bg-background px-3 text-sm focus:ring-2 focus:ring-primary"
-					required
-				>
-					<option value="">Qual o serviço?</option>
-					{#each data.services as service}
-						<option value={service.id}>{service.name} ({service.duration}min)</option>
-					{/each}
-				</select>
-			</div>
-
-			<hr class="border-dashed" />
-
-			<div class="space-y-5">
-				<div class="grid grid-cols-2 gap-4">
-					<div class="space-y-2">
-						<Label class="text-[10px] font-bold text-muted-foreground uppercase">Data</Label>
-						<Input type="date" name="date" bind:value={formState.date} class="h-10" />
-					</div>
-
-					<div class="space-y-2">
-						<TimePicker {data} bind:formState />
-						<input type="hidden" name="time" value={formState.time} />
-					</div>
-				</div>
-			</div>
-
-			<div class="space-y-2">
-				<Label class="text-[10px] font-bold text-muted-foreground uppercase"
-					>Observações (Opcional)</Label
-				>
-				<Textarea
-					name="notes"
-					bind:value={formState.notes}
-					placeholder="Ex: Cliente prefere café sem açúcar"
-					class="resize-none rounded-xl"
+		<div class="space-y-2">
+			<Label class="px-1 text-[10px] font-bold text-zinc-400 uppercase">Início</Label>
+			<div class="relative">
+				<Input
+					type="time"
+					name="start_at"
+					bind:value={formState.start_at}
+					class="h-12 rounded-2xl border-zinc-100 bg-zinc-50/50 pl-10"
 				/>
+				<Clock size={14} class="absolute top-1/2 left-4 -translate-y-1/2 text-zinc-400" />
 			</div>
+		</div>
+	</div>
 
-			<div class="pt-4">
-				<Button
-					type="submit"
-					disabled={isSubmitting || !formState.time || !formState.customerId}
-					class="h-12 w-full rounded-xl text-base font-bold transition-all active:scale-[0.98]"
-				>
-					{#if isSubmitting}
-						<LoaderCircle class="mr-2 size-5 animate-spin" />
-						Agendando...
-					{:else}
-						Confirmar Agendamento
-					{/if}
-				</Button>
-			</div>
-		</form>
-	</Dialog.Content>
-</Dialog.Root>
+	{#if end_at}
+		<p class="text-center text-[11px] font-medium text-zinc-400">
+			Término previsto às <span class="font-bold text-zinc-900">{end_at}</span>
+		</p>
+	{/if}
 
-<style>
-	/* Esconde scrollbar mas mantém funcionalidade */
-	.no-scrollbar::-webkit-scrollbar {
-		display: none;
-	}
-	.no-scrollbar {
-		-ms-overflow-style: none;
-		scrollbar-width: none;
-	}
-</style>
+	<div class="space-y-2">
+		<Label class="px-1 text-[10px] font-bold text-zinc-400 uppercase">Notas</Label>
+		<Textarea
+			name="notes"
+			bind:value={formState.notes}
+			placeholder="Algum detalhe importante?"
+			class="min-h-[80px] resize-none rounded-2xl border-zinc-100 bg-zinc-50/50"
+		/>
+	</div>
+
+	<div class="pt-2">
+		<Button
+			type="submit"
+			disabled={isSubmitting ||
+				!formState.start_at ||
+				!formState.customerId ||
+				!formState.serviceId}
+			class="h-14 w-full rounded-2xl bg-zinc-900 text-base font-bold shadow-lg transition-all active:scale-[0.97]"
+		>
+			{#if isSubmitting}
+				<LoaderCircle class="mr-2 size-5 animate-spin" />
+				Salvando...
+			{:else}
+				Agendar Horário
+			{/if}
+		</Button>
+	</div>
+</form>

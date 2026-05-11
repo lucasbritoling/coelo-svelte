@@ -169,10 +169,6 @@
 		/>
 	</div>
 
-	{#if data.customers.length > 0}
-		<p class="text-center select-none">Toque para editar</p>
-	{/if}
-
 	<div class="overflow-hidden rounded-2xl border bg-background shadow-sm">
 		{#each filteredCustomers as customer (customer.id)}
 			<div class="relative border-b last:border-b-0">

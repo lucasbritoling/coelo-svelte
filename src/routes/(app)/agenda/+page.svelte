@@ -13,6 +13,7 @@
 	import AgendaHeader from '$lib/components/app/agenda/agenda-header.svelte';
 	import AgendaStrip from '$lib/components/app/agenda/agenda-strip.svelte';
 	import AppointmentForm from '$lib/components/app/appointment-form.svelte';
+	import AppointmentCard from '$lib/components/app/agenda/appointment-card.svelte';
 	import AppointmentCardAction from '$lib/components/app/appointment-card-action.svelte';
 
 	let { data } = $props<{
@@ -147,7 +148,6 @@
 		onOpenAppointment={() => (ui.modal = true)}
 		onOpenSearch={() => toast('Busca em breve!')}
 	/>
-
 	<AgendaStrip selectedDate={data.selectedDate} onSelect={updateDate} />
 
 	<div class="flex-1 space-y-6 overflow-y-auto px-4 pb-10">
@@ -196,68 +196,22 @@
 		</div>
 	</div>
 </div>
-
 {#snippet section(title: string, list: Appointment[], isHighlighted = false, isDimmed = false)}
 	{#if list && list.length > 0}
 		<div class="space-y-3">
 			<p class="px-2 text-[11px] font-bold tracking-widest text-zinc-400 uppercase">{title}</p>
 			<div class="flex flex-col gap-2">
 				{#each list as appt}
-					{@render card(appt, isHighlighted, isDimmed, title === 'próximo')}
+					<AppointmentCard
+						{appt}
+						highlighted={isHighlighted}
+						dimmed={isDimmed}
+						soon={title === 'próximo' ? soonLabel(appt.start_at) : null}
+					/>
 				{/each}
 			</div>
 		</div>
 	{/if}
-{/snippet}
-
-{#snippet card(appt: Appointment, highlighted = false, dimmed = false, showSoon = false)}
-	{@const soon = soonLabel(appt.start_at)}
-	<div
-		class="flex gap-4 rounded-[30px] border bg-card px-5 py-5 transition-all active:scale-[0.985]
-        {highlighted ? 'border-zinc-200 shadow-md' : 'border-zinc-100'}"
-		class:opacity-40={dimmed}
-	>
-		<div class="flex min-w-[52px] flex-col items-center pt-0.5">
-			<span class="text-[15px] font-bold tabular-nums">{appt.start_at}</span>
-			<div class="my-2 w-px flex-1 bg-zinc-100" style="min-height:20px"></div>
-			<span class="text-[12px] text-zinc-400 tabular-nums">{appt.end_at}</span>
-		</div>
-
-		<div class="min-w-0 flex-1">
-			<div class="flex items-start justify-between gap-3">
-				<div class="min-w-0">
-					<p class="truncate text-[17px] leading-tight font-bold">{appt.customer_name}</p>
-					<p class="mt-1 text-[13px] text-zinc-500">{appt.service_name}</p>
-				</div>
-				<AppointmentCardAction appointmentId={appt.id} appointmentStatus={appt.status} />
-			</div>
-
-			<div class="mt-4 flex items-center gap-2">
-				{#if showSoon && soon}
-					<span class="rounded-full bg-blue-50 px-3 py-1 text-[11px] font-bold text-blue-600"
-						>{soon}</span
-					>
-				{/if}
-				{#if STATUS[appt.status]}
-					<Badge
-						class="rounded-full border-none px-3 py-1 text-[11px] font-bold"
-						style="background:{STATUS[appt.status].bg}; color:{STATUS[appt.status].text}"
-					>
-						{STATUS[appt.status].label}
-					</Badge>
-				{/if}
-				{#if appt.customer_phone}
-					<a
-						href="https://wa.me/{appt.customer_phone.replace(/\D/g, '')}"
-						target="_blank"
-						class="ml-auto text-zinc-400 active:opacity-50"
-					>
-						<MessageCircle size={18} />
-					</a>
-				{/if}
-			</div>
-		</div>
-	</div>
 {/snippet}
 
 <Dialog.Root bind:open={ui.modal}>

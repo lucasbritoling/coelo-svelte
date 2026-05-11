@@ -33,6 +33,22 @@
 	});
 
 	let isConfirmingDelete = $state(false);
+
+	// --- Lógica de Foco ---
+	const isMobile = () => typeof window !== 'undefined' && window.innerWidth < 640;
+
+	const handleOpenAutoFocus = (e: Event) => {
+		if (formState.id && isMobile()) {
+			e.preventDefault();
+		}
+	};
+
+	const focusButton = (node: HTMLElement) => {
+		const btn = node.querySelector('button');
+		btn?.focus();
+	};
+	// ---------------------
+
 	$effect(() => {
 		if (!open) {
 			isConfirmingDelete = false;
@@ -64,7 +80,10 @@
 </script>
 
 <Dialog.Root bind:open>
-	<Dialog.Content class="flex max-h-[90dvh] flex-col gap-0 p-0 sm:max-w-100">
+	<Dialog.Content
+		onOpenAutoFocus={handleOpenAutoFocus}
+		class="flex max-h-[90dvh] flex-col gap-0 p-0 sm:max-w-100"
+	>
 		<Dialog.Header class="shrink-0 border-b px-6 py-4">
 			<Dialog.Title>{formState.id ? 'Editar Serviço' : 'Novo Serviço'}</Dialog.Title>
 		</Dialog.Header>
@@ -165,46 +184,53 @@
 				{#if formState.id}
 					{#if !isConfirmingDelete}
 						<!-- Primeiro toque: Ativa o estado de confirmação -->
-						<Button
-							type="button"
-							variant="outline"
-							onclick={() => (isConfirmingDelete = true)}
-							class="flex-1 cursor-pointer border-destructive/20 text-destructive sm:hidden"
-						>
-							<Trash2 class="mr-2 h-4 w-4" />
-							Excluir
-						</Button>
+						<div use:focusButton class="flex-1 sm:hidden">
+							<Button
+								type="button"
+								variant="outline"
+								onclick={() => (isConfirmingDelete = true)}
+								class="flex-1 cursor-pointer border-destructive/20 text-destructive sm:hidden"
+							>
+								<Trash2 class="mr-2 h-4 w-4" />
+								Excluir
+							</Button>
+						</div>
 					{:else}
 						<!-- Segundo toque: Executa a exclusão de fato -->
-						<Button
-							type="submit"
-							variant="destructive"
-							formaction="/servicos?/delete"
-							disabled={isLoading}
-							class="flex-1 animate-in cursor-pointer duration-200 zoom-in-95 fade-in sm:hidden"
-						>
-							{#if isLoading}
-								<LoaderCircle class="h-4 w-4 animate-spin" />
-							{:else}
-								Confirmar?
-							{/if}
-						</Button>
+						<div use:focusButton class="flex-1 sm:hidden">
+							<Button
+								type="submit"
+								variant="destructive"
+								formaction="/servicos?/delete"
+								disabled={isLoading}
+								class="flex-1 animate-in cursor-pointer duration-200 zoom-in-95 fade-in sm:hidden"
+							>
+								{#if isLoading}
+									<LoaderCircle class="h-4 w-4 animate-spin" />
+								{:else}
+									Confirmar?
+								{/if}
+							</Button>
+						</div>
 					{/if}
 				{/if}
 
 				<Button
-					type="submit"
+					type={isConfirmingDelete ? 'button' : 'submit'}
 					disabled={isLoading}
+					onclick={(e) => {
+						if (isConfirmingDelete) {
+							e.preventDefault(); // Garante que não submeta o form
+							isConfirmingDelete = false;
+						}
+					}}
 					class="cursor-pointer {formState.id ? 'flex-[2] sm:w-full' : 'w-full'}"
 				>
 					{#if isLoading}
 						<LoaderCircle class="mr-2 h-4 w-4 animate-spin" /> Salvando
 					{:else}
-						{isConfirmingDelete ? 'Cancelar' : formState.id ? 'Salvar' : 'Salvar'}
+						{isConfirmingDelete ? 'Cancelar' : 'Salvar'}
 					{/if}
-					<!-- Se o usuário clicar em "Cancelar" (botão principal) enquanto estiver confirmando, voltamos o estado -->
-					<button type="button" class="hidden" onclick={() => (isConfirmingDelete = false)}
-					></button>
 				</Button>
 			</div>
 		</form>

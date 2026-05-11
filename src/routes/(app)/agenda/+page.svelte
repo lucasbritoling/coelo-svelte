@@ -274,96 +274,48 @@
 	ontouchstart={handleTouchStart}
 	ontouchend={handleTouchEnd}
 >
-	<!-- HEADER -->
 	<div
-		class="sticky top-0 z-20 bg-background/80 backdrop-blur-xl"
-		ontouchstart={(e) => e.stopPropagation()}
-		ontouchend={(e) => e.stopPropagation()}
+		class="flex h-full touch-pan-y flex-col bg-background sm:hidden"
+		ontouchstart={handleTouchStart}
+		ontouchend={handleTouchEnd}
 	>
-		<div class="flex items-start justify-between px-5 pt-6 pb-3">
-			<div>
-				<h1
-					class="text-[1.5rem] leading-none font-semibold tracking-tight capitalize"
-					class:opacity-40={navigating.to}
-				>
-					{headerLabel}
-				</h1>
-			</div>
+		<AgendaHeader
+			{headerLabel}
+			selectedDate={data.selectedDate}
+			user={data.user}
+			onDateSelect={handleCalendarSelect}
+			onOpenAppointment={() => (ui.modal = true)}
+			onOpenSearch={() => toast('Busca em breve!')}
+		/>
 
-			<div class="relative size-10 -translate-y-2">
-				<a
-					href="/mais"
-					class="flex size-10 items-center justify-center overflow-hidden rounded-full border border-blue-100/50 bg-blue-50 text-sm font-bold text-blue-600 uppercase shadow-sm transition-all hover:bg-blue-100 active:scale-90"
-				>
-					{#if data.user?.avatar_url}
-						<img
-							src={data.user.avatar_url}
-							alt="Perfil"
-							loading="lazy"
-							class="h-full w-full object-cover"
-						/>
-					{:else}
-						{data.user?.full_name?.charAt(0) ?? 'U'}
-					{/if}
-				</a>
-
-				<Settings
-					size={13}
-					strokeWidth={2.5}
-					class="pointer-events-none absolute -right-1 -bottom-1 text-zinc-600"
-					style="filter: drop-shadow(0 0 2px white) drop-shadow(0 1px 2px rgb(0 0 0 / 0.3))"
-				/>
-			</div>
-		</div>
-
-		<!-- STRIP -->
 		<div
-			class="no-scrollbar flex gap-2 overflow-x-auto px-5 pb-0"
+			class="no-scrollbar flex gap-2 overflow-x-auto px-5 pt-1 pb-4"
 			ontouchstart={(e) => e.stopPropagation()}
 			ontouchend={(e) => e.stopPropagation()}
 		>
 			{#each strip as day}
 				<button
 					onclick={() => updateDate(day.str)}
-					class={`flex min-w-[58px] shrink-0 flex-col items-center rounded-full border py-3 transition-all ${
+					class={`flex min-w-[54px] shrink-0 flex-col items-center rounded-2xl border py-3 transition-all ${
 						day.str === data.selectedDate
-							? 'border-black opacity-100'
-							: 'border-border/40 opacity-45'
+							? 'border-zinc-900 bg-zinc-900 text-white'
+							: 'border-transparent bg-zinc-100 text-zinc-500'
 					}`}
 				>
-					<span
-						class="text-[10px] tracking-wide uppercase"
-						class:text-black={day.str === data.selectedDate}
-						class:text-muted-foreground={day.str !== data.selectedDate}
-					>
-						{day.wd}
-					</span>
-
-					<span
-						class="mt-0.5 text-[16px] leading-none font-medium"
-						class:text-black={day.str === data.selectedDate}
-						class:text-muted-foreground={day.str !== data.selectedDate}
-					>
-						{day.day}
-					</span>
+					<span class="text-[9px] font-bold tracking-widest uppercase">{day.wd}</span>
+					<span class="mt-0.5 text-[15px] font-semibold">{day.day}</span>
 				</button>
 			{/each}
-			<Dialog.Root bind:open={ui.picker}>
-				<Dialog.Trigger
-					ontouchstart={(e) => e.stopPropagation()}
-					ontouchend={(e) => e.stopPropagation()}
-					class="flex min-w-[58px] shrink-0 flex-col items-center justify-center rounded-full border border-border/40 bg-muted/30 py-3 transition-all active:scale-95"
-				>
-					<CalendarDays class="size-5 text-muted-foreground" />
-					<span class="mt-1 text-[9px] font-bold text-muted-foreground uppercase">Ver</span>
-				</Dialog.Trigger>
+		</div>
 
-				<Dialog.Content
-					class="fixed top-[50%] left-[50%] z-50 w-[92vw] max-w-xs translate-x-[-50%] translate-y-[-50%] rounded-[32px] border bg-background p-4 shadow-lg"
-				>
-					<DatePicker value={parseDate(data.selectedDate)} onValueChange={handleCalendarSelect} />
-				</Dialog.Content>
-			</Dialog.Root>
+		<div class="flex-1 overflow-y-auto pb-36">
+			{#if data.appointments.length === 0}{:else if isTodayView}
+				{@render section('próximo', groups.next, true)}
+				{@render section('mais tarde', groups.later)}
+				{@render section('anteriores', groups.past, false, true)}
+			{:else}
+				{@render section('agendamentos', data.appointments)}
+			{/if}
 		</div>
 	</div>
 
@@ -487,14 +439,6 @@
 		</div>
 	</div>
 {/snippet}
-
-<!-- FAB -->
-<button
-	onclick={() => (ui.modal = true)}
-	class="fixed right-5 bottom-24 z-30 flex size-16 items-center justify-center rounded-full bg-black text-white shadow-2xl transition-all active:scale-95 sm:hidden"
->
-	<Plus class="size-7" strokeWidth={2.5} />
-</button>
 
 <!-- DESKTOP -->
 <div class="mx-auto hidden max-w-5xl p-8 sm:block">

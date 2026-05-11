@@ -173,6 +173,80 @@
 	<input type="hidden" name="date" value={selectedDate} />
 	<input type="hidden" name="end_at" value={endTime} />
 
+	<!-- serviço -->
+	<div class="grid gap-2">
+		<Label>Serviço</Label>
+		<Popover.Root bind:open={openService}>
+			<Popover.Trigger>
+				{#snippet child({ props })}
+					<Button
+						{...props}
+						variant="outline"
+						role="combobox"
+						aria-expanded={openService}
+						class="w-full cursor-pointer justify-between font-normal hover:shadow-sm"
+					>
+						<!-- CORREÇÃO: Usando a variável de serviço em vez de cliente -->
+						<span class="max-w-50! truncate xs:max-w-xs!">
+							{selectedServiceName}
+						</span>
+						<ChevronsUpDown class="ml-2 size-4 shrink-0 opacity-50" />
+					</Button>
+				{/snippet}
+			</Popover.Trigger>
+			<Popover.Content class="w-[--bits-popover-anchor-width] p-0" align="start">
+				<Command.Root>
+					<Command.Input placeholder="Buscar serviço..." bind:value={serviceSearch} />
+					<Command.List class="max-h-44 overflow-y-auto">
+						<Command.Empty>
+							<div class="flex flex-col items-center gap-2 px-2 py-4 text-center">
+								<p class="text-sm text-muted-foreground">Serviço não encontrado.</p>
+								<Button
+									variant="secondary"
+									size="sm"
+									class="h-8 w-full"
+									onclick={() => {
+										openService = false;
+										showServiceModal = true;
+									}}
+								>
+									<Plus class="mr-2 size-3" />
+									Criar "{serviceSearch}"
+								</Button>
+							</div>
+						</Command.Empty>
+						<Command.Group>
+							{#each services as service (service.id)}
+								<Command.Item
+									class="flex max-w-65! min-w-0 cursor-pointer items-center xs:max-w-xs!"
+									value={service.name}
+									onSelect={() => {
+										serviceId = service.id;
+										openService = false;
+									}}
+								>
+									<Check
+										class={cn(
+											'mr-2 size-4 shrink-0',
+											serviceId !== service.id && 'text-transparent'
+										)}
+									/>
+									<!-- Layout interno com truncagem para nomes longos de serviço -->
+									<div class="flex min-w-0 flex-1 items-center justify-between">
+										<span class="truncate">{service.name}</span>
+										<span class="ml-2 shrink-0 text-xs text-muted-foreground">
+											{service.duration} min
+										</span>
+									</div>
+								</Command.Item>
+							{/each}
+						</Command.Group>
+					</Command.List>
+				</Command.Root>
+			</Popover.Content>
+		</Popover.Root>
+	</div>
+
 	<!-- Cliente -->
 	<div class="grid gap-2">
 		<Label>Cliente</Label>
@@ -257,79 +331,6 @@
 								Refine a busca para ver mais
 							</div>
 						{/if}
-					</Command.List>
-				</Command.Root>
-			</Popover.Content>
-		</Popover.Root>
-	</div>
-	<!-- serviço -->
-	<div class="grid gap-2">
-		<Label>Serviço</Label>
-		<Popover.Root bind:open={openService}>
-			<Popover.Trigger>
-				{#snippet child({ props })}
-					<Button
-						{...props}
-						variant="outline"
-						role="combobox"
-						aria-expanded={openService}
-						class="w-full cursor-pointer justify-between font-normal hover:shadow-sm"
-					>
-						<!-- CORREÇÃO: Usando a variável de serviço em vez de cliente -->
-						<span class="max-w-50! truncate xs:max-w-xs!">
-							{selectedServiceName}
-						</span>
-						<ChevronsUpDown class="ml-2 size-4 shrink-0 opacity-50" />
-					</Button>
-				{/snippet}
-			</Popover.Trigger>
-			<Popover.Content class="w-[--bits-popover-anchor-width] p-0" align="start">
-				<Command.Root>
-					<Command.Input placeholder="Buscar serviço..." bind:value={serviceSearch} />
-					<Command.List class="max-h-44 overflow-y-auto">
-						<Command.Empty>
-							<div class="flex flex-col items-center gap-2 px-2 py-4 text-center">
-								<p class="text-sm text-muted-foreground">Serviço não encontrado.</p>
-								<Button
-									variant="secondary"
-									size="sm"
-									class="h-8 w-full"
-									onclick={() => {
-										openService = false;
-										showServiceModal = true;
-									}}
-								>
-									<Plus class="mr-2 size-3" />
-									Criar "{serviceSearch}"
-								</Button>
-							</div>
-						</Command.Empty>
-						<Command.Group>
-							{#each services as service (service.id)}
-								<Command.Item
-									class="flex max-w-65! min-w-0 cursor-pointer items-center xs:max-w-xs!"
-									value={service.name}
-									onSelect={() => {
-										serviceId = service.id;
-										openService = false;
-									}}
-								>
-									<Check
-										class={cn(
-											'mr-2 size-4 shrink-0',
-											serviceId !== service.id && 'text-transparent'
-										)}
-									/>
-									<!-- Layout interno com truncagem para nomes longos de serviço -->
-									<div class="flex min-w-0 flex-1 items-center justify-between">
-										<span class="truncate">{service.name}</span>
-										<span class="ml-2 shrink-0 text-xs text-muted-foreground">
-											{service.duration} min
-										</span>
-									</div>
-								</Command.Item>
-							{/each}
-						</Command.Group>
 					</Command.List>
 				</Command.Root>
 			</Popover.Content>

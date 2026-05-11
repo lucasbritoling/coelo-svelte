@@ -118,7 +118,7 @@
 {#if data.uiState === 'unavailable'}
 	<!-- mantém o estado indisponível como estava -->
 {:else}
-	<div class="mx-auto max-w-md px-4 pb-24">
+	<div class="mx-auto max-w-sm px-4 pb-24">
 		<!-- HEADER (inalterado) -->
 		<header class="mb-6 pt-6 text-center">
 			<div class="mx-auto mb-3 size-20 overflow-hidden rounded-full border bg-muted shadow-sm">
@@ -228,6 +228,7 @@
 		{:else if currentStep === 'date'}
 			<Calendar
 				bind:value={calendarValue}
+				fixedWeeks
 				onValueChange={(v) => v && updateDate(v.toString())}
 				class="w-full rounded-xl border"
 				minValue={today(getLocalTimeZone())}

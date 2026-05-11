@@ -49,6 +49,7 @@
 
 	const schedulingLink = $derived(`coelo.dev/${data.username}`);
 
+	// Reatividade baseada na Lib centralizada
 	const reactiveNow = $derived(dateUtils.toTime(ticker));
 	const isTodayView = $derived(data.selectedDate === dateUtils.today());
 	const headerLabel = $derived(dateUtils.getHeaderLabel(data.selectedDate));
@@ -64,20 +65,20 @@
 	function navigateDay(offset: number) {
 		const date = dateUtils.parseISO(data.selectedDate);
 		date.setDate(date.getDate() + offset);
-		updateDate(dateUtils.fmt.iso.format(date)); // Usa o formatador centralizado
+		updateDate(dateUtils.fmt.iso.format(date));
 	}
 
-	// Gestos
 	let touchStartX = 0;
 	function handleTouchEnd(e: TouchEvent) {
 		const dx = touchStartX - e.changedTouches[0].screenX;
 		if (Math.abs(dx) > 80) navigateDay(dx > 0 ? 1 : -1);
 	}
 
-	// ── Organização ──────────────────────────────────────────────
+	// ── Organização de Grupos ────────────────────────────────────
 	const groups = $derived.by(() => {
 		const appointments = data.appointments || [];
 		if (!isTodayView) return { next: [], later: appointments, past: [] };
+
 		const next = appointments.find((a) => a.start_at >= reactiveNow) ?? null;
 		return {
 			next: next ? [next] : [],

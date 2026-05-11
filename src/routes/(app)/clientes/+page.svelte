@@ -134,14 +134,20 @@
 	}
 	// desabilitar autofoco no dialog de edição mobile
 	// Função simples para detectar mobile
-    const isMobile = () => typeof window !== 'undefined' && window.innerWidth < 640;
+	const isMobile = () => typeof window !== 'undefined' && window.innerWidth < 640;
 
-    const handleOpenAutoFocus = (e: { preventDefault: () => void; }) => {
-        // Se estiver editando e for mobile, impede o foco automático
-        if (formState.id && isMobile()) {
-            e.preventDefault();
-        }
-    };
+	const handleOpenAutoFocus = (e: { preventDefault: () => void }) => {
+		// Se estiver editando e for mobile, impede o foco automático
+		if (formState.id && isMobile()) {
+			e.preventDefault();
+		}
+	};
+	// Adicione no seu bloco <script lang="ts">
+	const focusButton = (node: HTMLElement) => {
+		// Busca o botão real dentro do componente e foca nele
+		const btn = node.querySelector('button');
+		btn?.focus();
+	};
 </script>
 
 {#snippet emptyState()}
@@ -391,14 +397,16 @@
 				<div class="flex gap-3">
 					{#if formState.id}
 						{#if !isConfirmingDelete}
-							<Button
-								type="button"
-								variant="outline"
-								onclick={() => (isConfirmingDelete = true)}
-								class="flex-1 cursor-pointer border-destructive/20 text-destructive sm:hidden"
-							>
-								<Trash2 class="mr-2 h-4 w-4" /> Excluir
-							</Button>
+							<div use:focusButton class="flex-1 sm:hidden">
+								<Button
+									type="button"
+									variant="outline"
+									onclick={() => (isConfirmingDelete = true)}
+									class="flex-1 cursor-pointer border-destructive/20 text-destructive sm:hidden"
+								>
+									<Trash2 class="mr-2 h-4 w-4" /> Excluir
+								</Button>
+							</div>
 						{:else}
 							<Button
 								type="submit"

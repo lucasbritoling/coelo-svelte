@@ -2,15 +2,14 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ params, url, locals: { sql, supabase } }) => {
-	const { username } = params;
-	const date = url.searchParams.get('date');
-	const serviceId = url.searchParams.get('serviceId');
+    const { username } = params;
+    const date = url.searchParams.get('date');
+    const serviceId = url.searchParams.get('serviceId');
 
-	try {
-		// 1. Busca perfil e serviços em uma única query
-		const rows = await sql`
-            SELECT 
-                p.id, p.full_name, p.username, p.avatar_url,
+    const [profile] = await sql<any[]>`
+        SELECT 
+            p.id, p.full_name, p.username, p.avatar_url,
+            COALESCE(
                 json_agg(
                     json_build_object(
                         'id', s.id,
@@ -19,123 +18,127 @@ export const load: PageServerLoad = async ({ params, url, locals: { sql, supabas
                         'min_notice_hours', s.min_notice_hours,
                         'buffer_after_min', s.buffer_after_min
                     )
-                ) FILTER (WHERE s.id IS NOT NULL) as services
-            FROM profiles p
-            LEFT JOIN services s ON s.profile_id = p.id AND s.is_active = true
-            WHERE p.username = ${username}
-            GROUP BY p.id
+                ) FILTER (WHERE s.id IS NOT NULL AND s.is_active = true), 
+                '[]'
+            ) as services
+        FROM profiles p
+        LEFT JOIN services s ON s.profile_id = p.id
+        WHERE p.username = ${username}
+        GROUP BY p.id
+    `;
+
+    if (!profile) throw error(404, 'Profissional não encontrado');
+
+    // Processamento de Avatar
+    if (profile.avatar_url) {
+        const { data } = supabase.storage.from('avatars').getPublicUrl(profile.avatar_url);
+        profile.avatar_url = data.publicUrl;
+    }
+
+    const services = profile.services;
+    const activeServicesCount = services.length;
+
+    // 1. Determinar o Estado da UI
+    // 'unavailable' | 'single_service' | 'multiple_services'
+    let uiState: 'unavailable' | 'single_service' | 'multiple_services' = 'multiple_services';
+    
+    if (activeServicesCount === 0) {
+        uiState = 'unavailable';
+    } else if (activeServicesCount === 1) {
+        uiState = 'single_service';
+    }
+
+    // 2. Definir o serviço selecionado logicamente
+    // Se for single_service, ignora o que está na URL e usa o único disponível
+    const selectedService = uiState === 'single_service' 
+        ? services[0] 
+        : services.find((s: any) => s.id === serviceId);
+
+    // 3. Busca de Slots (RPC Cumulativa)
+    let slots = [];
+    if (date && selectedService) {
+        slots = await sql`
+            SELECT slot_start, slot_end 
+            FROM get_available_slots_selfbooking(
+                ${profile.id}, 
+                ${selectedService.id}, 
+                ${date}::date, 
+                ${selectedService.duration}::integer
+            )
         `;
+    }
 
-		const profile = rows[0];
-		if (!profile) throw error(404, 'Profissional não encontrado');
-
-		if (profile.avatar_url) {
-			console.log('--- SERVER DEBUG: AVATAR ---');
-			console.log('Path original do banco:', profile.avatar_url);
-
-			const {
-				data: { publicUrl }
-			} = supabase.storage.from('avatars').getPublicUrl(profile.avatar_url);
-
-			profile.avatar_url = publicUrl;
-			console.log('URL gerada pelo Supabase:', profile.avatar_url);
-		} else {
-			console.log('SERVER DEBUG: Profissional sem avatar_url no banco.');
-		}
-
-		const services = profile.services ?? [];
-		const hasActiveServices = services.length > 0;
-
-		if (!hasActiveServices) {
-			return { professional: profile, services: [], slots: [], hasActiveServices: false };
-		}
-
-		const autoServiceId = services.length === 1 ? String(services[0].id) : null;
-		const effectiveServiceId = serviceId ?? autoServiceId;
-
-		let availableSlots = [];
-
-		// 2. Busca slots usando a função do banco via SQL puro
-		if (date && effectiveServiceId) {
-			const selectedService = services.find((s: any) => s.id == effectiveServiceId);
-
-			if (selectedService) {
-				// Chamada direta da função no Postgres via Hyperdrive
-				availableSlots = await sql`
-                    SELECT * FROM get_available_slots(
-                        ${profile.id}, 
-                        ${selectedService.id}, 
-                        ${date}::date, 
-                        ${selectedService.duration}::smallint
-                    )
-                `;
-			}
-		}
-
-		return {
-			professional: { ...profile, services: undefined },
-			services,
-			slots: availableSlots,
-			selectedDate: date,
-			selectedServiceId: effectiveServiceId,
-			singleService: services.length === 1,
-			hasActiveServices: true
-		};
-	} catch (err: any) {
-		if (err.status === 404) throw err;
-		console.error('Erro na página pública:', err);
-		throw error(500, 'Erro ao carregar dados.');
-	}
+    return {
+        professional: {
+            id: profile.id,
+            full_name: profile.full_name,
+            username: profile.username,
+            avatar_url: profile.avatar_url
+        },
+        services,
+        slots,
+        uiState, // 'unavailable' | 'single_service' | 'multiple_services'
+        selectedDate: date,
+        selectedServiceId: selectedService?.id ?? null
+    };
 };
 
 export const actions: Actions = {
 	finishSelfBooking: async ({ request, locals: { sql } }) => {
-		const formData = await request.formData();
-		const profile_id = formData.get('profile_id') as string;
-		const service_id = formData.get('service_id') as string;
-		const customer_name = formData.get('customer_name') as string;
-		const customer_phone = formData.get('customer_phone') as string;
-		const selected_date = formData.get('selected_date') as string;
-		const slot_start = formData.get('slot_start') as string;
+    const formData = await request.formData();
+    
+    // Captura os dados
+    const profile_id = formData.get('profile_id') as string;
+    const service_id = formData.get('service_id') as string;
+    const customer_name = formData.get('customer_name') as string;
+    const customer_phone = formData.get('customer_phone') as string;
+    const selected_date = formData.get('selected_date') as string;
+    const slot_start = formData.get('slot_start') as string;
 
-		if (!customer_name || !customer_phone || !selected_date || !slot_start) {
-			return fail(400, { message: 'Preencha todos os campos obrigatórios.' });
-		}
+    // 1. VALIDAÇÃO AMPLIADA (Onde o erro estava escapando)
+    // Adicionei profile_id e service_id na checagem obrigatória
+    if (!profile_id || !service_id || !customer_name || !customer_phone || !selected_date || !slot_start) {
+        console.error('--- ERRO DE VALIDAÇÃO ---');
+        console.table({ profile_id, service_id, customer_name, customer_phone, selected_date, slot_start });
+        return fail(400, { message: 'Dados de identificação do agendamento ausentes.' });
+    }
 
-		try {
-			// 1. Forçamos o alias "id" e verificamos o retorno explicitamente
-			const result = await sql`
-                SELECT finish_self_booking(
-                    ${profile_id}::uuid,
-                    ${service_id}::uuid,
-                    ${customer_name},
-                    ${customer_phone},
-                    ${selected_date}::date,
-                    ${slot_start}::time
-                ) as id
-            `;
+    try {
+        // 2. Chamada da RPC com casting explícito
+        const result = await sql`
+            SELECT finish_self_booking(
+                ${profile_id}::uuid,
+                ${service_id}::uuid,
+                ${customer_name},
+                ${customer_phone},
+                ${selected_date}::date,
+                ${slot_start}::time
+            ) as id
+        `;
 
-			// 2. Log para depuração no terminal (Server-side)
-			console.log('Resultado da função SQL:', result);
+        const appointmentId = result[0]?.id;
 
-			const appointmentId = result[0]?.id;
+        if (!appointmentId) {
+            return fail(500, { message: 'O banco de dados não retornou um ID de agendamento.' });
+        }
 
-			if (!appointmentId) {
-				return fail(500, { message: 'Erro interno: ID não gerado pelo banco.' });
-			}
+        return {
+            success: true,
+            appointmentId
+        };
 
-			return {
-				success: true,
-				appointmentId
-			};
-		} catch (err: any) {
-			console.error('Erro no agendamento:', err);
+    } catch (err: any) {
+        // Logs inteligentes para o seu terminal
+        console.error('--- FALHA NA RPC finish_self_booking ---');
+        console.error('Mensagem:', err.message);
+        console.error('Código Postgres:', err.code);
 
-			if (err.code === '23P01' || err.message?.includes('ocupado')) {
-				return fail(400, { message: 'Este horário acabou de ser ocupado por outro cliente.' });
-			}
+        // Erro de concorrência (Horário ocupado entre o clique e o envio)
+        if (err.code === '23P01' || err.message?.includes('ocupado')) {
+            return fail(409, { message: 'Ops! Alguém acabou de reservar esse horário. Por favor, escolha outro.' });
+        }
 
-			return fail(400, { message: err.message || 'Erro ao processar agendamento.' });
-		}
-	}
+        return fail(400, { message: err.message || 'Erro ao processar o agendamento no servidor.' });
+    }
+}
 };

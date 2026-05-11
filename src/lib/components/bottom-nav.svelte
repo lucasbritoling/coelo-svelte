@@ -9,6 +9,16 @@
 		{ title: 'Clientes', href: '/clientes', icon: UsersRound },
 		{ title: 'Serviços', href: '/servicos', icon: BriefcaseBusiness }
 	];
+
+	// Função auxiliar para centralizar a navegação
+	function navigateTo(href: string) {
+		if (page.url.pathname === href) return; // Evita navegar para a mesma página
+
+		goto(href, {
+			replaceState: true, // Aqui está o segredo
+			noScroll: true // Mantém o scroll onde está, útil para PWAs
+		});
+	}
 </script>
 
 <nav
@@ -23,7 +33,7 @@
 	{#each navItems as item}
 		{@const active = page.url.pathname === item.href}
 		<button
-			onclick={() => goto(item.href)}
+			onclick={() => navigateTo(item.href)}
 			onmouseenter={() => preloadData(item.href)}
 			ontouchstart={() => preloadData(item.href)}
 			class="

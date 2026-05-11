@@ -14,6 +14,7 @@
 	import AgendaStrip from '$lib/components/app/agenda/agenda-strip.svelte';
 	import AppointmentForm from '$lib/components/app/appointment-form.svelte';
 	import AppointmentCard from '$lib/components/app/agenda/appointment-card.svelte';
+	import GhostSlot from '$lib/components/app/agenda/ghost-slot.svelte';
 
 	let { data } = $props<{
 		data: {
@@ -43,6 +44,7 @@
 	});
 
 	let ui = $state({ modal: false, copied: false });
+	let selectedTime = $state('');
 	$effect(() => {
 		globalUI.isModalOpen = ui.modal;
 	});
@@ -76,16 +78,31 @@
 
 	// ── Organização de Grupos ────────────────────────────────────
 	const groups = $derived.by(() => {
-		if (!isTodayView) return { past: [], next: null, later: activeApps };
+		const appointments = activeApps; // Apenas os confirmados/concluídos
+		if (!isTodayView) return { past: [], next: null, later: appointments };
 
-		const past = activeApps.filter((a) => a.start_at < reactiveNow);
-		const upcoming = activeApps.filter((a) => a.start_at >= reactiveNow);
+		const past = appointments.filter((a) => a.start_at < reactiveNow);
+		const upcoming = appointments.filter((a) => a.start_at >= reactiveNow);
 
-		return {
-			past,
-			next: upcoming[0] || null,
-			later: upcoming.slice(1)
-		};
+		const next = upcoming[0] || null;
+		const laterRaw = upcoming.slice(1);
+
+		// Injetar Vácuos na lista "Later"
+		const laterWithGaps = [];
+		for (let i = 0; i < laterRaw.length; i++) {
+			const current = laterRaw[i];
+			const prev = i === 0 ? next : laterRaw[i - 1];
+
+			if (prev) {
+				const gapMinutes = calculateGap(prev.end_at, current.start_at);
+				if (gapMinutes >= 30) {
+					laterWithGaps.push({ type: 'gap', duration: gapMinutes, start_at: prev.end_at });
+				}
+			}
+			laterWithGaps.push({ ...current, type: 'appointment' });
+		}
+
+		return { past, next, later: laterWithGaps };
 	});
 
 	// NOVOS
@@ -105,6 +122,12 @@
 		if (hour < 18) return 'TARDE';
 		return 'NOITE';
 	}
+
+	function calculateGap(end: string, nextStart: string) {
+		const [h1, m1] = end.split(':').map(Number);
+		const [h2, m2] = nextStart.split(':').map(Number);
+		return h2 * 60 + m2 - (h1 * 60 + m1);
+	}
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -118,7 +141,10 @@
 		selectedDate={data.selectedDate}
 		user={data.user}
 		onDateSelect={(d) => updateDate(d.toString())}
-		onOpenAppointment={() => (ui.modal = true)}
+		onOpenAppointment={() => {
+			selectedTime = '';
+			ui.modal = true;
+		}}
 		onOpenSearch={() => toast('Busca em breve!')}
 	/>
 	<AgendaStrip selectedDate={data.selectedDate} onSelect={updateDate} />
@@ -177,25 +203,36 @@
 
 			{#if groups.later.length > 0}
 				<section class="space-y-6">
-					{#each groups.later as appt, i}
-						{@const currentPeriod = getPeriod(appt.start_at)}
-						{@const prevAppt = groups.later[i - 1]}
-						{@const prevPeriod = prevAppt
-							? getPeriod(prevAppt.start_at)
-							: groups.next
-								? getPeriod(groups.next.start_at)
-								: null}
+					{#each groups.later as item, i}
+						{#if item.type === 'appointment'}
+							{@const currentPeriod = getPeriod(item.start_at)}
+							{@const prevItem = groups.later[i - 1]}
+							{@const prevPeriod = prevItem
+								? getPeriod(prevItem.start_at)
+								: groups.next
+									? getPeriod(groups.next.start_at)
+									: null}
 
-						{#if currentPeriod !== prevPeriod}
-							<div class="flex items-center gap-4 px-2 pt-2">
-								<span class="text-[10px] font-bold tracking-[0.2em] text-zinc-400 uppercase"
-									>{currentPeriod}</span
-								>
-								<div class="h-px flex-1 bg-zinc-100"></div>
-							</div>
+							{#if currentPeriod !== prevPeriod}
+								<div class="flex items-center gap-4 px-2 pt-2">
+									<span class="text-[10px] font-bold tracking-[0.2em] text-zinc-400 uppercase">
+										{currentPeriod}
+									</span>
+									<div class="h-px flex-1 bg-zinc-100"></div>
+								</div>
+							{/if}
+
+							<AppointmentCard appt={item} />
+						{:else}
+							<GhostSlot
+								duration={item.duration}
+								startAt={item.start_at}
+								onclick={() => {
+									selectedTime = item.start_at;
+									ui.modal = true;
+								}}
+							/>
 						{/if}
-
-						<AppointmentCard {appt} />
 					{/each}
 				</section>
 			{/if}
@@ -256,6 +293,7 @@
 				selectedDate={data.selectedDate}
 				{data}
 				onSuccess={() => (ui.modal = false)}
+				initialTime={selectedTime}
 			/>
 		</div>
 	</Dialog.Content>

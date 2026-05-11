@@ -31,6 +31,7 @@
 	let selectedService = $state<any>(null);
 	let serviceToDelete = $state<{ id: string; name: string } | null>(null);
 	let searchQuery = $state('');
+	let switchVersion = $state(0);
 
 	let filteredServices = $derived(
 		services.filter((s: any) => s.name.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -130,6 +131,7 @@
 	<div class="overflow-hidden rounded-2xl border bg-background shadow-sm">
 		{#each filteredServices as service (service.id)}
 			<div class="relative border-b last:border-b-0">
+				<!-- svelte-ignore a11y_click_events_have_key_events -->
 				<div
 					class="flex items-center gap-3 px-4 py-3.5 transition-colors active:bg-muted/50"
 					class:opacity-40={!service.is_active}
@@ -140,7 +142,12 @@
 					{@render serviceDetails(service)}
 
 					<div onclick={(e) => e.stopPropagation()} role="presentation">
-						<Switch checked={service.is_active} onCheckedChange={(v) => handleToggle(service, v)} />
+						{#key switchVersion}
+							<Switch
+								checked={service.is_active}
+								onCheckedChange={(v) => handleToggle(service, v)}
+							/>
+						{/key}
 					</div>
 					<ChevronRight class="size-4 shrink-0 text-muted-foreground/40" />
 				</div>
@@ -192,10 +199,12 @@
 						</td>
 						<td class="p-3 text-center">
 							<div class="flex justify-center">
-								<Switch
-									checked={service.is_active}
-									onCheckedChange={(v) => handleToggle(service, v)}
-								/>
+								{#key switchVersion}
+									<Switch
+										checked={service.is_active}
+										onCheckedChange={(v) => handleToggle(service, v)}
+									/>
+								{/key}
 							</div>
 						</td>
 						<td class="p-3 text-right">
@@ -244,8 +253,11 @@
 			</AlertDialog.Description>
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
-			<AlertDialog.Cancel onclick={() => (openConfirmToggle = false)}
-				>Manter Online</AlertDialog.Cancel
+			<AlertDialog.Cancel
+				onclick={() => {
+					openConfirmToggle = false;
+					switchVersion++; // Aqui forçamos a reconstrução dos Switches
+				}}>Manter Online</AlertDialog.Cancel
 			>
 			<Button
 				variant="destructive"

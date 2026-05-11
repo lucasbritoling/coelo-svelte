@@ -7,11 +7,13 @@
 	import type { Snippet } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import { fade } from 'svelte/transition';
 
 	let {
 		ref = $bindable(null),
 		value = $bindable(),
 		placeholder = $bindable(),
+		variant = 'default',
 		preventDeselect = true,
 		class: className,
 		weekdayFormat = 'short',
@@ -26,6 +28,7 @@
 		disableDaysOutsideMonth = false,
 		...restProps
 	}: WithoutChildrenOrChild<CalendarPrimitive.RootProps> & {
+		variant?: 'default' | 'booking' | 'agenda';
 		buttonVariant?: ButtonVariant;
 		captionLayout?: 'dropdown' | 'dropdown-months' | 'dropdown-years' | 'label';
 		months?: CalendarPrimitive.MonthSelectProps['months'];
@@ -76,6 +79,7 @@ get along, so we shut typescript up by casting `value` to `never`.
 	bind:value={value as never}
 	bind:ref
 	bind:placeholder
+	data-variant={variant}
 	{preventDeselect}
 	{weekdayFormat}
 	{disableDaysOutsideMonth}
@@ -90,13 +94,15 @@ get along, so we shut typescript up by casting `value` to `never`.
 >
 	{#snippet children({ months, weekdays })}
 		<Calendar.Months>
-			<Calendar.Nav>
+			<Calendar.Nav
+				class="absolute inset-x-0 top-0 z-50 flex h-(--cell-size) items-center justify-between px-1"
+			>
 				<Calendar.PrevButton variant={buttonVariant} class="cursor-pointer" />
 				<Calendar.NextButton variant={buttonVariant} class="cursor-pointer" />
 			</Calendar.Nav>
 			{#each months as month, monthIndex (month)}
 				<Calendar.Month>
-					<Calendar.Header class="h-auto flex-col gap-0 pt-1 pb-2 capitalize">
+					<Calendar.Header class="relative h-auto flex-col gap-0 pt-1 pb-6 capitalize">
 						<Calendar.Caption
 							{captionLayout}
 							months={monthsProp}
@@ -111,10 +117,13 @@ get along, so we shut typescript up by casting `value` to `never`.
 						/>
 
 						{#if isNotCurrentMonth}
-							<div transition:fade={{ duration: 150 }} class="flex w-full justify-center">
+							<div
+								transition:fade={{ duration: 150 }}
+								class="pointer-events-none absolute inset-x-0 top-[calc(var(--cell-size)-2px)] flex justify-center"
+							>
 								<button
 									onclick={goToToday}
-									class="mb-0 cursor-pointer pb-0 text-[10px] font-bold tracking-wider text-muted-foreground/80 uppercase transition-colors hover:text-foreground"
+									class="pointer-events-auto cursor-pointer text-[10px] font-bold tracking-wider text-muted-foreground/80 uppercase transition-colors hover:text-foreground"
 								>
 									Ir para hoje
 								</button>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { ui } from '$lib/state/ui.svelte';
 	import {
 		Plus,
 		Search,
@@ -27,6 +28,19 @@
 	let isLoading = $state(false);
 	let isConfirmingDelete = $state(false);
 	let isSearching = $state(false);
+
+	// Sincroniza Local -> Global
+	$effect(() => {
+		ui.isModalOpen = open || openDelete;
+	});
+
+	// Sincroniza Global -> Local (Botão voltar do celular)
+	$effect(() => {
+		if (!ui.isModalOpen) {
+			open = false;
+			openDelete = false;
+		}
+	});
 
 	// Estado manual do formulário
 	let formState = $state({

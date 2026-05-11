@@ -2,19 +2,42 @@
 	import './layout.css';
 	import { Toaster } from 'svelte-sonner';
 	import { onMount } from 'svelte';
+	import { ui } from '$lib/state/ui.svelte';
 
 	let { children } = $props();
 
 	let isMobile = $state(false);
 
+	$effect(() => {
+		if (ui.isModalOpen) {
+			// Só adiciona no histórico se a entrada atual não for já um modal
+			// Isso evita duplicatas se múltiplos modais abrirem em cadeia
+			if (history.state?.modal !== true) {
+				history.pushState({ modal: true }, '');
+			}
+		}
+	});
+
 	onMount(() => {
 		const checkMobile = () => {
 			isMobile = window.innerWidth < 640; // 640px é o breakpoint 'sm' do Tailwind
 		};
-
 		checkMobile();
 		window.addEventListener('resize', checkMobile);
-		return () => window.removeEventListener('resize', checkMobile);
+
+		const handlePopState = () => {
+			if (ui.isModalOpen) {
+				// Se o usuário clicou em 'voltar' e tinha modal aberto, fechamos o modal
+				ui.closeAll();
+			}
+		};
+		window.addEventListener('popstate', handlePopState);
+
+		return () => {
+			// Limpeza de todos os eventos ao destruir o layout
+			window.removeEventListener('resize', checkMobile);
+			window.removeEventListener('popstate', handlePopState);
+		};
 	});
 </script>
 

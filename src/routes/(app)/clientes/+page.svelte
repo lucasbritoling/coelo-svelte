@@ -132,6 +132,16 @@
 
 		return formatted;
 	}
+	// desabilitar autofoco no dialog de edição mobile
+	// Função simples para detectar mobile
+    const isMobile = () => typeof window !== 'undefined' && window.innerWidth < 640;
+
+    const handleOpenAutoFocus = (e: { preventDefault: () => void; }) => {
+        // Se estiver editando e for mobile, impede o foco automático
+        if (formState.id && isMobile()) {
+            e.preventDefault();
+        }
+    };
 </script>
 
 {#snippet emptyState()}
@@ -310,6 +320,7 @@
 <!-- ────────────────── Dialog Adaptativo ──────────────────────── -->
 <Dialog.Root bind:open>
 	<Dialog.Content
+		onOpenAutoFocus={handleOpenAutoFocus}
 		class="flex max-h-[90dvh] w-[95vw] flex-col gap-0 
            overflow-hidden rounded-xl p-0 sm:max-w-[400px]"
 	>

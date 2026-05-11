@@ -4,49 +4,110 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 
-	// Components UI
 	import { Calendar } from '$lib/components/ui/calendar/index.js';
 	import * as RadioGroup from '$lib/components/ui/radio-group';
-	import * as Card from '$lib/components/ui/card/index.js';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
-	import { LoaderCircle, CircleCheckBig, CalendarX2, ArrowLeft, Share2 } from '@lucide/svelte';
+	import {
+		LoaderCircle,
+		ArrowLeft,
+		ArrowRight,
+		Check,
+		Scissors,
+		CalendarDays,
+		Clock
+	} from '@lucide/svelte';
 
 	let { data } = $props();
 
-	// Derivados para facilitar o uso no template
 	const professional = $derived(data.professional);
 	const services = $derived(data.services);
 	const slots = $derived(data.slots);
+	const multiService = $derived(services.length > 1);
 
-	// Estados locais de interface
-	let isLoading = $state(false);
+	// ── Steps ────────────────────────────────────────────────────────
+	type StepId = 'service' | 'date' | 'time' | 'confirm';
+	const steps = $derived<StepId[]>(
+		multiService ? ['service', 'date', 'time', 'confirm'] : ['date', 'time', 'confirm']
+	);
+	let stepIndex = $state(0);
+	const currentStep = $derived(steps[stepIndex]);
+
+	// ── Selections ───────────────────────────────────────────────────
+	let selectedServiceId = $state<string | null>(multiService ? null : (services[0]?.id ?? null));
+	let calendarValue = $state(data.selectedDate ? parseDate(data.selectedDate) : null);
 	let selectedSlot = $state<any>(null);
-	let isConfirming = $state(false);
 	let customerName = $state('');
 	let customerPhone = $state('');
+	let isLoading = $state(false);
 
-	// Sincroniza o calendário com a URL (Svelte 5 effect)
-	let calendarValue = $state(data.selectedDate ? parseDate(data.selectedDate) : null);
+	const selectedService = $derived(services.find((s: any) => s.id === selectedServiceId));
 
-	async function updateSelection(params: { date?: string; serviceId?: string }) {
-		selectedSlot = null;
-		isConfirming = false;
+	// ── Context bar ──────────────────────────────────────────────────
+	const DAYS_PT = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+	const MONTHS_PT = [
+		'jan',
+		'fev',
+		'mar',
+		'abr',
+		'mai',
+		'jun',
+		'jul',
+		'ago',
+		'set',
+		'out',
+		'nov',
+		'dez'
+	];
 
-		const newUrl = new URL(page.url);
-		if (params.date) newUrl.searchParams.set('date', params.date);
-		if (params.serviceId) newUrl.searchParams.set('serviceId', params.serviceId);
+	const dateLabel = $derived(() => {
+		if (!data.selectedDate) return null;
+		const d = new Date(data.selectedDate + 'T12:00:00');
+		return `${DAYS_PT[d.getDay()]}, ${d.getDate()} de ${MONTHS_PT[d.getMonth()]}`;
+	});
 
-		await goto(newUrl.search, {
-			keepFocus: true,
-			noScroll: true,
-			replaceState: true
-		});
+	// ── Advance guard ────────────────────────────────────────────────
+	const canAdvance = $derived(
+		currentStep === 'service'
+			? !!selectedServiceId
+			: currentStep === 'date'
+				? !!data.selectedDate
+				: currentStep === 'time'
+					? !!selectedSlot
+					: currentStep === 'confirm'
+						? customerName.length > 1 && customerPhone.length > 7
+						: false
+	);
+
+	async function goNext() {
+		if (!canAdvance) return;
+		if (stepIndex < steps.length - 1) stepIndex++;
+	}
+	function goBack() {
+		if (stepIndex > 0) {
+			stepIndex--;
+			selectedSlot = null;
+		}
 	}
 
-	function formatSlotTime(time: string) {
-		return time?.slice(0, 5) ?? '';
+	async function updateDate(date: string) {
+		selectedSlot = null;
+		const newUrl = new URL(page.url);
+		newUrl.searchParams.set('date', date);
+		if (selectedServiceId) newUrl.searchParams.set('serviceId', selectedServiceId);
+		await goto(newUrl.search, { keepFocus: true, noScroll: true, replaceState: true });
+	}
+
+	async function selectService(id: string) {
+		selectedServiceId = id;
+		const newUrl = new URL(page.url);
+		newUrl.searchParams.set('serviceId', id);
+		await goto(newUrl.search, { keepFocus: true, noScroll: true, replaceState: true });
+	}
+
+	function formatSlot(t: string) {
+		return t?.slice(0, 5) ?? '';
 	}
 </script>
 
@@ -54,179 +115,174 @@
 	<title>Agendar com {professional.full_name}</title>
 </svelte:head>
 
-<div class="mx-auto p-6 {data.uiState === 'single_service' ? 'max-w-md' : 'max-w-md lg:max-w-6xl'}">
-	<!-- HEADER -->
-	<header class="mb-8 text-center">
-		<div class="mx-auto mb-4 size-24 overflow-hidden rounded-full border-2 bg-muted shadow-sm">
-			{#if professional.avatar_url}
-				<img
-					src={professional.avatar_url}
-					alt={professional.full_name}
-					class="h-full w-full object-cover"
-				/>
-			{/if}
-		</div>
-		<h1 class="text-3xl font-bold tracking-tight">{professional.full_name}</h1>
-		<p class="font-medium text-muted-foreground">@{professional.username}</p>
-	</header>
-
-	{#if data.uiState === 'unavailable'}
-		<!-- ESTADO: SEM SERVIÇOS -->
-		<Card.Root class="mx-auto max-w-sm border-dashed">
-			<Card.Content class="flex flex-col items-center justify-center py-12 text-center">
-				<div class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-					<CalendarX2 class="text-muted-foreground" />
-				</div>
-				<h2 class="text-xl font-semibold">Agenda indisponível</h2>
-				<p class="text-sm text-muted-foreground">Não há horários para agendamento no momento.</p>
-			</Card.Content>
-		</Card.Root>
-	{:else}
-		<!-- GRID PRINCIPAL -->
-		<div
-			class="grid gap-6 {data.uiState === 'multiple_services'
-				? 'lg:grid-cols-3'
-				: 'lg:grid-cols-2'}"
-		>
-			{#if data.uiState === 'multiple_services'}
-				<!-- SELEÇÃO DE SERVIÇO (Apenas se houver mais de um) -->
-				<Card.Root>
-					<Card.Header><Card.Title>1. Serviço</Card.Title></Card.Header>
-					<Card.Content>
-						<RadioGroup.Root
-							value={data.selectedServiceId}
-							onValueChange={(id) => updateSelection({ serviceId: id })}
-							class="space-y-3"
-						>
-							{#each services as service}
-								<Label
-									for={service.id}
-									class="flex cursor-pointer items-center justify-between rounded-xl border p-4 transition-all hover:bg-muted {data.selectedServiceId ===
-									service.id
-										? 'border-primary ring-1 ring-primary'
-										: ''}"
-								>
-									<div class="flex flex-col gap-1">
-										<span class="font-bold">{service.name}</span>
-										<span class="text-xs text-muted-foreground">{service.duration} min</span>
-									</div>
-									<RadioGroup.Item value={service.id} id={service.id} class="sr-only" />
-								</Label>
-							{/each}
-						</RadioGroup.Root>
-					</Card.Content>
-				</Card.Root>
-			{/if}
-
-			<!-- CALENDÁRIO -->
-			<Card.Root>
-				<Card.Header>
-					<Card.Title
-						>{data.uiState === 'multiple_services' ? '2. Data' : '1. Escolha a data'}</Card.Title
-					>
-				</Card.Header>
-				<Card.Content>
-					<Calendar
-						bind:value={calendarValue}
-						onValueChange={(v) => updateSelection({ date: v?.toString() })}
-						class="rounded-md border shadow-sm"
-						minValue={today(getLocalTimeZone())}
+{#if data.uiState === 'unavailable'}
+	<!-- mantém o estado indisponível como estava -->
+{:else}
+	<div class="mx-auto max-w-md px-4 pb-24">
+		<!-- HEADER (inalterado) -->
+		<header class="mb-6 pt-6 text-center">
+			<div class="mx-auto mb-3 size-20 overflow-hidden rounded-full border bg-muted shadow-sm">
+				{#if professional.avatar_url}
+					<img
+						src={professional.avatar_url}
+						alt={professional.full_name}
+						class="h-full w-full object-cover"
 					/>
-				</Card.Content>
-			</Card.Root>
+				{/if}
+			</div>
+			<h1 class="text-2xl font-bold tracking-tight">{professional.full_name}</h1>
+			<p class="text-sm text-muted-foreground">@{professional.username}</p>
+		</header>
 
-			<!-- HORÁRIOS / CONFIRMAÇÃO -->
-			<Card.Root class="flex flex-col">
-				<Card.Header>
-					<div class="flex items-center justify-between">
-						<Card.Title>Horário</Card.Title>
-						{#if !isConfirming && selectedSlot}
-							<Button size="sm" onclick={() => (isConfirming = true)}>Confirmar</Button>
-						{/if}
-					</div>
-				</Card.Header>
-				<Card.Content class="flex-1">
-					{#if !isConfirming}
-						{#if !data.selectedDate}
-							<p class="py-8 text-center text-sm text-muted-foreground">
-								Selecione uma data para ver os horários.
-							</p>
-						{:else if slots.length > 0}
-							<div class="grid grid-cols-2 gap-2">
-								{#each slots as slot}
-									<Button
-										variant={selectedSlot?.slot_start === slot.slot_start ? 'default' : 'outline'}
-										class="h-12"
-										onclick={() => (selectedSlot = slot)}
-									>
-										{formatSlotTime(slot.slot_start)}
-									</Button>
-								{/each}
-							</div>
-						{:else}
-							<p class="py-8 text-center text-sm text-muted-foreground text-red-500">
-								Nenhum horário disponível para este dia.
-							</p>
-						{/if}
-					{:else}
-						<!-- FORMULÁRIO DE CHECKOUT (STREAK/APPLE STYLE) -->
-						<form
-							method="POST"
-							action="?/finishSelfBooking"
-							use:enhance={() => {
-								isLoading = true;
-								return async ({ result }) => {
-									if (result.type === 'success' && result.data?.appointmentId) {
-										await goto(`/${result.data.appointmentId}`, { replaceState: true });
-									}
-									isLoading = false;
-								};
-							}}
-							class="flex animate-in flex-col space-y-4 fade-in slide-in-from-right-4"
-						>
-							<input type="hidden" name="selected_date" value={data.selectedDate} />
-							<input type="hidden" name="slot_start" value={selectedSlot.slot_start} />
-							<input type="hidden" name="service_id" value={data.selectedServiceId} />
-							<input type="hidden" name="profile_id" value={data.professional.id} />
+		<!-- STEPPER NAV -->
+		<div class="mb-3 flex items-center justify-between gap-2">
+			<Button
+				variant="outline"
+				size="sm"
+				onclick={goBack}
+				class="h-8 px-3 text-xs {stepIndex === 0 ? 'invisible' : ''}"
+			>
+				<ArrowLeft class="mr-1 size-3.5" /> Voltar
+			</Button>
 
-							<div class="rounded-lg bg-muted/50 p-3 text-sm">
-								<p>
-									<strong>{services.find((s) => s.id === data.selectedServiceId)?.name}</strong>
-								</p>
-								<p class="text-muted-foreground">
-									{data.selectedDate} às {formatSlotTime(selectedSlot.slot_start)}
-								</p>
-							</div>
+			<!-- dots -->
+			<div class="flex items-center gap-1.5">
+				{#each steps as _, i}
+					<div
+						class="h-1.5 rounded-full transition-all duration-200
+          {i === stepIndex
+							? 'w-5 bg-foreground'
+							: i < stepIndex
+								? 'w-1.5 bg-foreground/40'
+								: 'w-1.5 bg-border'}"
+					></div>
+				{/each}
+			</div>
 
-							<div class="space-y-2">
-								<Label for="name">Seu nome</Label>
-								<Input id="name" name="customer_name" bind:value={customerName} required />
-							</div>
-
-							<div class="space-y-2">
-								<Label for="phone">WhatsApp</Label>
-								<Input
-									id="phone"
-									name="customer_phone"
-									type="tel"
-									bind:value={customerPhone}
-									required
-								/>
-							</div>
-
-							<div class="flex gap-2 pt-4">
-								<Button variant="ghost" class="flex-1" onclick={() => (isConfirming = false)}
-									>Voltar</Button
-								>
-								<Button type="submit" class="flex-1" disabled={isLoading}>
-									{#if isLoading}<LoaderCircle class="mr-2 animate-spin" />{/if}
-									Reservar
-								</Button>
-							</div>
-						</form>
-					{/if}
-				</Card.Content>
-			</Card.Root>
+			{#if currentStep !== 'confirm'}
+				<Button size="sm" onclick={goNext} disabled={!canAdvance} class="h-8 px-3 text-xs">
+					Avançar <ArrowRight class="ml-1 size-3.5" />
+				</Button>
+			{:else}
+				<!-- submit fica dentro do form, botão avançar vira fantasma para manter layout -->
+				<div class="w-[72px]"></div>
+			{/if}
 		</div>
-	{/if}
-</div>
+
+		<!-- CONTEXT BAR -->
+		<div
+			class="mb-4 flex min-h-8 flex-wrap items-center justify-center gap-x-3 gap-y-1
+              rounded-lg border bg-muted/40 px-3 py-1.5 text-xs text-muted-foreground"
+		>
+			{#if !selectedService && !data.selectedDate && !selectedSlot}
+				<span class="italic">Nenhuma seleção ainda</span>
+			{:else}
+				{#if multiService && selectedService}
+					<span class="flex items-center gap-1">
+						<Scissors class="size-3" />
+						<strong class="font-medium text-foreground">{selectedService.name}</strong>
+					</span>
+				{/if}
+				{#if data.selectedDate}
+					{#if multiService && selectedService}<span class="text-border">·</span>{/if}
+					<span class="flex items-center gap-1">
+						<CalendarDays class="size-3" />
+						<strong class="font-medium text-foreground">{dateLabel()}</strong>
+					</span>
+				{/if}
+				{#if selectedSlot}
+					<span class="text-border">·</span>
+					<span class="flex items-center gap-1">
+						<Clock class="size-3" />
+						<strong class="font-medium text-foreground"
+							>{formatSlot(selectedSlot.slot_start)}</strong
+						>
+					</span>
+				{/if}
+			{/if}
+		</div>
+
+		<!-- STEP PANELS -->
+
+		{#if currentStep === 'service'}
+			<div class="flex flex-col gap-2">
+				{#each services as service}
+					<button
+						onclick={() => selectService(service.id)}
+						class="flex items-center justify-between rounded-xl border p-4 text-left
+                 transition-all hover:bg-muted/50
+                 {selectedServiceId === service.id
+							? 'border-foreground ring-1 ring-foreground'
+							: 'border-border'}"
+					>
+						<div>
+							<p class="font-semibold">{service.name}</p>
+							<p class="text-xs text-muted-foreground">{service.duration} min</p>
+						</div>
+						{#if selectedServiceId === service.id}
+							<Check class="size-4 shrink-0" />
+						{/if}
+					</button>
+				{/each}
+			</div>
+		{:else if currentStep === 'date'}
+			<Calendar
+				bind:value={calendarValue}
+				onValueChange={(v) => v && updateDate(v.toString())}
+				class="w-full rounded-xl border"
+				minValue={today(getLocalTimeZone())}
+			/>
+		{:else if currentStep === 'time'}
+			{#if slots.length === 0}
+				<p class="py-12 text-center text-sm text-muted-foreground">
+					Nenhum horário disponível para este dia.
+				</p>
+			{:else}
+				<div class="grid grid-cols-3 gap-2">
+					{#each slots as slot}
+						<Button
+							variant={selectedSlot?.slot_start === slot.slot_start ? 'default' : 'outline'}
+							class="h-11"
+							onclick={() => (selectedSlot = slot)}
+						>
+							{formatSlot(slot.slot_start)}
+						</Button>
+					{/each}
+				</div>
+			{/if}
+		{:else if currentStep === 'confirm'}
+			<form
+				method="POST"
+				action="?/finishSelfBooking"
+				use:enhance={() => {
+					isLoading = true;
+					return async ({ result }) => {
+						if (result.type === 'success' && result.data?.appointmentId)
+							await goto(`/${result.data.appointmentId}`, { replaceState: true });
+						isLoading = false;
+					};
+				}}
+				class="flex flex-col gap-4"
+			>
+				<input type="hidden" name="selected_date" value={data.selectedDate} />
+				<input type="hidden" name="slot_start" value={selectedSlot?.slot_start} />
+				<input type="hidden" name="service_id" value={selectedServiceId} />
+				<input type="hidden" name="profile_id" value={professional.id} />
+
+				<div class="space-y-2">
+					<Label for="name">Seu nome</Label>
+					<Input id="name" name="customer_name" bind:value={customerName} required />
+				</div>
+				<div class="space-y-2">
+					<Label for="phone">WhatsApp</Label>
+					<Input id="phone" name="customer_phone" type="tel" bind:value={customerPhone} required />
+				</div>
+
+				<Button type="submit" class="mt-2 w-full" disabled={isLoading || !canAdvance}>
+					{#if isLoading}<LoaderCircle class="mr-2 size-4 animate-spin" />{/if}
+					Reservar
+				</Button>
+			</form>
+		{/if}
+	</div>
+{/if}

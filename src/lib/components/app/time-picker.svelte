@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Label } from '$lib/components/ui/label';
 	import { Input } from '$lib/components/ui/input';
-	import { generateSmartSlots } from '$lib/helpers/slots.ts';
+	import { generateSmartSlots } from '$lib/services/slots.ts';
 
 	// Recebemos o data (com agendamentos e regras) e o formState (bindable)
 	let { data, formState = $bindable() } = $props();

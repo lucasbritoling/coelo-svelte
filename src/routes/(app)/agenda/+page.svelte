@@ -14,6 +14,7 @@
 	import DatePicker from '$lib/components/date-picker.svelte';
 	import { parseDate, getLocalTimeZone } from '@internationalized/date';
 
+	import AgendaHeader from '$lib/components/app/agenda/agenda-header.svelte';
 	import AppointmentForm from '$lib/components/app/appointment-form.svelte';
 	import AppointmentCardAction from '$lib/components/app/appointment-card-action.svelte';
 

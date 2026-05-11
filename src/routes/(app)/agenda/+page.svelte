@@ -49,28 +49,6 @@
 
 	const schedulingLink = $derived(`coelo.dev/${data.username}`);
 
-	// ── Formatação Local (Somente o necessário para a página) ────
-	const fmt = {
-		iso: new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Sao_Paulo' }),
-		time: new Intl.DateTimeFormat('pt-BR', {
-			timeZone: 'America/Sao_Paulo',
-			hour: '2-digit',
-			minute: '2-digit',
-			hour12: false
-		}),
-		header: new Intl.DateTimeFormat('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' }),
-		full: new Intl.DateTimeFormat('en-US', {
-			timeZone: 'America/Sao_Paulo',
-			year: 'numeric',
-			month: 'numeric',
-			day: 'numeric',
-			hour: 'numeric',
-			minute: 'numeric',
-			second: 'numeric',
-			hour12: false
-		})
-	};
-
 	const reactiveNow = $derived(dateUtils.toTime(ticker));
 	const isTodayView = $derived(data.selectedDate === dateUtils.today());
 	const headerLabel = $derived(dateUtils.getHeaderLabel(data.selectedDate));
@@ -107,18 +85,6 @@
 			past: appointments.filter((a) => a.start_at < reactiveNow)
 		};
 	});
-
-	function soonLabel(t: string) {
-		if (!isTodayView) return '';
-		const [h, m] = t.split(':').map(Number);
-		const nowInSP = new Date(fmt.full.format(new Date(ticker)));
-		const target = new Date(nowInSP);
-		target.setHours(h, m, 0, 0);
-		const diff = Math.floor((target.getTime() - nowInSP.getTime()) / 60000);
-		if (diff <= 0 && diff > -30) return 'agora';
-		if (diff < 60 && diff > 0) return `em ${diff} min`;
-		return '';
-	}
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->

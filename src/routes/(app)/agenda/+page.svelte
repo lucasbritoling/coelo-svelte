@@ -164,6 +164,7 @@
 	}
 </script>
 
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
 	class="flex h-full touch-pan-y flex-col"
 	ontouchstart={handleTouchStart}

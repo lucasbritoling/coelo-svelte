@@ -338,15 +338,10 @@
 			method="POST"
 			action="?/upsert"
 			class="flex flex-1 flex-col overflow-hidden"
-			use:enhance={({ cancel, submitter }) => {
-				if (isConfirmingDelete && submitter?.getAttribute('formaction') !== '?/delete') {
-					cancel();
-					isConfirmingDelete = false;
-					return;
-				}
+			use:enhance={() => {
 				isLoading = true;
 				return async ({ result, update }) => {
-					await update();
+					await update({ reset: false }); // Recomendado para evitar piscar campos
 					isLoading = false;
 					if (result.type === 'success') {
 						open = false;
@@ -425,12 +420,19 @@
 					{/if}
 
 					<Button
-						type="submit"
+						type={isConfirmingDelete ? 'button' : 'submit'}
 						disabled={isLoading}
+						onclick={(e) => {
+							if (isConfirmingDelete) {
+								e.preventDefault();
+								isConfirmingDelete = false;
+							}
+						}}
 						class="cursor-pointer {formState.id ? 'flex-[2] sm:w-full' : 'w-full'}"
 					>
 						{#if isLoading}
-							<LoaderCircle class="mr-2 h-4 w-4 animate-spin" /> Salvando
+							<LoaderCircle class="mr-2 h-4 w-4 animate-spin" />
+							Salvando
 						{:else}
 							{isConfirmingDelete ? 'Cancelar' : formState.id ? 'Salvar' : 'Salvar'}
 						{/if}

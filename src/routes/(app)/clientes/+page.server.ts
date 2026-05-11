@@ -88,12 +88,12 @@ export const actions: Actions = {
 			// Código 23503 é Foreign Key Violation no Postgres
 			if (error.code === '23503') {
 				return fail(400, {
-					message: 'Não é possível excluir: este cliente possui agendamentos vinculados'
+					message: 'Cliente possui agendamentos'
 				});
 			}
 
 			console.error('Erro ao deletar:', error);
-			return fail(500, { message: 'Não foi possível excluir o cliente.' });
+			return fail(500, { message: 'Erro interno ao tentar excluir o cliente.' });
 		}
 	}
 };

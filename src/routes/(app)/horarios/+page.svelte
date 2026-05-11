@@ -65,7 +65,7 @@
 		return async ({ result, update }: any) => {
 			isSavingSchedule = false;
 			if (result.type === 'success') {
-				toast.success('Agenda atualizada!');
+				toast.success('Rotina atualizada!');
 				await update({ invalidateAll: true });
 			}
 		};

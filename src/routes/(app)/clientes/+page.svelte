@@ -17,6 +17,7 @@
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import { toast } from 'svelte-sonner';
 
 	let { data } = $props();
 
@@ -341,10 +342,17 @@
 			use:enhance={() => {
 				isLoading = true;
 				return async ({ result, update }) => {
-					await update({ reset: false }); // Recomendado para evitar piscar campos
+					await update({ reset: false });
 					isLoading = false;
+
 					if (result.type === 'success') {
+						toast.success('Cliente excluído');
 						open = false;
+					} else if (result.type === 'failure') {
+						// Captura a mensagem enviada pelo fail() no servidor
+						const message = result.data?.message ?? 'Ocorreu um erro ao excluir.';
+						toast.error(message);
+						isConfirmingDelete = false;
 					}
 				};
 			}}

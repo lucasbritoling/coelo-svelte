@@ -32,11 +32,13 @@
 
 	// ── Rotina semanal ─────────────────────────────────────────────
 	const mapDays = (days: WorkingDay[]) =>
-		days.map((d) => ({
-			...d,
-			start_time: d.start_time?.slice(0, 5) ?? '09:00',
-			end_time: d.end_time?.slice(0, 5) ?? '18:00'
-		}));
+		days
+			.map((d) => ({
+				...d,
+				start_time: d.start_time?.slice(0, 5) ?? '09:00',
+				end_time: d.end_time?.slice(0, 5) ?? '18:00'
+			}))
+			.sort((a, b) => a.day_of_week - b.day_of_week);
 
 	// 2. Inicialize o estado diretamente
 	let localDays = $state(mapDays(data.workingHours));
@@ -170,7 +172,7 @@
 				class="min-w-[40px] text-[13px] font-bold text-zinc-900 capitalize sm:w-28 sm:text-sm dark:text-white"
 			>
 				{new Intl.DateTimeFormat('pt-BR', { weekday: isDesktop ? 'long' : 'short' })
-					.format(new Date(2024, 0, day.day_of_week + 1))
+					.format(new Date(2025, 0, 5 + day.day_of_week))
 					.replace('.', '')}
 			</label>
 		</div>

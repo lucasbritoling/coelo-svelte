@@ -98,6 +98,23 @@
 		const fm = (totalMinutes % 60).toString().padStart(2, '0');
 		return `${fh}:${fm}`;
 	});
+
+	function handleTimeInput(e: Event) {
+        const input = e.target as HTMLInputElement;
+        // Remove tudo que não é dígito
+        let value = input.value.replace(/\D/g, '');
+        
+        // Limita a 4 dígitos
+        if (value.length > 4) value = value.slice(0, 4);
+        
+        // Aplica a máscara HH:mm
+        if (value.length >= 3) {
+            value = value.slice(0, 2) + ':' + value.slice(2);
+        }
+        
+        formState.start_at = value;
+        input.value = value; // Sincroniza o valor visual
+    }
 </script>
 
 <Dialog.Root bind:open>
@@ -255,19 +272,23 @@
 				{/if}
 
 				<div class="space-y-2">
-					<Label class="px-1 text-[10px] font-bold text-zinc-400 uppercase"
-						>Início do Atendimento</Label
-					>
-					<div class="relative">
-						<Input
-							type="time"
-							name="start_at"
-							bind:value={formState.start_at}
-							class="h-12 rounded-2xl border-zinc-100 bg-zinc-50/50 pl-10 text-base"
-						/>
-						<Clock size={16} class="absolute top-1/2 left-4 -translate-y-1/2 text-zinc-400" />
-					</div>
-				</div>
+                    <Label class="px-1 text-[10px] font-bold text-zinc-400 uppercase"
+                        >Início do Atendimento</Label
+                    >
+                    <div class="relative">
+                        <Input
+                            type="text" 
+                            inputmode="numeric"
+                            placeholder="00:00"
+                            name="start_at"
+                            maxlength={5}
+                            value={formState.start_at}
+                            oninput={handleTimeInput}
+                            class="h-12 rounded-2xl border-zinc-100 bg-zinc-50/50 pl-10 text-base font-medium focus:bg-white transition-colors"
+                        />
+                        <Clock size={16} class="absolute top-1/2 left-4 -translate-y-1/2 text-zinc-400" />
+                    </div>
+                </div>
 
 				{#if end_at}
 					<div class="rounded-2xl bg-zinc-50 py-3 text-center transition-all">

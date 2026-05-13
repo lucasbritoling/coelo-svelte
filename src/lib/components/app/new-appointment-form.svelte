@@ -270,8 +270,6 @@
 					<input type="hidden" name="service_id" value={data.services[0].id} />
 				{/if}
 
-				<hr class="border-zinc-100" />
-
 				<div class="space-y-2">
 					<Label class="px-1 text-[10px] font-bold text-zinc-400 uppercase"
 						>Início do Atendimento</Label

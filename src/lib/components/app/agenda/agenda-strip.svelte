@@ -28,28 +28,28 @@
 </script>
 
 <div class="no-scrollbar flex gap-3 overflow-x-auto px-5 pb-3">
-	{#each strip as day}
-		<button
-			onclick={() => onSelect(day.str)}
-			class="flex min-w-[50px] shrink-0 flex-col items-center gap-0.5 rounded-full border py-3 transition-all active:scale-90
-            {day.str === selectedDate
-				? 'border-foreground opacity-100'
-				: 'border-foreground/10 opacity-60'}"
-		>
-			<span
-				class="text-[9px] tracking-wide uppercase
+    {#each strip as day}
+        <button
+            onclick={() => onSelect(day.str)}
+            class="flex aspect-square h-14 shrink-0 flex-col items-center justify-center rounded-full border transition-all active:scale-95
+            {day.str === selectedDate 
+                ? 'border-foreground opacity-100' 
+                : 'border-foreground/10 opacity-60'}"
+        >
+            <span
+                class="text-[9px] font-medium tracking-wide uppercase leading-none
                 {day.str === selectedDate ? 'text-foreground' : 'text-muted-foreground'}"
-			>
-				{day.wd}
-			</span>
-			<span
-				class="text-[14px] leading-tight font-medium
+            >
+                {day.wd}
+            </span>
+            <span
+                class="text-[16px] font-semibold leading-none mt-0.5
                 {day.str === selectedDate ? 'text-foreground' : 'text-muted-foreground'}"
-			>
-				{day.day}
-			</span>
-		</button>
-	{/each}
+            >
+                {day.day}
+            </span>
+        </button>
+    {/each}
 </div>
 
 <style>

@@ -17,7 +17,7 @@
 
 		return Array.from({ length: 7 }, (_, i) => {
 			const date = new Date(center);
-			date.setDate(center.getDate() - 3 + i);
+			date.setDate(center.getDate() - 1 + i);
 			return {
 				str: fmt.iso.format(date),
 				day: date.getDate(),
@@ -37,13 +37,13 @@
                 : 'border-foreground/10 opacity-60'}"
         >
             <span
-                class="text-[9px] font-medium tracking-wide uppercase leading-none
+                class="text-[9.5px] font-medium tracking-wide uppercase leading-none
                 {day.str === selectedDate ? 'text-foreground' : 'text-muted-foreground'}"
             >
                 {day.wd}
             </span>
             <span
-                class="text-[16px] font-semibold leading-none mt-0.5
+                class="text-[16px] font-semibold leading-none mt-1
                 {day.str === selectedDate ? 'text-foreground' : 'text-muted-foreground'}"
             >
                 {day.day}

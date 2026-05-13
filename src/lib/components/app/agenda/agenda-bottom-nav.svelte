@@ -17,7 +17,7 @@
 	}
 </script>
 
-<div class="pointer-events-none fixed right-0 bottom-6 left-0 z-50 flex justify-center px-6">
+<div class="pointer-events-none fixed right-0 bottom-7 left-0 z-50 flex justify-center px-6">
 	<nav
 		class="pointer-events-auto flex items-center gap-2 rounded-full border border-white/20 bg-white/80 p-2 shadow-2xl backdrop-blur-xl dark:bg-zinc-900/80"
 	>

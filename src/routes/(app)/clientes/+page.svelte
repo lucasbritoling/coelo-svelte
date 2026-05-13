@@ -84,11 +84,11 @@
 	}
 </script>
 
-<div class="flex h-full flex-col bg-white">
+<div class="flex h-full flex-col">
 	<!-- Header Local Simples (Estilo Agenda) -->
 	<header class="flex flex-col gap-4 px-6 pt-8 pb-4">
 		<div>
-			<h1 class="text-3xl font-bold tracking-tight text-zinc-900">Clientes</h1>
+			<h1 class="text-3xl font-semibold text-zinc-700">Clientes</h1>
 			<p class="text-sm text-zinc-500">Sua base de contatos</p>
 		</div>
 

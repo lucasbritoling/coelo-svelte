@@ -81,7 +81,7 @@
 	}
 </script>
 
-<div class="flex h-full flex-col bg-white">
+<div class="flex h-full flex-col">
 	<!-- Header Local (Estilo Agenda/Clientes) -->
 	<header class="flex flex-col gap-4 px-6 pt-8 pb-4">
 		<div>
@@ -92,7 +92,7 @@
 				>
 					<ChevronLeft size={24} strokeWidth={2.5} />
 				</button>
-				<h1 class="text-3xl font-bold tracking-tight text-zinc-900">Serviços</h1>
+				<h1 class="text-3xl font-semibold tracking-tight text-zinc-700">Serviços</h1>
 			</div>
 			<p class="mt-1 text-sm text-zinc-500">Gerencie seus procedimentos e tempos.</p>
 		</div>

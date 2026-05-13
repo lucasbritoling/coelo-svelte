@@ -15,14 +15,16 @@
 </script>
 
 <div class="mx-auto flex min-h-full max-w-xl flex-col pb-28" in:fly={{ x: -24, duration: 200 }}>
-	<div class="px-5 pt-6 pb-2">
-		<button
-			onclick={() => history.back()}
-			class="mb-2 -ml-2 flex items-center p-2 text-muted-foreground transition-transform active:scale-90"
-		>
-			<ChevronLeft size={24} strokeWidth={2.5} />
-		</button>
-		<h1 class="text-[26px] leading-tight font-medium tracking-tight">Mais</h1>
+	<div class="px-5 pt-8 pb-4">
+		<div class="flex items-center gap-2">
+			<button
+				onclick={() => history.back()}
+				class="-ml-2 flex items-center p-2 text-muted-foreground transition-transform active:scale-90"
+			>
+				<ChevronLeft size={24} strokeWidth={2.5} />
+			</button>
+			<h1 class="text-[26px] leading-tight font-medium tracking-tight">Mais</h1>
+		</div>
 	</div>
 
 	<!-- ── CONTA ────────────────────────────────────────────────────── -->

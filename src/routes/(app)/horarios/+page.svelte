@@ -397,7 +397,7 @@
 		<form
 			method="POST"
 			action="?/upsertOverride"
-			class="space-y-5 px-6 py-6"
+			class="space-y-5 px-6 py-6 pt-0"
 			use:enhance={() => {
 				isSavingOverride = true;
 				return async ({ result, update }) => {
@@ -472,6 +472,7 @@
 			</Button>
 
 			{#if dialogMode === 'edit'}
+				<!-- svelte-ignore node_invalid_placement_ssr -->
 				<form
 					method="POST"
 					action="?/deleteOverride"

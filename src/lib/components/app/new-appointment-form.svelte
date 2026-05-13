@@ -125,6 +125,20 @@
 		formState.start_at = value;
 		input.value = value;
 	}
+
+	// Gerencia a abertura e o fechamento do modal
+    $effect(() => {
+        if (open) {
+            // Sincroniza estado inicial ao abrir
+            formState.start_at = initialTime;
+            formState.date = data.selectedDate || dateUtils.today();
+        } else {
+            // Limpa apenas os campos específicos ao fechar
+            formState.customerId = '';
+            formState.notes = '';
+            customerQuery = '';
+        }
+    });
 </script>
 
 <Dialog.Root bind:open>

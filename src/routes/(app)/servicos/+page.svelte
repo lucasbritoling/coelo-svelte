@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { ui } from '$lib/state/ui.svelte';
-	import { Plus, Search, ChevronRight, Clock, Timer } from '@lucide/svelte';
+	import { Plus, Search, ChevronRight, Clock, Timer, ChevronLeft } from '@lucide/svelte';
+	import { goto } from '$app/navigation';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -84,8 +85,16 @@
 	<!-- Header Local (Estilo Agenda/Clientes) -->
 	<header class="flex flex-col gap-4 px-6 pt-8 pb-4">
 		<div>
-			<h1 class="text-3xl font-bold tracking-tight text-zinc-900">Serviços</h1>
-			<p class="text-sm text-zinc-500">Gerencie seus procedimentos e tempos.</p>
+			<div class="flex items-center gap-2">
+				<button
+					onclick={() => goto('/mais')}
+					class="-ml-2 flex items-center p-2 text-zinc-400 transition-transform active:scale-90"
+				>
+					<ChevronLeft size={24} strokeWidth={2.5} />
+				</button>
+				<h1 class="text-3xl font-bold tracking-tight text-zinc-900">Serviços</h1>
+			</div>
+			<p class="mt-1 text-sm text-zinc-500">Gerencie seus procedimentos e tempos.</p>
 		</div>
 
 		<div class="relative">

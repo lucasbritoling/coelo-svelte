@@ -8,7 +8,10 @@
 		Calendar as CalendarIcon,
 		Search,
 		X,
-		Check
+		Check,
+
+		Plus
+
 	} from '@lucide/svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
@@ -18,6 +21,7 @@
 	import { dateUtils } from '$lib/utils/date';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import CustomerForm from './customer-form.svelte';
 
 	// Props
 	let {
@@ -40,6 +44,7 @@
 		start_at: '',
 		notes: ''
 	});
+	let showCustomerModal = $state(false);
 
 	// Sincroniza o initialTime quando ele muda (ex: clique em Ghost Slot)
 	$effect(() => {
@@ -126,75 +131,97 @@
 				<input type="hidden" name="date" value={formState.date} />
 
 				<!-- SEÇÃO CLIENTE COM CHIPS -->
-				<div class="space-y-3">
-					<div class="flex items-center justify-between px-1">
-						<div class="flex items-center gap-2 text-zinc-400">
-							<User size={14} />
-							<Label class="text-[10px] font-bold tracking-widest uppercase">Cliente</Label>
-						</div>
-						{#if isSearching}
-							<LoaderCircle size={12} class="animate-spin text-zinc-400" />
-						{/if}
-					</div>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between px-1">
+                        <div class="flex items-center gap-2 text-zinc-400">
+                            <User size={14} />
+                            <Label class="text-[10px] font-bold tracking-widest uppercase">Cliente</Label>
+                        </div>
+                        {#if isSearching}
+                            <LoaderCircle size={12} class="animate-spin text-zinc-400" />
+                        {/if}
+                    </div>
 
-					<!-- Área de Chips (Resultados) -->
-					<div class="flex flex-wrap gap-2">
-						{#each data.customers.slice(0, 6) as customer}
-							<button
-								type="button"
-								onclick={() => {
-									formState.customerId = customer.id;
-									customerQuery = ''; // Limpa a busca ao selecionar
-								}}
-								class="flex items-center gap-2 rounded-full border px-3 py-1.5 transition-all
-                                {formState.customerId === customer.id
-									? 'border-zinc-900 bg-zinc-900 text-white shadow-md'
-									: 'border-zinc-100 bg-zinc-50 text-zinc-600 hover:border-zinc-200'}"
-							>
-								<span class="text-xs font-medium">{customer.name}</span>
-								{#if formState.customerId === customer.id}
-									<Check size={12} />
-								{/if}
-							</button>
-						{/each}
+                    <!-- Área de Chips -->
+                    <div class="flex flex-wrap gap-2">
+                        <!-- Mostra o cliente selecionado PRIMEIRO se ele não estiver na lista filtrada -->
+                        {#if selectedCustomer && !data.customers.some(c => c.id === formState.customerId)}
+                             <button
+                                type="button"
+                                onclick={() => {
+                                    formState.customerId = '';
+                                    customerQuery = '';
+                                }}
+                                class="flex items-center gap-2 rounded-full border border-zinc-900 bg-zinc-900 px-3 py-1.5 text-white shadow-md"
+                            >
+                                <span class="text-xs font-medium">{selectedCustomer.name}</span>
+                                <Check size={12} />
+                            </button>
+                        {/if}
 
-						{#if customerQuery && data.customers.length === 0 && !isSearching}
-							<button
-								type="button"
-								class="flex items-center gap-2 rounded-full border border-dashed border-zinc-300 bg-white px-3 py-1.5 text-zinc-500"
-							>
-								<Plus size={12} />
-								<span class="text-xs font-medium text-zinc-400 italic">Criar "{customerQuery}"</span
-								>
-							</button>
-						{/if}
-					</div>
+                        {#each data.customers.slice(0, 6) as customer}
+                            {#if customer.id !== formState.customerId} <!-- Evita duplicar se já mostramos acima -->
+                                <button
+                                    type="button"
+                                    onclick={() => {
+                                        formState.customerId = customer.id;
+                                        customerQuery = ''; 
+                                    }}
+                                    class="flex items-center gap-2 rounded-full border border-zinc-100 bg-zinc-50 px-3 py-1.5 text-zinc-600 transition-all hover:border-zinc-200 active:scale-95"
+                                >
+                                    <span class="text-xs font-medium">{customer.name}</span>
+                                </button>
+                            {:else if !selectedCustomer || data.customers.some(c => c.id === formState.customerId)}
+                                <!-- Mostra o selecionado dentro da ordem natural da lista -->
+                                <button
+                                    type="button"
+                                    onclick={() => {
+                                        formState.customerId = '';
+                                    }}
+                                    class="flex items-center gap-2 rounded-full border border-zinc-900 bg-zinc-900 px-3 py-1.5 text-white shadow-md"
+                                >
+                                    <span class="text-xs font-medium">{customer.name}</span>
+                                    <Check size={12} />
+                                </button>
+                            {/if}
+                        {/each}
 
-					<!-- Input de Busca -->
-					<div class="relative">
-						<Input
-							placeholder="Buscar cliente..."
-							value={customerQuery}
-							oninput={handleSearch}
-							class="h-12 rounded-2xl border-zinc-100 bg-zinc-50/50 pl-10 focus:bg-white"
-						/>
-						<Search size={16} class="absolute top-1/2 left-4 -translate-y-1/2 text-zinc-400" />
+                        {#if customerQuery && !isSearching}
+                            <button
+                                type="button"
+                                onclick={() => (showCustomerModal = true)}
+                                class="flex items-center gap-2 rounded-full border border-dashed border-emerald-200 bg-emerald-50 px-3 py-1.5 text-emerald-700 transition-all active:scale-95"
+                            >
+                                <Plus size={12} />
+                                <span class="text-xs font-bold">Criar "{customerQuery}"</span>
+                            </button>
+                        {/if}
+                    </div>
 
-						{#if customerQuery || formState.customerId}
-							<button
-								type="button"
-								onclick={() => {
-									customerQuery = '';
-									formState.customerId = '';
-									handleSearch({ target: { value: '' } } as any);
-								}}
-								class="absolute top-1/2 right-4 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
-							>
-								<X size={16} />
-							</button>
-						{/if}
-					</div>
-				</div>
+                    <!-- Input de Busca -->
+                    <div class="relative">
+                        <Input
+                            placeholder="Buscar cliente..."
+                            bind:value={customerQuery}
+                            oninput={handleSearch}
+                            class="h-12 rounded-2xl border-zinc-100 bg-zinc-50/50 pl-10 focus:bg-white"
+                        />
+                        <Search size={16} class="absolute top-1/2 left-4 -translate-y-1/2 text-zinc-400" />
+                        
+                        {#if customerQuery}
+                            <button 
+                                type="button"
+                                onclick={() => {
+                                    customerQuery = '';
+                                    handleSearch({ target: { value: '' } } as any);
+                                }}
+                                class="absolute top-1/2 right-4 -translate-y-1/2 text-zinc-400"
+                            >
+                                <X size={16} />
+                            </button>
+                        {/if}
+                    </div>
+                </div>
 
 				<div class="space-y-3">
 					<div class="flex items-center gap-2 px-1 text-zinc-400">
@@ -281,3 +308,16 @@
 		</div>
 	</Dialog.Content>
 </Dialog.Root>
+
+<CustomerForm
+    bind:open={showCustomerModal}
+    formData={data.customerForm}
+    initialName={customerQuery}
+    onSuccess={(newCustomer) => {
+        // Assume que o onSuccess retorna o objeto do cliente ou o ID
+        const id = newCustomer?.id || newCustomer;
+        formState.customerId = id;
+        customerQuery = '';
+        showCustomerModal = false;
+    }}
+/>

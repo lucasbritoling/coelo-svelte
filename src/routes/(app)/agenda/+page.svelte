@@ -255,7 +255,9 @@
 		{/if}
 
 		<!-- FAB Discreto para o Link -->
-		<div class="fixed right-4 bottom-24 z-40">
+		<!-- FABs: Link e Novo Agendamento -->
+		<div class="fixed right-4 bottom-24 z-40 flex flex-col items-end gap-2">
+			<!-- Botão: Copiar Link -->
 			<div class="flex flex-col items-end gap-2">
 				{#if ui.copied}
 					<span
@@ -282,6 +284,18 @@
 					{/if}
 				</button>
 			</div>
+
+			<!-- Botão: Novo Agendamento (Idêntico ao de cima) -->
+			<button
+				onclick={() => {
+					selectedTime = '';
+					ui.modal = true;
+				}}
+				class="flex h-12 w-12 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-lg transition-all hover:bg-zinc-50 active:scale-90"
+				aria-label="Novo agendamento"
+			>
+				<CalendarPlus size={20} />
+			</button>
 		</div>
 	</div>
 </div>

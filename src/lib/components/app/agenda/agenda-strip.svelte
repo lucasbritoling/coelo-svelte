@@ -31,7 +31,7 @@
     {#each strip as day}
         <button
             onclick={() => onSelect(day.str)}
-            class="flex aspect-square h-14 w-13.5 shrink-0 flex-col items-center justify-center rounded-full border transition-all active:scale-95
+            class="flex aspect-square h-15 w-14.5 shrink-0 flex-col items-center justify-center rounded-full border transition-all active:scale-95
             {day.str === selectedDate 
                 ? 'border-foreground opacity-100' 
                 : 'border-foreground/10 opacity-60'}"

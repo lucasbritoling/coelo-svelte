@@ -244,16 +244,15 @@
 				</section>
 			{/if}
 
-			{#if cancelledApps.length > 0 && data.user?.show_cancelled}
+			{#if cancelledApps.length > 0}
 				<section class="mt-12 space-y-3 border-t border-dashed border-zinc-200 pt-8">
 					<p class="px-2 text-[10px] font-bold tracking-[0.2em] text-zinc-300 uppercase">
 						Cancelados
 					</p>
 					<div class="flex flex-col gap-2">
 						{#each cancelledApps as appt}
-							<div class="opacity-30 grayscale">
-								<AppointmentCard {appt} />
-							</div>
+							<!-- Passamos dimmed={true} para usar a lógica de opacidade do card -->
+							<AppointmentCard {appt} dimmed={true} />
 						{/each}
 					</div>
 				</section>

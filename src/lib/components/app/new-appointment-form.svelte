@@ -9,9 +9,7 @@
 		Search,
 		X,
 		Check,
-
 		Plus
-
 	} from '@lucide/svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
@@ -84,6 +82,11 @@
 	}
 
 	let isSubmitting = $state(false);
+	$effect(() => {
+		if (data.services?.length === 1) {
+			formState.serviceId = data.services[0].id;
+		}
+	});
 	const selectedService = $derived(data.services.find((s) => s.id === formState.serviceId));
 	const end_at = $derived.by(() => {
 		if (!formState.start_at || !selectedService) return '';
@@ -131,126 +134,132 @@
 				<input type="hidden" name="date" value={formState.date} />
 
 				<!-- SEÇÃO CLIENTE COM CHIPS -->
-                <div class="space-y-3">
-                    <div class="flex items-center justify-between px-1">
-                        <div class="flex items-center gap-2 text-zinc-400">
-                            <User size={14} />
-                            <Label class="text-[10px] font-bold tracking-widest uppercase">Cliente</Label>
-                        </div>
-                        {#if isSearching}
-                            <LoaderCircle size={12} class="animate-spin text-zinc-400" />
-                        {/if}
-                    </div>
-
-                    <!-- Área de Chips -->
-                    <div class="flex flex-wrap gap-2">
-                        <!-- Mostra o cliente selecionado PRIMEIRO se ele não estiver na lista filtrada -->
-                        {#if selectedCustomer && !data.customers.some(c => c.id === formState.customerId)}
-                             <button
-                                type="button"
-                                onclick={() => {
-                                    formState.customerId = '';
-                                    customerQuery = '';
-                                }}
-                                class="flex items-center gap-2 rounded-full border border-zinc-900 bg-zinc-900 px-3 py-1.5 text-white shadow-md"
-                            >
-                                <span class="text-xs font-medium">{selectedCustomer.name}</span>
-                                <Check size={12} />
-                            </button>
-                        {/if}
-
-                        {#each data.customers.slice(0, 6) as customer}
-                            {#if customer.id !== formState.customerId} <!-- Evita duplicar se já mostramos acima -->
-                                <button
-                                    type="button"
-                                    onclick={() => {
-                                        formState.customerId = customer.id;
-                                        customerQuery = ''; 
-                                    }}
-                                    class="flex items-center gap-2 rounded-full border border-zinc-100 bg-zinc-50 px-3 py-1.5 text-zinc-600 transition-all hover:border-zinc-200 active:scale-95"
-                                >
-                                    <span class="text-xs font-medium">{customer.name}</span>
-                                </button>
-                            {:else if !selectedCustomer || data.customers.some(c => c.id === formState.customerId)}
-                                <!-- Mostra o selecionado dentro da ordem natural da lista -->
-                                <button
-                                    type="button"
-                                    onclick={() => {
-                                        formState.customerId = '';
-                                    }}
-                                    class="flex items-center gap-2 rounded-full border border-zinc-900 bg-zinc-900 px-3 py-1.5 text-white shadow-md"
-                                >
-                                    <span class="text-xs font-medium">{customer.name}</span>
-                                    <Check size={12} />
-                                </button>
-                            {/if}
-                        {/each}
-
-                        {#if customerQuery && !isSearching}
-                            <button
-                                type="button"
-                                onclick={() => (showCustomerModal = true)}
-                                class="flex items-center gap-2 rounded-full border border-dashed border-emerald-200 bg-emerald-50 px-3 py-1.5 text-emerald-700 transition-all active:scale-95"
-                            >
-                                <Plus size={12} />
-                                <span class="text-xs font-bold">Criar "{customerQuery}"</span>
-                            </button>
-                        {/if}
-                    </div>
-
-                    <!-- Input de Busca -->
-                    <div class="relative">
-                        <Input
-                            placeholder="Buscar cliente..."
-                            bind:value={customerQuery}
-                            oninput={handleSearch}
-                            class="h-12 rounded-2xl border-zinc-100 bg-zinc-50/50 pl-10 focus:bg-white"
-                        />
-                        <Search size={16} class="absolute top-1/2 left-4 -translate-y-1/2 text-zinc-400" />
-                        
-                        {#if customerQuery}
-                            <button 
-                                type="button"
-                                onclick={() => {
-                                    customerQuery = '';
-                                    handleSearch({ target: { value: '' } } as any);
-                                }}
-                                class="absolute top-1/2 right-4 -translate-y-1/2 text-zinc-400"
-                            >
-                                <X size={16} />
-                            </button>
-                        {/if}
-                    </div>
-                </div>
-
 				<div class="space-y-3">
-					<div class="flex items-center gap-2 px-1 text-zinc-400">
-						<Briefcase size={14} />
-						<Label class="text-[10px] font-bold tracking-widest uppercase">Serviço</Label>
+					<div class="flex items-center justify-between px-1">
+						<div class="flex items-center gap-2 text-zinc-400">
+							<User size={14} />
+							<Label class="text-[10px] font-bold tracking-widest uppercase">Cliente</Label>
+						</div>
+						{#if isSearching}
+							<LoaderCircle size={12} class="animate-spin text-zinc-400" />
+						{/if}
 					</div>
-					<div class="grid grid-cols-1 gap-2">
-						{#each data.services as service}
+
+					<!-- Área de Chips -->
+					<div class="flex flex-wrap gap-2">
+						<!-- Mostra o cliente selecionado PRIMEIRO se ele não estiver na lista filtrada -->
+						{#if selectedCustomer && !data.customers.some((c) => c.id === formState.customerId)}
 							<button
 								type="button"
-								onclick={() => (formState.serviceId = service.id)}
-								class="flex items-center justify-between rounded-2xl border px-4 py-3 transition-all
-                                {formState.serviceId === service.id
-									? 'border-zinc-900 bg-zinc-900 text-white'
-									: 'border-zinc-100 bg-white text-zinc-600 hover:border-zinc-200'}"
+								onclick={() => {
+									formState.customerId = '';
+									customerQuery = '';
+								}}
+								class="flex items-center gap-2 rounded-full border border-zinc-900 bg-zinc-900 px-3 py-1.5 text-white shadow-md"
 							>
-								<div class="flex items-center gap-3">
-									<div
-										class="size-2 rounded-full"
-										style="background: {service.color || '#e4e4e7'}"
-									></div>
-									<span class="text-sm font-bold">{service.name}</span>
-								</div>
-								<span class="text-xs opacity-60">{service.duration} min</span>
+								<span class="text-xs font-medium">{selectedCustomer.name}</span>
+								<Check size={12} />
 							</button>
+						{/if}
+
+						{#each data.customers.slice(0, 6) as customer}
+							{#if customer.id !== formState.customerId}
+								<!-- Evita duplicar se já mostramos acima -->
+								<button
+									type="button"
+									onclick={() => {
+										formState.customerId = customer.id;
+										customerQuery = '';
+									}}
+									class="flex items-center gap-2 rounded-full border border-zinc-100 bg-zinc-50 px-3 py-1.5 text-zinc-600 transition-all hover:border-zinc-200 active:scale-95"
+								>
+									<span class="text-xs font-medium">{customer.name}</span>
+								</button>
+							{:else if !selectedCustomer || data.customers.some((c) => c.id === formState.customerId)}
+								<!-- Mostra o selecionado dentro da ordem natural da lista -->
+								<button
+									type="button"
+									onclick={() => {
+										formState.customerId = '';
+									}}
+									class="flex items-center gap-2 rounded-full border border-zinc-900 bg-zinc-900 px-3 py-1.5 text-white shadow-md"
+								>
+									<span class="text-xs font-medium">{customer.name}</span>
+									<Check size={12} />
+								</button>
+							{/if}
 						{/each}
-						<input type="hidden" name="service_id" value={formState.serviceId} />
+
+						{#if customerQuery && !isSearching}
+							<button
+								type="button"
+								onclick={() => (showCustomerModal = true)}
+								class="flex items-center gap-2 rounded-full border border-dashed border-emerald-200 bg-emerald-50 px-3 py-1.5 text-emerald-700 transition-all active:scale-95"
+							>
+								<Plus size={12} />
+								<span class="text-xs font-bold">Criar "{customerQuery}"</span>
+							</button>
+						{/if}
+					</div>
+
+					<!-- Input de Busca -->
+					<div class="relative">
+						<Input
+							placeholder="Buscar cliente..."
+							bind:value={customerQuery}
+							oninput={handleSearch}
+							class="h-12 rounded-2xl border-zinc-100 bg-zinc-50/50 pl-10 focus:bg-white"
+						/>
+						<Search size={16} class="absolute top-1/2 left-4 -translate-y-1/2 text-zinc-400" />
+
+						{#if customerQuery}
+							<button
+								type="button"
+								onclick={() => {
+									customerQuery = '';
+									handleSearch({ target: { value: '' } } as any);
+								}}
+								class="absolute top-1/2 right-4 -translate-y-1/2 text-zinc-400"
+							>
+								<X size={16} />
+							</button>
+						{/if}
 					</div>
 				</div>
+
+				<!-- SEÇÃO SERVIÇO -->
+				{#if data.services.length > 1}
+					<div class="space-y-3">
+						<div class="flex items-center gap-2 px-1 text-zinc-400">
+							<Briefcase size={14} />
+							<Label class="text-[10px] font-bold tracking-widest uppercase">Serviço</Label>
+						</div>
+						<div class="grid grid-cols-1 gap-2">
+							{#each data.services as service}
+								<button
+									type="button"
+									onclick={() => (formState.serviceId = service.id)}
+									class="flex items-center justify-between rounded-2xl border px-4 py-3 transition-all
+                                    {formState.serviceId === service.id
+										? 'border-zinc-900 bg-zinc-900 text-white shadow-md'
+										: 'border-zinc-100 bg-white text-zinc-600 hover:border-zinc-200'}"
+								>
+									<div class="flex items-center gap-3">
+										<div
+											class="size-2 rounded-full"
+											style="background: {service.color || '#e4e4e7'}"
+										></div>
+										<span class="text-sm font-bold">{service.name}</span>
+									</div>
+									<span class="text-xs opacity-60">{service.duration} min</span>
+								</button>
+							{/each}
+						</div>
+					</div>
+				{:else if data.services.length === 1}
+					<!-- Se houver apenas um, mantemos o input oculto para o POST funcionar -->
+					<input type="hidden" name="service_id" value={data.services[0].id} />
+				{/if}
 
 				<hr class="border-zinc-100" />
 
@@ -310,14 +319,14 @@
 </Dialog.Root>
 
 <CustomerForm
-    bind:open={showCustomerModal}
-    formData={data.customerForm}
-    initialName={customerQuery}
-    onSuccess={(newCustomer) => {
-        // Assume que o onSuccess retorna o objeto do cliente ou o ID
-        const id = newCustomer?.id || newCustomer;
-        formState.customerId = id;
-        customerQuery = '';
-        showCustomerModal = false;
-    }}
+	bind:open={showCustomerModal}
+	formData={data.customerForm}
+	initialName={customerQuery}
+	onSuccess={(newCustomer) => {
+		// Assume que o onSuccess retorna o objeto do cliente ou o ID
+		const id = newCustomer?.id || newCustomer;
+		formState.customerId = id;
+		customerQuery = '';
+		showCustomerModal = false;
+	}}
 />

@@ -254,7 +254,6 @@
 			{/if}
 		{/if}
 
-		<!-- FAB Discreto para o Link -->
 		<!-- FABs: Link e Novo Agendamento -->
 		<div class="fixed right-4 bottom-24 z-40 flex flex-col items-end gap-2">
 			<!-- Botão: Copiar Link -->

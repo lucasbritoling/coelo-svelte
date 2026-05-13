@@ -146,7 +146,7 @@
 					</div>
 
 					<!-- Área de Chips (Agora com Scroll Horizontal) -->
-					<div class="group relative">
+					<div class="group relative h-6.5">
 						<!-- Efeito de sombra/fade na direita para indicar continuidade -->
 						<div
 							class="pointer-events-none absolute top-0 right-0 bottom-0 z-10 w-10 bg-gradient-to-l from-white to-transparent"

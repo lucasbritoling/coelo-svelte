@@ -36,17 +36,23 @@
 
 		<Dialog.Root bind:open={isPickerOpen}>
 			<Dialog.Trigger
-				class="group absolute left-1/2 flex -translate-x-1/2 items-center gap-1 outline-none"
+				class="group absolute left-1/2 flex -translate-x-1/2 items-center gap-1.5 outline-none"
 			>
 				<h1
-					class="text-[1.15rem] font-bold tracking-tight capitalize transition-opacity group-active:opacity-60"
-					class:opacity-40={navigating.to}
+					class="capitalize transition-opacity group-active:opacity-60 {navigating.to
+						? 'opacity-40'
+						: ''} 
+                    {headerLabel.toLowerCase() === 'hoje'
+						? 'text-[1.45rem] font-medium'
+						: 'text-[1.15rem] font-semibold'}"
 				>
 					{headerLabel}
 				</h1>
 				<ChevronDown
-					size={16}
-					class="text-zinc-400 transition-transform group-active:translate-y-0.5"
+					size={headerLabel.toLowerCase() === 'hoje' ? 22 : 18}
+					strokeWidth={headerLabel.toLowerCase() === 'hoje' ? 2.5 : 2}
+					class="mb-0.5 text-zinc-900 transition-transform group-active:translate-y-0.5
+                    {headerLabel.toLowerCase() === 'hoje' ? 'mt-1' : 'mt-0.5'}"
 				/>
 			</Dialog.Trigger>
 
@@ -57,12 +63,12 @@
 			</Dialog.Content>
 		</Dialog.Root>
 
-		<div class="flex items-center gap-2">
+		<div class="flex items-center gap-1">
 			<button
 				onclick={onOpenAppointment}
 				class="p-2 text-foreground transition-transform active:scale-90"
 			>
-				<Plus size={28} strokeWidth={1.8} />
+				<Plus size={28} strokeWidth={2.1} />
 			</button>
 
 			<a href="/mais" class="relative ml-1 size-9 transition-transform active:scale-90">

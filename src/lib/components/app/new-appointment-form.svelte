@@ -100,21 +100,30 @@
 	});
 
 	function handleTimeInput(e: Event) {
-        const input = e.target as HTMLInputElement;
-        // Remove tudo que não é dígito
-        let value = input.value.replace(/\D/g, '');
-        
-        // Limita a 4 dígitos
-        if (value.length > 4) value = value.slice(0, 4);
-        
-        // Aplica a máscara HH:mm
-        if (value.length >= 3) {
-            value = value.slice(0, 2) + ':' + value.slice(2);
-        }
-        
-        formState.start_at = value;
-        input.value = value; // Sincroniza o valor visual
-    }
+		const input = e.target as HTMLInputElement;
+		let value = input.value.replace(/\D/g, '');
+
+		if (value.length > 4) value = value.slice(0, 4);
+
+		// Validação robusta de horas (primeiros 2 dígitos)
+		if (value.length >= 2) {
+			let hours = parseInt(value.slice(0, 2));
+			if (hours > 23) value = '23' + value.slice(2);
+		}
+
+		// Validação robusta de minutos (últimos 2 dígitos)
+		if (value.length === 4) {
+			let mins = parseInt(value.slice(2, 4));
+			if (mins > 59) value = value.slice(0, 2) + '59';
+		}
+
+		if (value.length >= 3) {
+			value = value.slice(0, 2) + ':' + value.slice(2);
+		}
+
+		formState.start_at = value;
+		input.value = value;
+	}
 </script>
 
 <Dialog.Root bind:open>
@@ -272,23 +281,39 @@
 				{/if}
 
 				<div class="space-y-2">
-                    <Label class="px-1 text-[10px] font-bold text-zinc-400 uppercase"
-                        >Início do Atendimento</Label
-                    >
-                    <div class="relative">
-                        <Input
-                            type="text" 
-                            inputmode="numeric"
-                            placeholder="00:00"
-                            name="start_at"
-                            maxlength={5}
-                            value={formState.start_at}
-                            oninput={handleTimeInput}
-                            class="h-12 rounded-2xl border-zinc-100 bg-zinc-50/50 pl-10 text-base font-medium focus:bg-white transition-colors"
-                        />
-                        <Clock size={16} class="absolute top-1/2 left-4 -translate-y-1/2 text-zinc-400" />
-                    </div>
-                </div>
+					<Label class="px-1 text-[10px] font-bold text-zinc-400 uppercase">Data e Início</Label>
+
+					<div class="flex gap-2">
+						<!-- Input de Data (Estilo reduzido para o lado) -->
+						<div class="relative w-36 shrink-0">
+							<Input
+								type="date"
+								name="date"
+								bind:value={formState.date}
+								class="h-12 rounded-2xl border-zinc-100 bg-zinc-50/50 pr-2 pl-10 text-sm font-medium"
+							/>
+							<CalendarIcon
+								size={16}
+								class="absolute top-1/2 left-4 -translate-y-1/2 text-zinc-400"
+							/>
+						</div>
+
+						<!-- Input Inteligente de Hora -->
+						<div class="relative flex-1">
+							<Input
+								type="text"
+								inputmode="numeric"
+								placeholder="00:00"
+								name="start_at"
+								maxlength="5"
+								value={formState.start_at}
+								oninput={handleTimeInput}
+								class="h-12 rounded-2xl border-zinc-100 bg-zinc-50/50 pl-10 text-base font-medium focus:bg-white"
+							/>
+							<Clock size={16} class="absolute top-1/2 left-4 -translate-y-1/2 text-zinc-400" />
+						</div>
+					</div>
+				</div>
 
 				{#if end_at}
 					<div class="rounded-2xl bg-zinc-50 py-3 text-center transition-all">

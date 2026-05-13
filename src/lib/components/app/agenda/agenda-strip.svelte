@@ -27,17 +27,27 @@
 	});
 </script>
 
-<div class="no-scrollbar flex gap-2 overflow-x-auto px-5 pt-1 pb-0">
+<div class="no-scrollbar flex gap-3 overflow-x-auto px-5 pb-3">
 	{#each strip as day}
 		<button
 			onclick={() => onSelect(day.str)}
-			class="flex min-w-[54px] shrink-0 flex-col items-center rounded-2xl border py-3 transition-all active:scale-90
+			class="flex min-w-[50px] shrink-0 flex-col items-center gap-0.5 rounded-full border py-3 transition-all active:scale-90
             {day.str === selectedDate
-				? 'border-zinc-900 bg-zinc-900 text-white'
-				: 'border-transparent bg-zinc-100 text-zinc-500'}"
+				? 'border-foreground opacity-100'
+				: 'border-foreground/10 opacity-60'}"
 		>
-			<span class="text-[9px] font-bold tracking-widest uppercase">{day.wd}</span>
-			<span class="mt-0.5 text-[15px] font-semibold">{day.day}</span>
+			<span
+				class="text-[9px] tracking-wide uppercase
+                {day.str === selectedDate ? 'text-foreground' : 'text-muted-foreground'}"
+			>
+				{day.wd}
+			</span>
+			<span
+				class="text-[14px] leading-tight font-medium
+                {day.str === selectedDate ? 'text-foreground' : 'text-muted-foreground'}"
+			>
+				{day.day}
+			</span>
 		</button>
 	{/each}
 </div>

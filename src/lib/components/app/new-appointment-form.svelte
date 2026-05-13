@@ -104,11 +104,11 @@
 	<Dialog.Content
 		class="flex max-h-[92dvh] w-[94vw] flex-col overflow-hidden rounded-[32px] p-0 shadow-2xl sm:max-w-[450px]"
 	>
-		<div class="border-b px-6 py-4 pb-3">
+		<div class="px-6 py-4 pb-1">
 			<h2 class="text-xl font-bold">Novo Agendamento</h2>
-			<p class="text-sm text-zinc-500 capitalize">
+			<!--<p class="text-sm text-zinc-500 capitalize">
 				{dateUtils.getHeaderLabel(data.selectedDate)}
-			</p>
+			</p>-->
 		</div>
 
 		<div class="no-scrollbar overflow-y-auto">
@@ -146,12 +146,7 @@
 					</div>
 
 					<!-- Área de Chips (Agora com Scroll Horizontal) -->
-					<div class="group relative h-6.5">
-						<!-- Efeito de sombra/fade na direita para indicar continuidade -->
-						<div
-							class="pointer-events-none absolute top-0 right-0 bottom-0 z-10 w-10 bg-gradient-to-l from-white to-transparent"
-						></div>
-
+					<div class="group h-6.5">
 						<div
 							class="no-scrollbar flex flex-nowrap items-center gap-2 overflow-x-auto scroll-smooth pb-1"
 						>
@@ -303,7 +298,7 @@
 					/>
 				</div>
 
-				<div class="pt-2">
+				<div>
 					<Button
 						type="submit"
 						disabled={isSubmitting ||

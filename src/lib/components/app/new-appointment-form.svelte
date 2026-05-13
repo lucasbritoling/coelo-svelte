@@ -16,10 +16,11 @@
 	import { Label } from '$lib/components/ui/label';
 	import { Input } from '$lib/components/ui/input';
 	import { Textarea } from '$lib/components/ui/textarea';
-	import { dateUtils } from '$lib/utils/date';
+	import { dateUtils, fmt } from '$lib/utils/date';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import CustomerForm from './customer-form.svelte';
+	import { ui } from '$lib/state/ui.svelte';
 
 	// Props
 	let {
@@ -285,18 +286,21 @@
 
 					<div class="flex gap-2">
 						<!-- Input de Data (Estilo reduzido para o lado) -->
-						<div class="relative w-36 shrink-0">
-							<Input
-								type="date"
-								name="date"
-								bind:value={formState.date}
-								class="h-12 rounded-2xl border-zinc-100 bg-zinc-50/50 pr-2 pl-10 text-sm font-medium"
-							/>
-							<CalendarIcon
-								size={16}
-								class="absolute top-1/2 left-4 -translate-y-1/2 text-zinc-400"
-							/>
-						</div>
+						<button
+							type="button"
+							onclick={() => (ui.isDatePickerOpen = true)}
+							class="relative flex h-12 w-[140px] shrink-0 items-center rounded-2xl border border-zinc-100 bg-zinc-50/50 pr-3 pl-10 transition-all hover:border-zinc-200 active:scale-[0.98]"
+						>
+							<CalendarIcon size={16} class="absolute left-4 text-zinc-400" />
+							<span class="block truncate text-xs font-bold text-zinc-600 uppercase">
+								{#if formState.date === dateUtils.today()}
+									Hoje
+								{:else}
+									<!-- Usando os formatadores que você já tem no arquivo -->
+									{fmt.header.format(dateUtils.parseISO(formState.date)).replace('.', '')}
+								{/if}
+							</span>
+						</button>
 
 						<!-- Input Inteligente de Hora -->
 						<div class="relative flex-1">

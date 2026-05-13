@@ -80,7 +80,7 @@
 			</Dialog.Trigger>
 
 			<Dialog.Content
-				class="fixed top-[50%] left-[50%] z-50 w-[92vw] max-w-xs translate-x-[-50%] translate-y-[-50%] rounded-[32px] border bg-background p-4 shadow-lg"
+				class="fixed top-[50%] left-[50%] z-100 w-[92vw] max-w-xs translate-x-[-50%] translate-y-[-50%] rounded-[32px] border bg-background p-4 shadow-lg"
 			>
 				<DatePicker value={parseDate(selectedDate)} onValueChange={handleDateChange} />
 			</Dialog.Content>

@@ -1,15 +1,14 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
-	import { ChevronRight, LogOut, ChevronLeft } from '@lucide/svelte';
+	import { ChevronRight, LogOut, ChevronLeft, Clock, BriefcaseBusiness } from '@lucide/svelte';
 
 	let { data } = $props();
 
-	// Derivamos o avatar direto do data.user (que já vem com a URL completa do Hook)
 	const avatarUrl = $derived(data.user?.avatar_url);
 
 	const profile = {
 		name: data.user?.full_name ?? 'Usuário',
-		slug: data.user?.username ?? 'username' // Ajustado para pegar de data.user
+		slug: data.user?.username ?? 'username'
 	};
 
 	const initials = $derived(profile.name[0]?.toUpperCase() ?? '?');
@@ -49,6 +48,32 @@
 				<p class="truncate text-[14px] font-medium">{profile.name}</p>
 				<p class="truncate text-[12px] text-muted-foreground">coelo.dev/{profile.slug}</p>
 			</div>
+			<ChevronRight class="size-4 shrink-0 text-muted-foreground/40" />
+		</a>
+	</div>
+
+	<!-- ── CONFIGURAÇÕES ────────────────────────────────────────────── -->
+	<p class="section-label">configurações</p>
+	<div class="mx-3 overflow-hidden rounded-2xl border border-border/40 bg-card">
+		<a
+			href="/servicos"
+			class="flex w-full items-center gap-3 border-b border-border/40 px-4 py-3 text-left transition-colors active:bg-muted/50"
+		>
+			<div class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted">
+				<BriefcaseBusiness class="size-4 text-muted-foreground" />
+			</div>
+			<p class="flex-1 text-[14px] font-medium">Serviços</p>
+			<ChevronRight class="size-4 shrink-0 text-muted-foreground/40" />
+		</a>
+
+		<a
+			href="/horarios"
+			class="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors active:bg-muted/50"
+		>
+			<div class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted">
+				<Clock class="size-4 text-muted-foreground" />
+			</div>
+			<p class="flex-1 text-[14px] font-medium">Rotina Semanal</p>
 			<ChevronRight class="size-4 shrink-0 text-muted-foreground/40" />
 		</a>
 	</div>

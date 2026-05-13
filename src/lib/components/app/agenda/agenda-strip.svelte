@@ -27,11 +27,11 @@
 	});
 </script>
 
-<div class="no-scrollbar flex gap-3 overflow-x-auto px-5 pb-3">
+<div class="no-scrollbar flex gap-3 overflow-x-auto px-5 pb-3 pt-2">
     {#each strip as day}
         <button
             onclick={() => onSelect(day.str)}
-            class="flex aspect-square h-14 shrink-0 flex-col items-center justify-center rounded-full border transition-all active:scale-95
+            class="flex aspect-square h-14 w-13.5 shrink-0 flex-col items-center justify-center rounded-full border transition-all active:scale-95
             {day.str === selectedDate 
                 ? 'border-foreground opacity-100' 
                 : 'border-foreground/10 opacity-60'}"

@@ -26,7 +26,7 @@
 	class="sticky top-0 z-20 border-b border-transparent bg-background/80 backdrop-blur-xl transition-all"
 	class:border-border={!isPickerOpen}
 >
-	<div class="flex items-center justify-between px-5 pt-6 pb-0">
+	<div class="relative flex items-center justify-between px-5 pt-6 pb-0">
 		<button
 			onclick={onOpenSearch}
 			class="-ml-2 p-2 text-zinc-900 transition-transform active:scale-90"
@@ -35,7 +35,9 @@
 		</button>
 
 		<Dialog.Root bind:open={isPickerOpen}>
-			<Dialog.Trigger class="group flex items-center gap-1 outline-none">
+			<Dialog.Trigger
+				class="group absolute left-1/2 flex -translate-x-1/2 items-center gap-1 outline-none"
+			>
 				<h1
 					class="text-[1.15rem] font-bold tracking-tight capitalize transition-opacity group-active:opacity-60"
 					class:opacity-40={navigating.to}
@@ -57,11 +59,11 @@
 
 		<div class="flex items-center gap-2">
 			<button
-                onclick={onOpenAppointment}
-                class="p-2 text-foreground transition-transform active:scale-90"
-            >
-                <Plus size={28} strokeWidth={1.8} />
-            </button>
+				onclick={onOpenAppointment}
+				class="p-2 text-foreground transition-transform active:scale-90"
+			>
+				<Plus size={28} strokeWidth={1.8} />
+			</button>
 
 			<a href="/mais" class="relative ml-1 size-9 transition-transform active:scale-90">
 				<div

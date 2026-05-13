@@ -27,29 +27,29 @@
 	});
 </script>
 
-<div class="no-scrollbar flex gap-3 overflow-x-auto px-5 pb-3 pt-2">
-    {#each strip as day}
-        <button
-            onclick={() => onSelect(day.str)}
-            class="flex aspect-square h-15 w-14.5 shrink-0 flex-col items-center justify-center rounded-full border transition-all active:scale-95
-            {day.str === selectedDate 
-                ? 'border-foreground opacity-100' 
-                : 'border-foreground/10 opacity-60'}"
-        >
-            <span
-                class="text-[9.5px] font-medium tracking-wide uppercase leading-none
+<div class="no-scrollbar flex gap-3 overflow-x-auto px-5 pt-2 pb-3">
+	{#each strip as day}
+		<button
+			onclick={() => onSelect(day.str)}
+			class="flex aspect-square h-15 w-14.5 shrink-0 flex-col items-center justify-center rounded-full border transition-all active:scale-95
+            {day.str === selectedDate
+				? 'border-foreground opacity-100'
+				: 'border-foreground/10 opacity-60'}"
+		>
+			<span
+				class="text-[9.5px] leading-none font-medium tracking-wide uppercase
                 {day.str === selectedDate ? 'text-foreground' : 'text-muted-foreground'}"
-            >
-                {day.wd}
-            </span>
-            <span
-                class="text-[16px] font-semibold leading-none mt-1
+			>
+				{day.wd}
+			</span>
+			<span
+				class="mt-1 text-[16px] leading-none font-semibold
                 {day.str === selectedDate ? 'text-foreground' : 'text-muted-foreground'}"
-            >
-                {day.day}
-            </span>
-        </button>
-    {/each}
+			>
+				{day.day}
+			</span>
+		</button>
+	{/each}
 </div>
 
 <style>

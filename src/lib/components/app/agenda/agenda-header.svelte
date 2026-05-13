@@ -55,13 +55,13 @@
 			</Dialog.Content>
 		</Dialog.Root>
 
-		<div class="flex items-center gap-1">
+		<div class="flex items-center gap-2">
 			<button
-				onclick={onOpenAppointment}
-				class="p-2 text-zinc-900 transition-transform active:scale-90"
-			>
-				<Plus size={26} strokeWidth={2.5} />
-			</button>
+                onclick={onOpenAppointment}
+                class="p-2 text-foreground transition-transform active:scale-90"
+            >
+                <Plus size={28} strokeWidth={1.8} />
+            </button>
 
 			<a href="/mais" class="relative ml-1 size-9 transition-transform active:scale-90">
 				<div

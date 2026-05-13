@@ -2,7 +2,7 @@
 	import { dateUtils } from '$lib/utils/date';
 	import { ui as globalUI } from '$lib/state/ui.svelte';
 	import type { Appointment } from '$lib/types/appointment';
-	import { Copy, Check, CalendarDays, Link } from '@lucide/svelte';
+	import { Check, CalendarDays, Link, CalendarPlus } from '@lucide/svelte';
 
 	import * as Dialog from '$lib/components/ui/dialog';
 

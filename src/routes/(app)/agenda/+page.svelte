@@ -174,7 +174,7 @@
 			{#if pendingApps.length > 0}
 				<section class="space-y-3">
 					<p class="px-2 text-[10px] font-bold tracking-[0.2em] text-amber-600 uppercase">
-						Solicitações
+						Pendentes
 					</p>
 					<div class="flex flex-col gap-2">
 						{#each pendingApps as appt}
@@ -199,7 +199,7 @@
 
 			{#if groups.next}
 				<section class="space-y-3">
-					<p class="px-2 text-[10px] font-bold tracking-[0.2em] text-blue-600 uppercase">Agora</p>
+					<p class="px-2 text-[10px] font-bold tracking-[0.2em] text-blue-600 uppercase">Próximo</p>
 					<AppointmentCard
 						appt={groups.next}
 						highlighted={true}

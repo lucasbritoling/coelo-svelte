@@ -1,6 +1,6 @@
 <script lang="ts">
-import { ui } from '$lib/state/ui.svelte';
-	import { Calendar } from "@lucide/svelte";
+	import { ui } from '$lib/state/ui.svelte';
+	import { Calendar, CalendarDays } from '@lucide/svelte';
 	interface Props {
 		selectedDate: string;
 		onSelect: (date: string) => void;
@@ -54,14 +54,16 @@ import { ui } from '$lib/state/ui.svelte';
 		</button>
 	{/each}
 	<button
-        class="flex aspect-square h-15 w-14.5 shrink-0 flex-col items-center justify-center rounded-full border border-foreground/10 bg-muted/20 opacity-80 transition-all active:scale-95"
-        onclick={() => ui.isDatePickerOpen = true}
-    >
-        <span class="text-[9.5px] leading-none font-medium tracking-wide uppercase text-muted-foreground">
-            Ver
-        </span>
-        <Calendar class="mt-1 h-4 w-4 text-muted-foreground" />
-    </button>
+		class="flex aspect-square h-15 w-14.5 shrink-0 flex-col items-center justify-center rounded-full border border-foreground/10 bg-muted opacity-80 transition-all active:scale-95"
+		onclick={() => (ui.isDatePickerOpen = true)}
+	>
+		<span
+			class="text-[9.5px] leading-none font-semibold tracking-widest text-muted-foreground uppercase"
+		>
+			Ver
+		</span>
+		<CalendarDays class="mt-1 h-4 w-4 text-muted-foreground" />
+	</button>
 </div>
 
 <style>

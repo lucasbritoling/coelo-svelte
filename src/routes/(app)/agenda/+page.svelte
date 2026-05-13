@@ -2,7 +2,7 @@
 	import { dateUtils } from '$lib/utils/date';
 	import { ui as globalUI } from '$lib/state/ui.svelte';
 	import type { Appointment } from '$lib/types/appointment';
-	import { Copy, Check, CalendarDays } from '@lucide/svelte';
+	import { Copy, Check, CalendarDays, Link } from '@lucide/svelte';
 
 	import * as Dialog from '$lib/components/ui/dialog';
 
@@ -15,6 +15,7 @@
 	import AppointmentForm from '$lib/components/app/new-appointment-form.svelte';
 	import AppointmentCard from '$lib/components/app/agenda/appointment-card.svelte';
 	import GhostSlot from '$lib/components/app/agenda/ghost-slot.svelte';
+	import { scale } from 'svelte/transition';
 
 	let { data } = $props<{
 		data: {
@@ -253,24 +254,31 @@
 			{/if}
 		{/if}
 
-		<div class="pt-4">
-			<div class="rounded-[32px] border border-zinc-200 bg-white p-6 shadow-sm">
-				<p class="text-[10px] font-bold tracking-[0.2em] text-zinc-400 uppercase">
-					Link de agendamento
-				</p>
-				<p class="mt-2 truncate font-mono text-sm text-zinc-600">{schedulingLink}</p>
+		<!-- FAB Discreto para o Link -->
+		<div class="fixed right-4 bottom-24 z-40">
+			<div class="flex flex-col items-end gap-2">
+				{#if ui.copied}
+					<span
+						transition:scale={{ duration: 150 }}
+						class="rounded-lg bg-zinc-900 px-3 py-1.5 text-[10px] font-bold text-white shadow-xl"
+					>
+						LINK COPIADO!
+					</span>
+				{/if}
+
 				<button
 					onclick={() => {
 						navigator.clipboard.writeText(schedulingLink);
 						ui.copied = true;
 						setTimeout(() => (ui.copied = false), 2000);
 					}}
-					class="mt-5 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-zinc-100 text-sm font-bold transition-all active:scale-95"
+					class="flex h-12 w-12 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-lg transition-all hover:bg-zinc-50 active:scale-90"
+					aria-label="Copiar link de agendamento"
 				>
 					{#if ui.copied}
-						<Check size={16} /> Copiado!
+						<Check class="text-green-600" size={20} />
 					{:else}
-						<Copy size={16} /> Copiar link
+						<Link size={20} />
 					{/if}
 				</button>
 			</div>

@@ -182,7 +182,7 @@
 			>
 				<ChevronLeft size={24} strokeWidth={2.5} />
 			</button>
-			<h1 class="text-3xl font-bold tracking-tight text-zinc-900">Horários</h1>
+			<h1 class="text-3xl font-semibold tracking-tight text-zinc-700">Horários</h1>
 		</div>
 		<p class="mt-1 text-sm text-zinc-500">Defina sua rotina e exceções de agenda.</p>
 	</header>

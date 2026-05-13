@@ -127,18 +127,18 @@
 	}
 
 	// Gerencia a abertura e o fechamento do modal
-    $effect(() => {
-        if (open) {
-            // Sincroniza estado inicial ao abrir
-            formState.start_at = initialTime;
-            formState.date = data.selectedDate || dateUtils.today();
-        } else {
-            // Limpa apenas os campos específicos ao fechar
-            formState.customerId = '';
-            formState.notes = '';
-            customerQuery = '';
-        }
-    });
+	$effect(() => {
+		if (open) {
+			// Sincroniza estado inicial ao abrir
+			formState.start_at = initialTime;
+			formState.date = data.selectedDate || dateUtils.today();
+		} else {
+			// Limpa apenas os campos específicos ao fechar
+			formState.customerId = '';
+			formState.notes = '';
+			customerQuery = '';
+		}
+	});
 </script>
 
 <Dialog.Root bind:open>
@@ -299,36 +299,35 @@
 					<Label class="px-1 text-[10px] font-bold text-zinc-400 uppercase">Data e Início</Label>
 
 					<div class="flex gap-2">
-						<!-- Input de Data (Estilo reduzido para o lado) -->
+						<!-- Input de Data (Agora é flex-1 para crescer) -->
 						<button
 							type="button"
 							onclick={() => (ui.isDatePickerOpen = true)}
-							class="relative flex h-12 w-[140px] shrink-0 items-center rounded-2xl border border-zinc-100 bg-zinc-50/50 pr-3 pl-10 transition-all hover:border-zinc-200 active:scale-[0.98]"
+							class="relative flex h-12 flex-1 items-center rounded-2xl border border-zinc-100 bg-zinc-50/50 pr-3 pl-10 transition-all hover:border-zinc-200 active:scale-[0.98]"
 						>
 							<CalendarIcon size={16} class="absolute left-4 text-zinc-400" />
 							<span class="block truncate text-xs font-bold text-zinc-600 uppercase">
 								{#if formState.date === dateUtils.today()}
 									Hoje
 								{:else}
-									<!-- Usando os formatadores que você já tem no arquivo -->
 									{fmt.header.format(dateUtils.parseISO(formState.date)).replace('.', '')}
 								{/if}
 							</span>
 						</button>
 
-						<!-- Input Inteligente de Hora -->
-						<div class="relative flex-1">
+						<!-- Input de Hora (Agora com largura fixa reduzida) -->
+						<div class="relative w-[105px] shrink-0">
 							<Input
 								type="text"
 								inputmode="numeric"
 								placeholder="00:00"
 								name="start_at"
-								maxlength="5"
+								maxlength={5}
 								value={formState.start_at}
 								oninput={handleTimeInput}
-								class="h-12 rounded-2xl border-zinc-100 bg-zinc-50/50 pl-10 text-base font-medium focus:bg-white"
+								class="h-12 rounded-2xl border-zinc-100 bg-zinc-50/50 pl-9 text-base font-medium focus:bg-white"
 							/>
-							<Clock size={16} class="absolute top-1/2 left-4 -translate-y-1/2 text-zinc-400" />
+							<Clock size={16} class="absolute top-1/2 left-3.5 -translate-y-1/2 text-zinc-400" />
 						</div>
 					</div>
 				</div>

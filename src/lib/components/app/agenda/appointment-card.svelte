@@ -24,18 +24,31 @@
 		emerald: 'bg-emerald-500'
 	};
 
-	const STATUS: Record<AppointmentStatus, { label: string; bg: string; text: string; icon?: any }> =
-		{
-			confirmed: { label: 'confirmado', bg: '#EAF3DE', text: '#3B6D11' },
-			pending: { label: 'pendente', bg: '#FAEEDA', text: '#854F0B' },
-			cancelled: { label: 'cancelado', bg: '#FEE2E2', text: '#991B1B' },
-			concluído: { label: 'concluído', bg: '#F4F4F5', text: '#71717A', icon: CheckCircle2 },
-			faltou: { label: 'não compareceu', bg: '#FEF2F2', text: '#991B1B', icon: XCircle }
-		};
+	const STATUS: Record<string, { label: string; bg: string; text: string; icon?: any }> = {
+		pending: { label: 'pendente', bg: '#FAEEDA', text: '#854F0B' },
+		confirmed: { label: 'confirmado', bg: '#EAF3DE', text: '#3B6D11' },
+		cancelled: { label: 'cancelado', bg: '#FEE2E2', text: '#991B1B' },
+		concluído: { label: 'concluído', bg: '#F4F4F5', text: '#71717A', icon: CheckCircle2 },
+		faltou: { label: 'não compareceu', bg: '#FEF2F2', text: '#991B1B', icon: XCircle }
+	};
 
 	const currentStatus = $derived(STATUS[appt.status]);
 	// Cor do serviço vinda do banco (default blue se não houver)
-	const categoryColor = $derived(serviceColorMap[appt.service_color || 'blue']);
+	const categoryStyle = $derived.by(() => {
+		const color = appt.service_color || 'zinc';
+		if (color.startsWith('#')) return { style: `background-color: ${color}`, class: '' };
+
+		const tailwindMap: Record<string, string> = {
+			zinc: 'bg-zinc-500',
+			blue: 'bg-blue-500',
+			indigo: 'bg-indigo-500',
+			violet: 'bg-violet-500',
+			rose: 'bg-rose-500',
+			amber: 'bg-amber-500',
+			emerald: 'bg-emerald-500'
+		};
+		return { style: '', class: tailwindMap[color] || 'bg-zinc-500' };
+	});
 </script>
 
 <div
@@ -44,7 +57,8 @@
     {dimmed ? 'scale-[0.98] opacity-50 grayscale-[0.5]' : 'opacity-100'}"
 >
 	<div
-		class="absolute top-1/2 left-0 h-8 w-1.5 -translate-y-1/2 rounded-r-full {categoryColor}"
+		class="absolute top-1/2 left-0 h-8 w-1.5 -translate-y-1/2 rounded-r-full {categoryStyle.class}"
+		style={categoryStyle.style}
 	></div>
 
 	<div class="flex min-w-[52px] flex-col items-center pt-0.5">

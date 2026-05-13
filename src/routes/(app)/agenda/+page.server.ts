@@ -38,7 +38,9 @@ export const load: PageServerLoad = async ({ url, locals: { sql, user } }) => {
                     to_char(lower(a.slot), 'HH24:MI') as start_at,
                     to_char(upper(a.slot), 'HH24:MI') as end_at,
                     c.name as customer_name,
+					c.phone as customer_phone,
                     s.name as service_name,
+					s.color as service_color,
                     s.duration as service_duration
                 FROM appointments a
                 JOIN customers c ON a.customer_id = c.id

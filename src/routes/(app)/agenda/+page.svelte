@@ -79,16 +79,22 @@
 
 	// ── Organização de Grupos ────────────────────────────────────
 	const groups = $derived.by(() => {
-		const appointments = activeApps; // Apenas os confirmados/concluídos
-		if (!isTodayView) return { past: [], next: null, later: appointments };
+		// 1. Mapeie todos para o tipo 'appointment' logo de cara
+		const appointments = activeApps.map((a) => ({ ...a, type: 'appointment' as const }));
 
+		// 2. Corrija o retorno para dias que não são "hoje"
+		if (!isTodayView) {
+			return { past: [], next: null, later: appointments };
+		}
+
+		// O restante da sua lógica de "Hoje" (past, upcoming, gaps)
+		// precisará usar esse novo array 'appointments' que já tem o 'type'
 		const past = appointments.filter((a) => a.start_at < reactiveNow);
 		const upcoming = appointments.filter((a) => a.start_at >= reactiveNow);
 
 		const next = upcoming[0] || null;
 		const laterRaw = upcoming.slice(1);
 
-		// Injetar Vácuos na lista "Later"
 		const laterWithGaps = [];
 		for (let i = 0; i < laterRaw.length; i++) {
 			const current = laterRaw[i];
@@ -97,10 +103,10 @@
 			if (prev) {
 				const gapMinutes = calculateGap(prev.end_at, current.start_at);
 				if (gapMinutes >= 30) {
-					laterWithGaps.push({ type: 'gap', duration: gapMinutes, start_at: prev.end_at });
+					laterWithGaps.push({ type: 'gap' as const, duration: gapMinutes, start_at: prev.end_at });
 				}
 			}
-			laterWithGaps.push({ ...current, type: 'appointment' });
+			laterWithGaps.push(current); // Já tem o type: 'appointment'
 		}
 
 		return { past, next, later: laterWithGaps };

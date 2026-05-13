@@ -1,15 +1,6 @@
 <script lang="ts">
 	import { ui } from '$lib/state/ui.svelte';
-	import {
-		Plus,
-		Search,
-		Trash2,
-		LoaderCircle,
-		ChevronRight,
-		Pencil,
-		Clock,
-		ShieldAlert
-	} from '@lucide/svelte';
+	import { Plus, Search, ChevronRight, Clock, Timer } from '@lucide/svelte';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -38,7 +29,7 @@
 		services.filter((s: any) => s.name.toLowerCase().includes(searchQuery.toLowerCase()))
 	);
 
-	// ── Lógica de Negócio ──────────────────────────────────────────
+	// ── Lógica de Interface ──────────────────────────────────────────
 
 	function startCreate() {
 		selectedService = null;
@@ -50,44 +41,26 @@
 		openForm = true;
 	}
 
-	function confirmDelete(service: any) {
-		serviceToDelete = { id: service.id, name: service.name };
-		openDelete = true;
-	}
-
-	// Toggle de Status Refatorado (Sem manipulação de DOM)
-	let servicePendingToggle = $state<any>(null);
-	let openConfirmToggle = $state(false);
-
-	// 1. Sincroniza Local -> Global
-	// Se qualquer um dos três estiver aberto, o Layout saberá que deve "sequestrar" o botão voltar
+	// Sincroniza estado de modais para o botão voltar (Layout Hook)
 	$effect(() => {
 		ui.isModalOpen = openForm || openConfirmToggle || openDelete;
 	});
 
-	// 2. Sincroniza Global -> Local (Reação ao botão voltar do celular/gesto iOS)
-	$effect(() => {
-		if (!ui.isModalOpen) {
-			openForm = false;
-			openConfirmToggle = false;
-			openDelete = false;
-		}
-	});
+	// ── Lógica de Status ──────────────────────────────────────────
+	let servicePendingToggle = $state<any>(null);
+	let openConfirmToggle = $state(false);
 
 	async function handleToggle(service: any, newValue: boolean) {
-		// Validação: Não permitir que o profissional fique sem nenhum serviço ativo
 		const activeServices = services.filter((s) => s.is_active);
 		if (!newValue && activeServices.length === 1 && activeServices[0].id === service.id) {
 			servicePendingToggle = service;
 			openConfirmToggle = true;
 			return;
 		}
-
 		await executeToggle(service.id, newValue);
 	}
 
 	async function executeToggle(id: string, is_active: boolean) {
-		// Atualização Otimista (UI muda na hora)
 		const idx = services.findIndex((s) => s.id === id);
 		const previousValue = services[idx].is_active;
 		services[idx].is_active = is_active;
@@ -97,186 +70,115 @@
 		formData.append('is_active', String(is_active));
 
 		try {
-			const response = await fetch('?/updateStatus', {
-				method: 'POST',
-				body: formData
-			});
-
+			const response = await fetch('?/updateStatus', { method: 'POST', body: formData });
 			if (!response.ok) throw new Error();
 			toast.success(is_active ? 'Serviço visível' : 'Serviço oculto');
 		} catch (err) {
-			// Reverte em caso de erro no servidor
 			services[idx].is_active = previousValue;
-			toast.error('Não foi possível atualizar o status.');
+			toast.error('Erro ao atualizar status.');
 		}
 	}
 </script>
 
-{#snippet serviceDetails(service)}
-	<div class="min-w-0 flex-1">
-		<p class="truncate leading-snug font-semibold">{service.name}</p>
-		<div class="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-			<span class="flex items-center gap-1"><Clock class="size-3" /> {service.duration} min</span>
-			{#if service.buffer_after_min > 0}
-				<span
-					class="rounded-full bg-amber-100 px-2 py-0.5 font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
-				>
-					+{service.buffer_after_min}m intervalo
-				</span>
-			{/if}
-			{#if service.min_notice_hours}
-				<span class="rounded-full bg-muted px-2 py-0.5">
-					{service.min_notice_hours}h antecedência
-				</span>
-			{/if}
+<div class="flex h-full flex-col bg-white">
+	<!-- Header Local (Estilo Agenda/Clientes) -->
+	<header class="flex flex-col gap-4 px-6 pt-8 pb-4">
+		<div>
+			<h1 class="text-3xl font-bold tracking-tight text-zinc-900">Serviços</h1>
+			<p class="text-sm text-zinc-500">Gerencie seus procedimentos e tempos.</p>
 		</div>
-	</div>
-{/snippet}
 
-<div class="flex w-full flex-col gap-4 p-4 pb-28 sm:hidden">
-	<div>
-		<h1 class="text-2xl font-bold tracking-tight">Serviços</h1>
-		<p class="text-sm text-muted-foreground">Regras e tempos de atendimento.</p>
-	</div>
+		<div class="relative">
+			<Search class="absolute top-3 left-3.5 size-4 text-zinc-400" />
+			<Input
+				type="search"
+				placeholder="Procurar serviço..."
+				class="h-11 rounded-2xl border-none bg-zinc-100 pl-10 focus-visible:ring-zinc-200"
+				bind:value={searchQuery}
+			/>
+		</div>
+	</header>
 
-	<div class="relative">
-		<Search class="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
-		<Input type="search" placeholder="Procurar serviço..." class="pl-9" bind:value={searchQuery} />
-	</div>
-
-	<div class="overflow-hidden rounded-2xl border bg-background shadow-sm">
+	<!-- Lista de Serviços -->
+	<div class="flex-1 space-y-3 overflow-y-auto px-4 pb-32">
 		{#each filteredServices as service (service.id)}
-			<div class="relative border-b last:border-b-0">
-				<!-- svelte-ignore a11y_click_events_have_key_events -->
-				<div
-					class="flex items-center gap-3 px-4 py-3.5 transition-colors active:bg-muted/50"
-					class:opacity-40={!service.is_active}
-					role="button"
-					tabindex="0"
-					onclick={() => startEdit(service)}
-				>
-					{@render serviceDetails(service)}
-
-					<div onclick={(e) => e.stopPropagation()} role="presentation">
-						{#key switchVersion}
-							<Switch
-								checked={service.is_active}
-								onCheckedChange={(v) => handleToggle(service, v)}
-							/>
-						{/key}
+			<div
+				class="group relative flex w-full flex-col overflow-hidden rounded-[24px] border border-zinc-100 bg-white p-4 transition-all active:scale-[0.98]"
+			>
+				<!-- Botão de Edição (Área clicável principal) -->
+				<button onclick={() => startEdit(service)} class="flex items-center gap-4 text-left">
+					<div
+						class="flex size-11 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-zinc-500"
+					>
+						<Timer size={20} />
 					</div>
-					<ChevronRight class="size-4 shrink-0 text-muted-foreground/40" />
+
+					<div class="min-w-0 flex-1">
+						<p class="truncate font-bold text-zinc-900 {!service.is_active ? 'opacity-50' : ''}">
+							{service.name}
+						</p>
+
+						<div class="mt-1 flex flex-wrap items-center gap-2 text-xs font-medium">
+							<span class="flex items-center gap-1 text-zinc-500">
+								<Clock class="size-3" />
+								{service.duration} min
+							</span>
+
+							{#if service.buffer_after_min > 0}
+								<span class="rounded-full bg-zinc-100 px-2 py-0.5 text-zinc-600">
+									+{service.buffer_after_min}m intervalo
+								</span>
+							{/if}
+						</div>
+					</div>
+
+					<ChevronRight class="size-4 text-zinc-300" />
+				</button>
+
+				<!-- Controle de Visibilidade (Switch separado da ação de editar) -->
+				<div class="mt-3 flex items-center justify-between border-t border-zinc-50 pt-3">
+					<span class="text-[11px] font-bold tracking-widest text-zinc-400 uppercase">
+						{service.is_active ? 'Visível para clientes' : 'Oculto na agenda'}
+					</span>
+					{#key switchVersion}
+						<Switch checked={service.is_active} onCheckedChange={(v) => handleToggle(service, v)} />
+					{/key}
 				</div>
 			</div>
 		{:else}
-			<div class="py-16 text-center italic text-muted-foreground text-sm">
-				Nenhum serviço encontrado.
+			<div class="py-20 text-center">
+				<p class="text-sm text-zinc-400 italic">Nenhum serviço encontrado.</p>
 			</div>
 		{/each}
 	</div>
 </div>
 
-<div class="mx-auto hidden w-full max-w-lg flex-col gap-6 p-6 sm:flex">
-	<div class="flex items-center justify-between gap-4">
-		<div>
-			<h1 class="text-2xl font-bold tracking-tight">Serviços</h1>
-			<p class="text-sm text-muted-foreground">Regras e tempos de atendimento.</p>
-		</div>
-		<Button onclick={startCreate} size="sm" class="h-9 cursor-pointer">
-			<Plus class="mr-2 h-4 w-4" /> Novo Serviço
-		</Button>
-	</div>
-
-	<div class="relative">
-		<Search class="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
-		<Input type="search" placeholder="Procurar..." class="pl-9" bind:value={searchQuery} />
-	</div>
-
-	<div class="overflow-hidden rounded-md border">
-		<table class="w-full text-sm">
-			<thead class="bg-muted/50 font-medium">
-				<tr class="border-b">
-					<th class="p-3 text-left">Serviço</th>
-					<th class="p-3 text-center">Visível</th>
-					<th class="p-3 text-right">Ações</th>
-				</tr>
-			</thead>
-			<tbody>
-				{#each filteredServices as service (service.id)}
-					<tr
-						class="border-b transition-colors hover:bg-muted/30"
-						class:opacity-50={!service.is_active}
-					>
-						<td class="p-3">
-							<div class="font-medium">{service.name}</div>
-							<div class="text-[11px] text-muted-foreground">
-								{service.duration}min + {service.buffer_after_min}m
-							</div>
-						</td>
-						<td class="p-3 text-center">
-							<div class="flex justify-center">
-								{#key switchVersion}
-									<Switch
-										checked={service.is_active}
-										onCheckedChange={(v) => handleToggle(service, v)}
-									/>
-								{/key}
-							</div>
-						</td>
-						<td class="p-3 text-right">
-							<div class="flex justify-end gap-1">
-								<Button variant="ghost" size="icon" onclick={() => startEdit(service)}
-									><Pencil class="h-4 w-4" /></Button
-								>
-								<Button
-									variant="ghost"
-									size="icon"
-									class="text-destructive hover:bg-destructive/10"
-									onclick={() => confirmDelete(service)}><Trash2 class="h-4 w-4" /></Button
-								>
-							</div>
-						</td>
-					</tr>
-				{:else}
-					<tr
-						><td colspan="3" class="p-8 text-center italic text-muted-foreground"
-							>Nenhum serviço.</td
-						></tr
-					>
-				{/each}
-			</tbody>
-		</table>
-	</div>
-</div>
-
+<!-- FAB (Estilo consistente) -->
 <button
 	onclick={startCreate}
-	class="fixed right-4 z-30 flex items-center gap-2 rounded-full bg-primary px-5 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg active:scale-95 sm:hidden"
-	style="bottom: calc(4rem + 1rem + env(safe-area-inset-bottom))"
+	class="fixed right-6 z-40 flex size-14 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-900 shadow-xl transition-all active:scale-90"
+	style="bottom: 100px"
 >
-	<Plus class="size-5" /> Novo Serviço
+	<Plus size={28} />
 </button>
 
+<!-- Modais (ServiceForm já deve usar o estilo do Dialog refatorado) -->
 <ServiceForm formData={data.form} service={selectedService} bind:open={openForm} />
 
+<!-- Alerta de Desativação Total -->
 <AlertDialog.Root bind:open={openConfirmToggle}>
-	<AlertDialog.Content>
+	<AlertDialog.Content class="rounded-[32px] p-6">
 		<AlertDialog.Header>
-			<AlertDialog.Title>Desativar sua agenda?</AlertDialog.Title>
-			<AlertDialog.Description>
-				Este é seu único serviço ativo. Se desativá-lo, ninguém conseguirá agendar horários com
-				você.
+			<AlertDialog.Title class="text-xl font-bold">Desativar sua agenda?</AlertDialog.Title>
+			<AlertDialog.Description class="text-zinc-500">
+				Este é seu único serviço ativo. Se desativá-lo, ninguém conseguirá agendar horários com você
+				através do link.
 			</AlertDialog.Description>
 		</AlertDialog.Header>
-		<AlertDialog.Footer>
-			<AlertDialog.Cancel
-				onclick={() => {
-					openConfirmToggle = false;
-					switchVersion++; // Aqui forçamos a reconstrução dos Switches
-				}}>Manter Online</AlertDialog.Cancel
-			>
+		<AlertDialog.Footer class="flex flex-col gap-2 pt-4">
 			<Button
 				variant="destructive"
+				class="h-12 rounded-2xl"
 				onclick={() => {
 					executeToggle(servicePendingToggle.id, false);
 					openConfirmToggle = false;
@@ -284,37 +186,22 @@
 			>
 				Ocultar Agenda
 			</Button>
+			<AlertDialog.Cancel
+				class="h-12 rounded-2xl border-none bg-zinc-100"
+				onclick={() => {
+					openConfirmToggle = false;
+					switchVersion++;
+				}}>Manter Online</AlertDialog.Cancel
+			>
 		</AlertDialog.Footer>
 	</AlertDialog.Content>
 </AlertDialog.Root>
 
-<AlertDialog.Root bind:open={openDelete}>
-	<AlertDialog.Content>
-		<AlertDialog.Header>
-			<AlertDialog.Title>Excluir serviço?</AlertDialog.Title>
-			<AlertDialog.Description
-				>Remover <strong>{serviceToDelete?.name}</strong> permanentemente?</AlertDialog.Description
-			>
-		</AlertDialog.Header>
-		<AlertDialog.Footer>
-			<AlertDialog.Cancel disabled={isLoading}>Cancelar</AlertDialog.Cancel>
-			<form
-				method="POST"
-				action="?/delete"
-				use:enhance={() => {
-					isLoading = true;
-					return async ({ result, update }) => {
-						await update();
-						isLoading = false;
-						if (result.type === 'success') openDelete = false;
-					};
-				}}
-			>
-				<input type="hidden" name="id" value={serviceToDelete?.id} />
-				<Button type="submit" variant="destructive" disabled={isLoading} class="w-full sm:min-w-36">
-					{isLoading ? 'Removendo...' : 'Confirmar Exclusão'}
-				</Button>
-			</form>
-		</AlertDialog.Footer>
-	</AlertDialog.Content>
-</AlertDialog.Root>
+<style>
+	:global(body) {
+		background-color: white;
+	}
+	button {
+		-webkit-tap-highlight-color: transparent;
+	}
+</style>

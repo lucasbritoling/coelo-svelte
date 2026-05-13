@@ -145,61 +145,70 @@
 						{/if}
 					</div>
 
-					<!-- Área de Chips -->
-					<div class="flex flex-wrap gap-2">
-						<!-- Mostra o cliente selecionado PRIMEIRO se ele não estiver na lista filtrada -->
-						{#if selectedCustomer && !data.customers.some((c) => c.id === formState.customerId)}
-							<button
-								type="button"
-								onclick={() => {
-									formState.customerId = '';
-									customerQuery = '';
-								}}
-								class="flex items-center gap-2 rounded-full border border-zinc-900 bg-zinc-900 px-3 py-1.5 text-white shadow-md"
-							>
-								<span class="text-xs font-medium">{selectedCustomer.name}</span>
-								<Check size={12} />
-							</button>
-						{/if}
+					<!-- Área de Chips (Agora com Scroll Horizontal) -->
+					<div class="group relative">
+						<!-- Efeito de sombra/fade na direita para indicar continuidade -->
+						<div
+							class="pointer-events-none absolute top-0 right-0 bottom-0 z-10 w-10 bg-gradient-to-l from-white to-transparent"
+						></div>
 
-						{#each data.customers.slice(0, 6) as customer}
-							{#if customer.id !== formState.customerId}
-								<!-- Evita duplicar se já mostramos acima -->
-								<button
-									type="button"
-									onclick={() => {
-										formState.customerId = customer.id;
-										customerQuery = '';
-									}}
-									class="flex items-center gap-2 rounded-full border border-zinc-100 bg-zinc-50 px-3 py-1.5 text-zinc-600 transition-all hover:border-zinc-200 active:scale-95"
-								>
-									<span class="text-xs font-medium">{customer.name}</span>
-								</button>
-							{:else if !selectedCustomer || data.customers.some((c) => c.id === formState.customerId)}
-								<!-- Mostra o selecionado dentro da ordem natural da lista -->
+						<div
+							class="no-scrollbar flex flex-nowrap items-center gap-2 overflow-x-auto scroll-smooth pb-1"
+						>
+							<!-- Mostra o cliente selecionado PRIMEIRO se ele não estiver na lista filtrada -->
+							{#if selectedCustomer && !data.customers.some((c) => c.id === formState.customerId)}
 								<button
 									type="button"
 									onclick={() => {
 										formState.customerId = '';
+										customerQuery = '';
 									}}
-									class="flex items-center gap-2 rounded-full border border-zinc-900 bg-zinc-900 px-3 py-1.5 text-white shadow-md"
+									class="flex shrink-0 items-center gap-2 rounded-full border border-zinc-900 bg-zinc-900 px-3 py-1.5 text-white shadow-md"
 								>
-									<span class="text-xs font-medium">{customer.name}</span>
+									<span class="text-xs font-medium whitespace-nowrap">{selectedCustomer.name}</span>
 									<Check size={12} />
 								</button>
 							{/if}
-						{/each}
 
-						{#if customerQuery && !isSearching}
-							<button
-								type="button"
-								onclick={() => (showCustomerModal = true)}
-								class="flex items-center gap-2 rounded-full border border-dashed border-emerald-200 bg-emerald-50 px-3 py-1.5 text-emerald-700 transition-all active:scale-95"
-							>
-								<Plus size={12} />
-								<span class="text-xs font-bold">Criar "{customerQuery}"</span>
-							</button>
-						{/if}
+							{#each data.customers.slice(0, 10) as customer}
+								{#if customer.id !== formState.customerId}
+									<!-- Evita duplicar se já mostramos acima -->
+									<button
+										type="button"
+										onclick={() => {
+											formState.customerId = customer.id;
+											customerQuery = '';
+										}}
+										class="flex shrink-0 items-center gap-2 rounded-full border border-zinc-100 bg-zinc-50 px-3 py-1.5 text-zinc-600 transition-all hover:border-zinc-200 active:scale-95"
+									>
+										<span class="text-xs font-medium whitespace-nowrap">{customer.name}</span>
+									</button>
+								{:else if !selectedCustomer || data.customers.some((c) => c.id === formState.customerId)}
+									<!-- Mostra o selecionado dentro da ordem natural da lista -->
+									<button
+										type="button"
+										onclick={() => {
+											formState.customerId = '';
+										}}
+										class="flex shrink-0 items-center gap-2 rounded-full border border-zinc-900 bg-zinc-900 px-3 py-1.5 text-white shadow-md"
+									>
+										<span class="text-xs font-medium whitespace-nowrap">{customer.name}</span>
+										<Check size={12} />
+									</button>
+								{/if}
+							{/each}
+
+							{#if customerQuery && !isSearching}
+								<button
+									type="button"
+									onclick={() => (showCustomerModal = true)}
+									class="flex shrink-0 items-center gap-2 rounded-full border border-dashed border-emerald-200 bg-emerald-50 px-3 py-1.5 text-emerald-700 transition-all active:scale-95"
+								>
+									<Plus size={12} />
+									<span class="text-xs font-bold whitespace-nowrap">Criar "{customerQuery}"</span>
+								</button>
+							{/if}
+						</div>
 					</div>
 
 					<!-- Input de Busca -->

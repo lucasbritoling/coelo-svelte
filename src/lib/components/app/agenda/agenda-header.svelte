@@ -21,6 +21,12 @@
 		onDateSelect(d);
 		isPickerOpen = false;
 	}
+
+	function goToToday(e: MouseEvent) {
+		e.stopPropagation(); // Impede de abrir o Dialog ao clicar no "Ir para hoje"
+		const today = new Date().toISOString().split('T')[0];
+		onDateSelect(today);
+	}
 </script>
 
 <header
@@ -39,22 +45,38 @@
 			<Dialog.Trigger
 				class="group absolute left-1/2 flex -translate-x-1/2 items-center gap-1.5 outline-none"
 			>
-				<h1
-					class="capitalize transition-opacity group-active:opacity-60 {navigating.to
-						? 'opacity-40'
-						: ''} 
-                    {headerLabel.toLowerCase() === 'hoje'
-						? 'text-[1.45rem] font-medium'
-						: 'text-[1.15rem] font-semibold'}"
-				>
-					{headerLabel}
-				</h1>
-				<ChevronDown
-					size={headerLabel.toLowerCase() === 'hoje' ? 22 : 18}
-					strokeWidth={headerLabel.toLowerCase() === 'hoje' ? 2.5 : 2}
-					class="mb-0.5 text-zinc-900 transition-transform group-active:translate-y-0.5
-                    {headerLabel.toLowerCase() === 'hoje' ? 'mt-1' : 'mt-0.5'}"
-				/>
+				<!-- Container Flex Col para empilhar Título e "Ir para hoje" -->
+				<div class="flex flex-col items-center">
+					<div class="flex items-center gap-1.5">
+						<h1
+							class="capitalize transition-opacity group-active:opacity-60 {navigating.to
+								? 'opacity-40'
+								: ''} 
+                            {headerLabel.toLowerCase() === 'hoje'
+								? 'text-[1.45rem] font-medium'
+								: 'text-[1.15rem] font-semibold'}"
+						>
+							{headerLabel}
+						</h1>
+						<ChevronDown
+							size={headerLabel.toLowerCase() === 'hoje' ? 22 : 18}
+							strokeWidth={headerLabel.toLowerCase() === 'hoje' ? 2.5 : 2}
+							class="mb-0.5 text-zinc-900 transition-transform group-active:translate-y-0.5
+                            {headerLabel.toLowerCase() === 'hoje' ? 'mt-1' : 'mt-0.5'}"
+						/>
+					</div>
+
+					{#if headerLabel.toLowerCase() !== 'hoje'}
+						<div class="mt-0.5 flex justify-center">
+							<button
+								onclick={goToToday}
+								class="cursor-pointer text-[10px] font-bold tracking-wider text-muted-foreground/80 uppercase transition-colors hover:text-foreground"
+							>
+								Ir para hoje
+							</button>
+						</div>
+					{/if}
+				</div>
 			</Dialog.Trigger>
 
 			<Dialog.Content

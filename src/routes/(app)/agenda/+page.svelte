@@ -4,8 +4,6 @@
 	import type { Appointment } from '$lib/types/appointment';
 	import { Check, CalendarDays, Link, CalendarPlus } from '@lucide/svelte';
 
-	import * as Dialog from '$lib/components/ui/dialog';
-
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';

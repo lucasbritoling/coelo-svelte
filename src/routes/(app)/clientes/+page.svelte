@@ -167,14 +167,26 @@
 			use:enhance={() => {
 				isLoading = true;
 				return async ({ result, update }) => {
-					// O update() já tenta invalidar, mas as vezes o reset: false interfere
-					await update({ reset: true });
-					await invalidateAll(); // Força a atualização dos dados do banco
-
+					// O update() aplica o resultado da action (limpa campos se necessário, etc)
+					await update();
 					isLoading = false;
+
 					if (result.type === 'success') {
-						toast.success(formState.id ? 'Atualizado' : 'Criado');
+						toast.success(formState.id ? 'Atualizado com sucesso' : 'Criado com sucesso');
 						open = false;
+					}
+
+					if (result.type === 'failure') {
+						// Aqui capturamos a mensagem enviada pelo fail(400, { message: '...' })
+						const message = result.data?.message || 'Ocorreu um erro inesperado';
+						toast.error(message);
+
+						// Resetamos o estado de confirmação para o botão voltar ao normal após o erro
+						isConfirmingDelete = false;
+					}
+
+					if (result.type === 'error') {
+						toast.error('Erro de conexão ou erro interno do servidor');
 					}
 				};
 			}}

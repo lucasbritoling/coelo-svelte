@@ -79,7 +79,7 @@
 						}
 					};
 				}}
-				class="flex flex-col space-y-6 p-6 pb-10"
+				class="flex flex-col space-y-6 p-6 pt-0 pb-4"
 			>
 				<input type="hidden" name="end_at" value={end_at} />
 				<input type="hidden" name="date" value={formState.date} />

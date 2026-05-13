@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { ui } from '$lib/state/ui.svelte';
 	import { Plus, Search, ChevronDown, Settings } from '@lucide/svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import DatePicker from '$lib/components/date-picker.svelte';
@@ -34,7 +35,7 @@
 			<Search size={22} strokeWidth={2.5} />
 		</button>
 
-		<Dialog.Root bind:open={isPickerOpen}>
+		<Dialog.Root bind:open={ui.isDatePickerOpen}>
 			<Dialog.Trigger
 				class="group absolute left-1/2 flex -translate-x-1/2 items-center gap-1.5 outline-none"
 			>

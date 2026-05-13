@@ -1,10 +1,13 @@
 <script lang="ts">
+import { ui } from '$lib/state/ui.svelte';
+	import { Calendar } from "@lucide/svelte";
 	interface Props {
 		selectedDate: string;
 		onSelect: (date: string) => void;
+		onOpenPicker: () => void;
 	}
 
-	let { selectedDate, onSelect }: Props = $props();
+	let { selectedDate, onSelect, onOpenPicker }: Props = $props();
 
 	const fmt = {
 		iso: new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Sao_Paulo' }),
@@ -14,8 +17,8 @@
 	const strip = $derived.by(() => {
 		const [y, m, d] = selectedDate.split('-').map(Number);
 		const center = new Date(y, m - 1, d);
-
-		return Array.from({ length: 7 }, (_, i) => {
+		// Renderizamos 6 dias, pois o 7º será o 'ver calendar'
+		return Array.from({ length: 6 }, (_, i) => {
 			const date = new Date(center);
 			date.setDate(center.getDate() - 1 + i);
 			return {
@@ -50,6 +53,15 @@
 			</span>
 		</button>
 	{/each}
+	<button
+        class="flex aspect-square h-15 w-14.5 shrink-0 flex-col items-center justify-center rounded-full border border-foreground/10 bg-muted/20 opacity-80 transition-all active:scale-95"
+        onclick={() => ui.isDatePickerOpen = true}
+    >
+        <span class="text-[9.5px] leading-none font-medium tracking-wide uppercase text-muted-foreground">
+            Ver
+        </span>
+        <Calendar class="mt-1 h-4 w-4 text-muted-foreground" />
+    </button>
 </div>
 
 <style>

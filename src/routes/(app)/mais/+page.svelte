@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
 	import { ChevronRight, LogOut, ChevronLeft, Clock, BriefcaseBusiness } from '@lucide/svelte';
+	import { goto } from '$app/navigation';
 
 	let { data } = $props();
 
@@ -18,7 +19,7 @@
 	<div class="px-5 pt-8 pb-4">
 		<div class="flex items-center gap-2">
 			<button
-				onclick={() => history.back()}
+				onclick={() => goto('/agenda')}
 				class="-ml-2 flex items-center p-2 text-muted-foreground transition-transform active:scale-90"
 			>
 				<ChevronLeft size={24} strokeWidth={2.5} />

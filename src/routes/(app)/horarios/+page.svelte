@@ -424,24 +424,29 @@
 					name="date"
 					required
 					bind:value={overrideForm.date}
-					class="h-11 rounded-xl border-zinc-100 bg-[#F8F8F8]"
+					class="h-11 rounded-xl"
 				/>
 			</div>
 
 			<div
-				class="flex items-center justify-between rounded-2xl border border-zinc-100 bg-[#F8F8F8]/50 p-4"
+				class="flex items-center justify-between rounded-xl border p-4 transition-colors duration-200
+    {overrideForm.is_available
+					? 'border-emerald-100 bg-emerald-50/50'
+					: 'border-rose-100 bg-rose-50/50'}"
 			>
 				<span
-					class="text-sm font-bold {overrideForm.is_available
-						? 'text-emerald-700'
-						: 'text-rose-700'}"
+					class="text-sm font-bold transition-colors duration-200
+        {overrideForm.is_available ? 'text-emerald-700' : 'text-rose-700'}"
 				>
-					{overrideForm.is_available ? 'Disponível' : 'Indisponível'}
+					{overrideForm.is_available ? 'Horário Disponível' : 'Horário Indisponível'}
 				</span>
-				<Switch bind:checked={overrideForm.is_available} />
-				{#if overrideForm.is_available}
-					<input type="hidden" name="is_available" value="on" />
-				{/if}
+
+				<div class="flex items-center">
+					<Switch bind:checked={overrideForm.is_available} />
+					{#if overrideForm.is_available}
+						<input type="hidden" name="is_available" value="on" />
+					{/if}
+				</div>
 			</div>
 
 			<div class="grid grid-cols-2 gap-4">
@@ -449,13 +454,13 @@
 					type="time"
 					name="start_time"
 					bind:value={overrideForm.start_time}
-					class="h-11 rounded-xl border-zinc-100 bg-[#F8F8F8] font-bold"
+					class="h-11 rounded-xl font-bold"
 				/>
 				<Input
 					type="time"
 					name="end_time"
 					bind:value={overrideForm.end_time}
-					class="h-11 rounded-xl border-zinc-100 bg-[#F8F8F8] font-bold"
+					class="h-11 rounded-xl font-bold"
 				/>
 			</div>
 
@@ -465,7 +470,7 @@
 					name="note"
 					placeholder="Opcional..."
 					bind:value={overrideForm.note}
-					class="h-11 rounded-xl border-zinc-100 bg-[#F8F8F8]"
+					class="h-11 rounded-xl "
 				/>
 			</div>
 

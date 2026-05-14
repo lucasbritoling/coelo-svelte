@@ -2,7 +2,7 @@
 	import type { Appointment, AppointmentStatus } from '$lib/types/appointment';
 	import { MessageCircle, CheckCircle2, XCircle } from '@lucide/svelte';
 	import { Badge } from '$lib/components/ui/badge';
-	import AppointmentCardAction from '$lib/components/app/appointment-card-action.svelte';
+	import AppointmentCardAction from '$lib/components/app/agenda/appointment-card-action.svelte';
 
 	interface Props {
 		appt: Appointment;

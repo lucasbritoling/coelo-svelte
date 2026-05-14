@@ -2,7 +2,7 @@
 	import BottomNav from '$lib/components/app/agenda/agenda-bottom-nav.svelte';
 	import { ui } from '$lib/state/ui.svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
-	import DatePicker from '$lib/components/date-picker.svelte';
+	import DatePicker from '$lib/components/app/date-picker.svelte';
 	import { parseDate } from '@internationalized/date';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';

@@ -19,7 +19,7 @@
 	import { dateUtils, fmt } from '$lib/utils/date';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import CustomerForm from './customer-form.svelte';
+	import CustomerForm from '../customer-form.svelte';
 	import { ui } from '$lib/state/ui.svelte';
 
 	// Props

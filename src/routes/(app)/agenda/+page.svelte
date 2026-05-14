@@ -10,7 +10,7 @@
 
 	import AgendaHeader from '$lib/components/app/agenda/agenda-header.svelte';
 	import AgendaStrip from '$lib/components/app/agenda/agenda-strip.svelte';
-	import AppointmentForm from '$lib/components/app/new-appointment-form.svelte';
+	import AppointmentForm from '$lib/components/app/agenda/appointment-form.svelte';
 	import AppointmentCard from '$lib/components/app/agenda/appointment-card.svelte';
 	import GhostSlot from '$lib/components/app/agenda/ghost-slot.svelte';
 	import { scale } from 'svelte/transition';

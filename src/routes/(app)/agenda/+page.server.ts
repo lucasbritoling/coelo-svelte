@@ -9,89 +9,52 @@ import { customerSchema, serviceSchema } from '$lib/schemas/app';
 export const load: PageServerLoad = async ({ url, locals: { sql, user } }) => {
 	if (!user) throw redirect(303, '/login');
 
-	// 1. Pega o parâmetro da URL
 	const dateParam = url.searchParams.get('date') || dateUtils.today();
+	const searchQuery = url.searchParams.get('q')?.trim() ?? '';
 
-	// 2. Se NÃO existir o parâmetro, redireciona para a mesma página com o parâmetro de hoje
-	if (!dateParam) {
-		// Caso precise forçar redirecionamento
-		throw redirect(302, `${url.pathname}?date=${dateUtils.today()}`);
-	}
-
-	// 3. Validação estrita (agora temos certeza que dateParam existe)
+	// Validação básica da data para evitar queries inúteis
 	if (!/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
 		throw error(400, 'Data inválida');
 	}
 
-	const searchQuery = url.searchParams.get('q')?.trim() ?? '';
-
 	try {
-		const [customerForm, serviceForm, rawAppointments, customers, services, workingHours, profile] =
-			await Promise.all([
-				superValidate(zod4(customerSchema)),
-				superValidate(zod4(serviceSchema)),
+		// 1. Chamada paralela: RPC do Banco + Validação dos Formulários
+		const [rpcResult, customerForm, serviceForm] = await Promise.all([
+			sql`SELECT load_agenda(${user.id}::uuid, ${dateParam}::date, ${searchQuery}) as data`,
+			superValidate(zod4(customerSchema)),
+			superValidate(zod4(serviceSchema))
+		]);
 
-				// 2. Query de Appointments: Mais performática e segura
-				sql`
-                SELECT 
-                    a.id, a.status, 
-                    to_char(lower(a.slot), 'HH24:MI') as start_at,
-                    to_char(upper(a.slot), 'HH24:MI') as end_at,
-                    c.name as customer_name,
-					c.phone as customer_phone,
-                    s.name as service_name,
-					s.color as service_color,
-                    s.duration as service_duration
-                FROM appointments a
-                JOIN customers c ON a.customer_id = c.id
-                JOIN services s ON a.service_id = s.id
-                WHERE a.profile_id = ${user.id}
-                  -- Filtro exato por dia usando cast para DATE
-                  AND lower(a.slot)::date = ${dateParam}::date
-                ORDER BY lower(a.slot) ASC
-            `,
-
-				// 3. Clientes com LIMIT (Segurança de memória)
-				// Se tiver mais de 100, o ideal é usar um combo-box com busca
-				sql`SELECT id, name FROM customers 
-    WHERE profile_id = ${user.id} 
-    ${searchQuery ? sql`AND name ILIKE ${'%' + searchQuery + '%'}` : sql``}
-    ORDER BY name 
-    LIMIT 100`,
-
-				sql`SELECT id, name, duration FROM services 
-                    WHERE profile_id = ${user.id} AND is_active = true 
-                    ORDER BY name`,
-
-				sql`SELECT username FROM profiles WHERE id = ${user.id} LIMIT 1`.then((r) => r[0]),
-
-				sql`SELECT day_of_week, start_time, end_time, is_active 
-        FROM working_hours WHERE profile_id = ${user.id} AND is_active = true`,
-
-				// Buscar perfil com dados de almoço
-				sql`SELECT username, has_lunch, lunch_start, lunch_end FROM profiles WHERE id = ${user.id} LIMIT 1`.then(
-					(r) => r[0]
-				)
-			]);
+		// 2. Extração dos dados da RPC
+		// O postgres.js retorna um array de linhas, pegamos a primeira (.data vem do alias no SQL)
+		const agenda = rpcResult[0].data;
 
 		return {
-			appointments: rawAppointments,
-			customers,
-			services,
-			username: profile?.username ?? 'user',
+			// Dados vindos da RPC
+			appointments: agenda.appointments,
+			customers: agenda.customers,
+			services: agenda.services,
+			workingHours: agenda.workingHours,
+			username: agenda.profile?.username ?? 'user',
+
+			// Contexto da página
 			selectedDate: dateParam,
 			customerForm,
 			serviceForm,
-			workingHours,
+
+			// User injetado com as configurações de almoço vindas do profile
 			user: {
 				...user,
-				lunch_settings: profile
+				lunch_settings: {
+					has_lunch: agenda.profile.has_lunch,
+					lunch_start: agenda.profile.lunch_start,
+					lunch_end: agenda.profile.lunch_end
+				}
 			}
 		};
 	} catch (err) {
-		// Log detalhado internamente, mas mensagem genérica para o usuário
 		console.error(`[Agenda Load Error] User: ${user.id}, Date: ${dateParam}:`, err);
-		throw error(500, 'Não foi possível carregar a agenda.');
+		throw error(500, 'Erro ao carregar os dados da agenda.');
 	}
 };
 

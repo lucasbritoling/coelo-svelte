@@ -455,6 +455,7 @@
 				};
 			}}
 		>
+			<input type="hidden" name="date" value={overrideForm.date} />
 			{#if overrideForm.id}
 				<input type="hidden" name="id" value={overrideForm.id} />
 			{/if}

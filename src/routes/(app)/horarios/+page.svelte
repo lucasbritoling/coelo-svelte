@@ -483,15 +483,35 @@
 
 			<div class="grid grid-cols-2 gap-4">
 				<Input
-					type="time"
+					type="text"
+					inputmode="numeric"
 					name="start_time"
-					bind:value={overrideForm.start_time}
+					maxlength={5}
+					value={overrideForm.start_time}
+					placeholder="09:00"
+					oninput={(e) => {
+						const input = e.currentTarget;
+						let raw = input.value.replace(/\D/g, '');
+						if (raw.length >= 3) raw = raw.slice(0, 2) + ':' + raw.slice(2, 4);
+						input.value = raw;
+						overrideForm.start_time = raw;
+					}}
 					class="h-11 rounded-xl font-bold"
 				/>
 				<Input
-					type="time"
+					type="text"
+					inputmode="numeric"
+					maxlength={5}
 					name="end_time"
-					bind:value={overrideForm.end_time}
+					value={overrideForm.end_time}
+					placeholder="18:00"
+					oninput={(e) => {
+						const input = e.currentTarget;
+						let raw = input.value.replace(/\D/g, '');
+						if (raw.length >= 3) raw = raw.slice(0, 2) + ':' + raw.slice(2, 4);
+						input.value = raw;
+						overrideForm.end_time = raw;
+					}}
 					class="h-11 rounded-xl font-bold"
 				/>
 			</div>

@@ -26,7 +26,7 @@ export const load: PageServerLoad = async ({ url, locals: { sql, user } }) => {
 	const searchQuery = url.searchParams.get('q')?.trim() ?? '';
 
 	try {
-		const [customerForm, serviceForm, rawAppointments, customers, services, profile] =
+		const [customerForm, serviceForm, rawAppointments, customers, services, workingHours, profile] =
 			await Promise.all([
 				superValidate(zod4(customerSchema)),
 				superValidate(zod4(serviceSchema)),
@@ -63,7 +63,15 @@ export const load: PageServerLoad = async ({ url, locals: { sql, user } }) => {
                     WHERE profile_id = ${user.id} AND is_active = true 
                     ORDER BY name`,
 
-				sql`SELECT username FROM profiles WHERE id = ${user.id} LIMIT 1`.then((r) => r[0])
+				sql`SELECT username FROM profiles WHERE id = ${user.id} LIMIT 1`.then((r) => r[0]),
+
+				sql`SELECT day_of_week, start_time, end_time, is_active 
+        FROM working_hours WHERE profile_id = ${user.id} AND is_active = true`,
+
+				// Buscar perfil com dados de almoço
+				sql`SELECT username, has_lunch, lunch_start, lunch_end FROM profiles WHERE id = ${user.id} LIMIT 1`.then(
+					(r) => r[0]
+				)
 			]);
 
 		return {
@@ -73,7 +81,12 @@ export const load: PageServerLoad = async ({ url, locals: { sql, user } }) => {
 			username: profile?.username ?? 'user',
 			selectedDate: dateParam,
 			customerForm,
-			serviceForm
+			serviceForm,
+			workingHours,
+			user: {
+				...user,
+				lunch_settings: profile
+			}
 		};
 	} catch (err) {
 		// Log detalhado internamente, mas mensagem genérica para o usuário

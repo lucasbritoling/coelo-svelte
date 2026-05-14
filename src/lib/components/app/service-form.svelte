@@ -7,7 +7,6 @@
 	import { enhance } from '$app/forms';
 	import { toast } from 'svelte-sonner';
 
-	// Definição de interface para melhor DX
 	interface Service {
 		id?: string;
 		name: string;
@@ -39,17 +38,6 @@
 		buffer_after_min: 0
 	});
 
-	// --- Utilitários ---
-	const isMobile = () => typeof window !== 'undefined' && window.innerWidth < 640;
-
-	const handleOpenAutoFocus = (e: Event) => {
-		if (formState.id && isMobile()) e.preventDefault();
-	};
-
-	const focusButton = (node: HTMLElement) => {
-		node.querySelector('button')?.focus();
-	};
-
 	// --- Efeitos ---
 	$effect(() => {
 		if (!open) isConfirmingDelete = false;
@@ -70,156 +58,152 @@
 
 <Dialog.Root bind:open>
 	<Dialog.Content
-		onOpenAutoFocus={handleOpenAutoFocus}
-		class="flex max-h-[90dvh] flex-col gap-0 p-0 sm:max-w-[400px]"
+		class="flex max-h-[90dvh] w-[95vw] flex-col gap-0 overflow-hidden rounded-[32px] p-0 sm:max-w-[400px]"
 	>
-		<Dialog.Header class="shrink-0 border-b px-6 py-4">
-			<Dialog.Title>{formState.id ? 'Editar Serviço' : 'Novo Serviço'}</Dialog.Title>
+		<Dialog.Header class="px-6 py-6 text-left">
+			<Dialog.Title class="text-xl font-bold">
+				{formState.id ? 'Editar Serviço' : 'Novo Serviço'}
+			</Dialog.Title>
 		</Dialog.Header>
 
 		<form
 			method="POST"
 			action="/servicos?/upsert"
-			use:enhance={() => {
+			use:enhance={({ action }) => {
 				isLoading = true;
-				const isEditing = !!formState.id; // Captura o estado antes da resposta
+				const isDelete = action.search.includes('delete');
 
 				return async ({ result, update }) => {
-					await update({ reset: false });
+					await update({ reset: false, invalidateAll: true });
 					isLoading = false;
 
 					if (result.type === 'success') {
-						// Lógica de Toast para Sucesso
-						if (isConfirmingDelete) {
-							toast.success('Serviço excluído');
-						} else {
-							toast.success(isEditing ? 'Serviço atualizado' : 'Serviço criado');
-						}
-
-						const data = result.data as { service?: Service };
-						if (data?.service) onSuccess?.(data.service);
+						toast.success(isDelete ? 'Serviço excluído' : 'Serviço salvo');
 						open = false;
 					} else if (result.type === 'failure') {
-						// Lógica de Toast para Erro (Chave estrangeira ou validação)
-						const message = result.data?.message ?? 'Erro ao salvar serviço';
-						toast.error(message);
-						isConfirmingDelete = false; // Volta o botão para o estado original
-					} else if (result.type === 'error') {
-						toast.error('Erro de conexão com o servidor');
+						toast.error(result.data?.message ?? 'Erro na operação');
+						isConfirmingDelete = false;
 					}
 				};
 			}}
-			class="flex flex-1 flex-col overflow-hidden"
+			class="flex flex-col"
 		>
 			<input type="hidden" name="id" value={formState.id} />
 
-			<div class="flex flex-1 flex-col gap-5 overflow-y-auto px-6 py-5">
+			<div class="space-y-6 px-6 pb-8">
+				<!-- Nome -->
 				<div class="grid gap-2">
-					<Label for="name">Nome</Label>
+					<Label class="text-[11px] font-bold tracking-widest text-zinc-400 uppercase">Nome</Label>
 					<Input
-						id="name"
 						name="name"
 						bind:value={formState.name}
 						placeholder="Ex: Corte de Cabelo"
-						minlength={3}
+						class="h-12 rounded-xl"
 						required
 					/>
 				</div>
 
+				<!-- Duração -->
 				<div class="grid gap-2">
-					<Label for="duration">Duração (minutos)</Label>
+					<Label class="text-[11px] font-bold tracking-widest text-zinc-400 uppercase"
+						>Duração (minutos)</Label
+					>
 					<div class="relative">
-						<Clock class="absolute top-2.5 left-2.5 h-4 w-4 text-muted-foreground" />
+						<Clock class="absolute top-4 left-4 size-4 text-zinc-400" />
 						<Input
-							id="duration"
 							name="duration"
-							type="number"
+							type="text"
+							placeholder="30"
 							inputmode="numeric"
-							min={1}
-							class="pl-9"
 							bind:value={formState.duration}
+							class="h-12 rounded-xl pl-11 font-bold"
 							required
+							oninput={(e) => {
+								// Remove tudo que não for de 0 a 9 em tempo real
+								formState.duration = e.currentTarget.value.replace(/\D/g, '');
+							}}
 						/>
 					</div>
 				</div>
 
-				<div class="mt-2 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-					<CalendarClock class="h-4 w-4" /> Regras de Agendamento
+				<div
+					class="flex items-center gap-2 pt-2 text-[10px] font-bold tracking-widest text-zinc-400 uppercase"
+				>
+					<CalendarClock size={14} /> Configurações de Agenda
 				</div>
 
-				<div class="grid gap-2">
-					<Label for="min_notice_hours">Antecedência Mínima (horas)</Label>
-					<Input
-						id="min_notice_hours"
-						name="min_notice_hours"
-						type="number"
-						inputmode="numeric"
-						bind:value={formState.min_notice_hours}
-					/>
-				</div>
+				<div class="grid grid-cols-2 gap-4">
+					<!-- Antecedência -->
+					<div class="grid gap-2">
+						<Label class="text-[11px] font-bold tracking-widest text-zinc-400 uppercase"
+							>Antecedência (horas)</Label
+						>
+						<div class="relative">
+							<Input
+								name="min_notice_hours"
+								type="text"
+								placeholder="2"
+								inputmode="numeric"
+								bind:value={formState.min_notice_hours}
+								class="h-12 rounded-xl  font-bold"
+								oninput={(e) => {
+									// Remove tudo que não for de 0 a 9 em tempo real
+									formState.min_notice_hours = e.currentTarget.value.replace(/\D/g, '');
+								}}
+							/>
+						</div>
+					</div>
 
-				<div class="grid gap-2">
-					<Label for="buffer_after_min">Intervalo de Respiro (minutos)</Label>
-					<div class="relative">
-						<Coffee class="absolute top-2 left-2.5 h-4 w-4 text-muted-foreground" />
-						<Input
-							id="buffer_after_min"
-							name="buffer_after_min"
-							type="number"
-							inputmode="numeric"
-							class="pl-9"
-							bind:value={formState.buffer_after_min}
-						/>
+					<!-- Buffer -->
+					<div class="grid gap-2">
+						<Label class="text-[11px] font-bold tracking-widest text-zinc-400 uppercase"
+							>Intervalo (minutos)</Label
+						>
+						<div class="relative">
+							<Coffee class="absolute top-4 left-4 size-4 text-zinc-400" />
+							<Input
+								name="buffer_after_min"
+								type="text"
+								placeholder="0"
+								inputmode="numeric"
+								bind:value={formState.buffer_after_min}
+								class="h-12 rounded-xl pl-11 font-bold"
+								oninput={(e) => {
+									// Remove tudo que não for de 0 a 9 em tempo real
+									formState.buffer_after_min = e.currentTarget.value.replace(/\D/g, '');
+								}}
+							/>
+						</div>
 					</div>
 				</div>
 			</div>
 
-			<div
-				class="flex shrink-0 gap-3 border-t px-6 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))]"
-			>
+			<!-- Footer com Botões unificados -->
+			<div class="flex gap-3 border-t p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
 				{#if formState.id}
-					<div use:focusButton class="flex-1 sm:hidden">
-						{#if !isConfirmingDelete}
-							<Button
-								type="button"
-								variant="outline"
-								onclick={() => (isConfirmingDelete = true)}
-								class="w-full cursor-pointer border-destructive/20 text-destructive"
-							>
-								<Trash2 class="mr-2 h-4 w-4" /> Excluir
-							</Button>
-						{:else}
-							<Button
-								type="submit"
-								variant="destructive"
-								formaction="/servicos?/delete"
-								disabled={isLoading}
-								class="w-full animate-in cursor-pointer zoom-in-95 fade-in"
-							>
-								{#if isLoading}
-									<LoaderCircle class="h-4 w-4 animate-spin" />
-								{:else}
-									Confirmar?
-								{/if}
-							</Button>
-						{/if}
-					</div>
+					<Button
+						type={isConfirmingDelete ? 'submit' : 'button'}
+						variant="destructive"
+						formaction="/servicos?/delete"
+						onclick={(e) => {
+							if (!isConfirmingDelete) {
+								e.preventDefault();
+								isConfirmingDelete = true;
+							}
+						}}
+						class="h-12 flex-1 rounded-2xl"
+					>
+						{isConfirmingDelete ? 'Confirmar?' : 'Excluir'}
+					</Button>
 				{/if}
 
 				<Button
-					type={isConfirmingDelete ? 'button' : 'submit'}
+					type="submit"
 					disabled={isLoading}
-					onclick={(e) => {
-						if (isConfirmingDelete) {
-							e.preventDefault();
-							isConfirmingDelete = false;
-						}
-					}}
-					class="cursor-pointer {formState.id ? 'flex-[2] sm:w-full' : 'w-full'}"
+					class="h-12 {formState.id ? 'flex-[2]' : 'w-full'} rounded-2xl bg-zinc-900 text-white"
 				>
 					{#if isLoading}
-						<LoaderCircle class="mr-2 h-4 w-4 animate-spin" />
-						Salvando
+						<LoaderCircle class="mr-2 size-4 animate-spin" />
 					{:else}
 						{isConfirmingDelete ? 'Cancelar' : 'Salvar'}
 					{/if}
@@ -228,3 +212,12 @@
 		</form>
 	</Dialog.Content>
 </Dialog.Root>
+
+<style>
+	/* Remove as setinhas padrão do input number para manter o visual limpo */
+	input::-webkit-outer-spin-button,
+	input::-webkit-inner-spin-button {
+		-webkit-appearance: none;
+		margin: 0;
+	}
+</style>

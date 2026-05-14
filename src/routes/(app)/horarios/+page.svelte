@@ -127,9 +127,10 @@
 
 	function handleTimeInput(e: Event, day: any, field: string) {
 		const input = e.target as HTMLInputElement;
-		let value = input.value.replace(/\D/g, '');
-		if (value.length >= 3) value = value.slice(0, 2) + ':' + value.slice(2, 4);
-		day[field] = value;
+		let raw = input.value.replace(/\D/g, '');
+		if (raw.length >= 3) raw = raw.slice(0, 2) + ':' + raw.slice(2, 4);
+		input.value = raw;
+		day[field] = raw;
 	}
 
 	let dialogMode = $derived(overrideForm.id ? 'edit' : 'new');

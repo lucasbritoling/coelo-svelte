@@ -158,13 +158,15 @@
 				action="?/create"
 				use:enhance={() => {
 					isSubmitting = true;
-					return async ({ result }) => {
+					return async ({ result, update }) => {
+						await update();
 						isSubmitting = false;
 						if (result.type === 'success') {
 							onSuccess();
 							open = false;
-							formState.customerId = ''; // Limpa após sucesso
+							formState.customerId = '';
 							customerQuery = '';
+							formState.notes = '';
 						}
 					};
 				}}

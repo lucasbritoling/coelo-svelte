@@ -1,6 +1,13 @@
 <script lang="ts">
 	import { fly } from 'svelte/transition';
-	import { ChevronRight, LogOut, ChevronLeft, Clock, BriefcaseBusiness } from '@lucide/svelte';
+	import {
+		ChevronRight,
+		LogOut,
+		ChevronLeft,
+		Clock,
+		BriefcaseBusiness,
+		LoaderCircle
+	} from '@lucide/svelte';
 	import { goto } from '$app/navigation';
 
 	let { data } = $props();
@@ -13,6 +20,18 @@
 	};
 
 	const initials = $derived(profile.name[0]?.toUpperCase() ?? '?');
+
+	let confirmLogout = $state(false);
+	let isLoggingOut = $state(false);
+
+	$effect(() => {
+		if (confirmLogout && !isLoggingOut) {
+			const timer = setTimeout(() => {
+				confirmLogout = false;
+			}, 2000);
+			return () => clearTimeout(timer);
+		}
+	});
 </script>
 
 <div class="mx-auto flex min-h-full max-w-xl flex-col pb-28" in:fly={{ x: -24, duration: 200 }}>
@@ -84,15 +103,47 @@
 	<!-- ── SESSÃO ───────────────────────────────────────────────────── -->
 	<p class="section-label">sessão</p>
 	<div class="mx-3 overflow-hidden rounded-2xl border border-border/40 bg-card">
-		<form method="POST" action="/logout">
+		<form method="POST" action="/logout" onsubmit={() => (isLoggingOut = true)}>
 			<button
-				type="submit"
-				class="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-muted/50"
+				type={confirmLogout ? 'submit' : 'button'}
+				onclick={(e) => {
+					if (!confirmLogout) {
+						e.preventDefault();
+						confirmLogout = true;
+					}
+				}}
+				/* No Svelte 5, usamos ternários ou funções auxiliares dentro de template strings */
+				class={`flex w-full items-center gap-3 px-4 py-3 text-left transition-all duration-200 active:bg-muted/50 ${
+					confirmLogout ? 'bg-destructive/5' : ''
+				}`}
 			>
-				<div class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted">
-					<LogOut class="size-4 text-muted-foreground" />
+				<div
+					class={`flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted transition-colors ${
+						confirmLogout ? 'bg-destructive/10' : ''
+					}`}
+				>
+					{#if isLoggingOut}
+						<LoaderCircle class="size-4 animate-spin text-destructive" />
+					{:else}
+						<LogOut
+							class={`size-4 ${confirmLogout ? 'text-destructive' : 'text-muted-foreground'}`}
+						/>
+					{/if}
 				</div>
-				<p class="text-[14px] font-medium text-destructive">Sair</p>
+
+				<div class="flex flex-1 flex-col">
+					<p
+						class={`text-[14px] font-medium transition-colors ${confirmLogout ? 'text-destructive' : ''}`}
+					>
+						{#if isLoggingOut}
+							Saindo...
+						{:else if confirmLogout}
+							Tem certeza?
+						{:else}
+							Sair
+						{/if}
+					</p>
+				</div>
 			</button>
 		</form>
 	</div>

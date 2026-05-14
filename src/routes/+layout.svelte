@@ -51,6 +51,7 @@
 	expand={false}
 	position={isMobile ? 'top-center' : 'bottom-center'}
 	visibleToasts={1}
+	duration={2000}
 	toastOptions={{
 		// w-fit + mx-auto garante que ele fique "magrinho" e centralizado
 		class: 'w-fit mx-auto border-border/50 bg-background shadow-lg font-sans'
@@ -71,9 +72,11 @@
 			display: flex !important;
 			flex-direction: column !important;
 			align-items: center !important;
+			pointer-events: none !important;
 		}
 
 		:global([data-sonner-toast]) {
+			pointer-events: auto !important;
 			--y: 0px !important;
 			position: relative !important;
 			/* Garante que o toast não estique para 100% da largura do container */

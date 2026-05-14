@@ -8,7 +8,8 @@
 		Pencil,
 		Utensils,
 		ChevronLeft,
-		TriangleAlert
+		TriangleAlert,
+		CalendarDays
 	} from '@lucide/svelte';
 	import { goto, beforeNavigate } from '$app/navigation';
 	import * as Dialog from '$lib/components/ui/dialog';
@@ -159,6 +160,7 @@
 				note: ''
 			};
 		}
+		ui.selectedDate = overrideForm.date;
 		dialogOpen = true;
 	}
 	function fmtDate(dateStr: string) {
@@ -169,6 +171,14 @@
 			month: 'long'
 		}).format(date);
 	}
+
+	$effect(() => {
+		// Sempre que a data global mudar e o picker fechar,
+		// sincronizamos com o formulário de exceção se ele estiver aberto
+		if (ui.selectedDate && !ui.isDatePickerOpen && dialogOpen) {
+			overrideForm.date = ui.selectedDate;
+		}
+	});
 </script>
 
 <div class="flex h-full flex-col bg-[#F8F8F8]">
@@ -450,14 +460,22 @@
 			{/if}
 
 			<div class="space-y-1.5">
-				<Label class="text-[11px] font-bold text-zinc-400 uppercase">Data</Label>
-				<Input
-					type="date"
-					name="date"
-					required
-					bind:value={overrideForm.date}
-					class="h-11 rounded-xl"
-				/>
+				<Label class="text-[11px] font-bold tracking-widest text-zinc-400 uppercase">Data</Label>
+
+				<button
+					type="button"
+					onclick={() => {
+						ui.isDatePickerOpen = true;
+					}}
+					class="flex h-11 w-full items-center justify-between rounded-xl border border-zinc-100 bg-zinc-50 px-4 active:scale-[0.98]"
+				>
+					<span class="text-sm font-bold text-zinc-900">
+						{overrideForm.date
+							? overrideForm.date.split('-').reverse().join('/')
+							: 'Selecionar data'}
+					</span>
+					<CalendarDays class="size-4 text-zinc-400" />
+				</button>
 			</div>
 
 			<div

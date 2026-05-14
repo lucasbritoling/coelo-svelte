@@ -2,8 +2,6 @@
 	import { ui } from '$lib/state/ui.svelte';
 	import { Plus, Search, ChevronDown, Settings } from '@lucide/svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
-	import DatePicker from '$lib/components/date-picker.svelte';
-	import { parseDate } from '@internationalized/date';
 	import { navigating } from '$app/state';
 
 	let { headerLabel, selectedDate, user, onDateSelect, onOpenAppointment, onOpenSearch } = $props<{
@@ -15,15 +13,8 @@
 		onOpenSearch: () => void;
 	}>();
 
-	let isPickerOpen = $state(false);
-
-	function handleDateChange(d: any) {
-		onDateSelect(d);
-		isPickerOpen = false;
-	}
-
 	function goToToday(e: MouseEvent) {
-		e.stopPropagation(); // Impede de abrir o Dialog ao clicar no "Ir para hoje"
+		e.stopPropagation();
 		const today = new Date().toISOString().split('T')[0];
 		onDateSelect(today);
 	}
@@ -31,7 +22,7 @@
 
 <header
 	class="sticky top-0 z-20 border-b border-transparent bg-background/80 backdrop-blur-xl transition-all"
-	class:border-border={!isPickerOpen}
+	class:border-border={!ui.isDatePickerOpen}
 >
 	<div class="relative flex items-center justify-between px-5 pt-6 pb-0">
 		<button
@@ -44,8 +35,11 @@
 		<Dialog.Root bind:open={ui.isDatePickerOpen}>
 			<Dialog.Trigger
 				class="group absolute left-1/2 flex -translate-x-1/2 items-center gap-1.5 outline-none"
+				onclick={() => {
+					// Sincroniza a data atual no estado global antes de abrir
+					ui.selectedDate = selectedDate;
+				}}
 			>
-				<!-- Container Flex Col para empilhar Título e "Ir para hoje" -->
 				<div class="flex flex-col items-center">
 					<div class="flex items-center gap-1.5">
 						<h1
@@ -78,12 +72,6 @@
 					{/if}
 				</div>
 			</Dialog.Trigger>
-
-			<Dialog.Content
-				class="fixed top-[50%] left-[50%] z-100 w-[92vw] max-w-xs translate-x-[-50%] translate-y-[-50%] rounded-[32px] border bg-background p-4 shadow-lg"
-			>
-				<DatePicker value={parseDate(selectedDate)} onValueChange={handleDateChange} />
-			</Dialog.Content>
 		</Dialog.Root>
 
 		<div class="flex items-center gap-1">

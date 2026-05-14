@@ -76,5 +76,18 @@ export const dateUtils = {
 		if (diff <= 0 && diff > -30) return 'agora';
 		if (diff < 60 && diff > 0) return `em ${diff} min`;
 		return null;
+	},
+	handleSelection: (date: any, currentPath: string) => {
+		if (!date) return null;
+
+		const dateString = date.toString();
+
+		// Se estiver na agenda, retorna o destino da navegação
+		if (currentPath.includes('/agenda')) {
+			return `/agenda?date=${dateString}`;
+		}
+
+		// Caso contrário, apenas retorna a string para atualizar estados locais
+		return dateString;
 	}
 };

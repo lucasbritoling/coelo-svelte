@@ -21,6 +21,7 @@
 	import { page } from '$app/state';
 	import CustomerForm from '../customer-form.svelte';
 	import { ui } from '$lib/state/ui.svelte';
+	import TimeSlotsSuggestions from '$lib/components/app/time-picker.svelte';
 
 	// Props
 	let {
@@ -297,11 +298,24 @@
 					<input type="hidden" name="service_id" value={data.services[0].id} />
 				{/if}
 
-				<div class="space-y-2">
-					<Label class="px-1 text-[10px] font-bold text-zinc-400 uppercase">Data e Início</Label>
+				<div class="space-y-3">
+					<div class="flex items-center gap-2 px-1 text-zinc-400">
+						<Clock size={14} />
+						<Label class="text-[10px] font-bold tracking-widest uppercase">Data e Início</Label>
+					</div>
+
+					<div class="h-7 px-1">
+						{#if formState.serviceId}
+							<TimeSlotsSuggestions
+								{data}
+								bind:start_at={formState.start_at}
+								selectedDate={formState.date}
+								serviceId={formState.serviceId}
+							/>
+						{/if}
+					</div>
 
 					<div class="flex gap-2">
-						<!-- Input de Data (Agora é flex-1 para crescer) -->
 						<button
 							type="button"
 							onclick={() => (ui.isDatePickerOpen = true)}
@@ -317,7 +331,6 @@
 							</span>
 						</button>
 
-						<!-- Input de Hora (Agora com largura fixa reduzida) -->
 						<div class="relative w-[105px] shrink-0">
 							<Input
 								type="text"
@@ -325,7 +338,7 @@
 								placeholder="00:00"
 								name="start_at"
 								maxlength={5}
-								value={formState.start_at}
+								bind:value={formState.start_at}
 								oninput={handleTimeInput}
 								class="h-12 rounded-2xl border-zinc-100 bg-zinc-50/50 pl-9 text-base font-medium focus:bg-white"
 							/>

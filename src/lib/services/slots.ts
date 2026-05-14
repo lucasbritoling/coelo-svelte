@@ -1,11 +1,5 @@
-// helpers/slots.ts
-
 /**
- * @param date - String YYYY-MM-DD
- * @param duration - Duração em minutos (ex: 45)
- * @param daySchedule - { start: "09:00", end: "18:00", is_active: true }
- * @param lunch - { start: "12:00", end: "13:00", active: true }
- * @param bookedRanges - [ { start: "10:00", end: "10:30" }, ... ]
+ * Gerador de Slots Inteligente com Telemetria de Debug
  */
 export function generateSmartSlots(
 	date: string,
@@ -14,13 +8,20 @@ export function generateSmartSlots(
 	lunch: any,
 	bookedRanges: { start: string; end: string }[]
 ) {
-	if (!daySchedule?.is_active) return [];
+	console.group(`⚙️ Motor de Slots: ${date}`);
+
+	// 1. Validação de Entrada
+	if (!daySchedule?.is_active) {
+		console.warn('ℹ️ Dia inativo no cronograma.');
+		console.groupEnd();
+		return [];
+	}
 
 	const slots: string[] = [];
-	const interval = 15; // Granularidade da agenda (ex: de 15 em 15 min)
+	const interval = 15;
 
-	// 1. Converter tudo para minutos desde o início do dia para facilitar cálculos
 	const toMin = (t: string) => {
+		if (!t) return 0;
 		const [h, m] = t.split(':').map(Number);
 		return h * 60 + m;
 	};
@@ -36,28 +37,57 @@ export function generateSmartSlots(
 	const startMin = toMin(daySchedule.start_time);
 	const endMin = toMin(daySchedule.end_time);
 
-	// Bloqueios convertidos
-	const blocks = bookedRanges.map((r) => ({ s: toMin(r.start), e: toMin(r.end) }));
+	console.log('📊 Configuração:', {
+		janela: `${daySchedule.start_time} até ${daySchedule.end_time}`,
+		minutos: `${startMin}min até ${endMin}min`,
+		duracaoServico: `${duration}min`,
+		intervaloPasso: `${interval}min`
+	});
 
-	if (lunch?.active) {
-		blocks.push({ s: toMin(lunch.start), e: toMin(lunch.end) });
+	// 2. Mapear Bloqueios (Agendamentos + Almoço)
+	const blocks = bookedRanges.map((r) => ({
+		s: toMin(r.start),
+		e: toMin(r.end),
+		origin: 'Agendamento'
+	}));
+
+	if (lunch?.has_lunch) {
+		const lStart = toMin(lunch.lunch_start);
+		const lEnd = toMin(lunch.lunch_end);
+		blocks.push({ s: lStart, e: lEnd, origin: 'Almoço' });
+		console.log(
+			`🍴 Bloqueio de Almoço: ${lunch.lunch_start} - ${lunch.lunch_end} (${lStart}-${lEnd}min)`
+		);
 	}
 
-	// 2. Iterar sobre o dia em passos de 15 min
+	if (blocks.length > 0) {
+		console.table(blocks);
+	}
+
+	// 3. Loop de Geração
+	console.log('🚶 Iniciando varredura de horários...');
+
 	for (let current = startMin; current + duration <= endMin; current += interval) {
 		const currentEnd = current + duration;
+		const slotLabel = fromMin(current);
 
-		// 3. A Mágica: O serviço "cabe" aqui?
-		// Verifica se o intervalo [current, currentEnd] sobrepõe qualquer bloco
-		const isOverlap = blocks.some((b) => {
-			// Existe sobreposição se: (Início1 < Fim2) E (Fim1 > Início2)
+		// Verifica se este slot colide com QUALQUER bloco
+		const collision = blocks.find((b) => {
+			// Lógica de colisão de intervalos:
+			// O slot começa antes do fim do bloco E termina depois do início do bloco
 			return current < b.e && currentEnd > b.s;
 		});
 
-		if (!isOverlap) {
-			slots.push(fromMin(current));
+		if (collision) {
+			// Log opcional para slots descartados (comentado para não poluir muito)
+			// console.debug(`  - Slot ${slotLabel} descartado: Colisão com ${collision.origin}`);
+		} else {
+			slots.push(slotLabel);
 		}
 	}
+
+	console.log(`✅ Finalizado: ${slots.length} slots gerados.`);
+	console.groupEnd();
 
 	return slots;
 }

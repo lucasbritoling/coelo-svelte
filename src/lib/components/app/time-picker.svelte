@@ -1,100 +1,149 @@
 <script lang="ts">
-	import { Label } from '$lib/components/ui/label';
-	import { Input } from '$lib/components/ui/input';
 	import { generateSmartSlots } from '$lib/services/slots.ts';
 
-	// Recebemos o data (com agendamentos e regras) e o formState (bindable)
-	let { data, formState = $bindable() } = $props();
+	let {
+		data,
+		start_at = $bindable(),
+		selectedDate,
+		serviceId
+	} = $props<{
+		data: any;
+		start_at: string;
+		selectedDate: string;
+		serviceId: string;
+	}>();
 
-	// 1. Derivamos a duração do serviço selecionado
-	const serviceDuration = $derived(
-		data.services.find((s) => s.id === formState.serviceId)?.duration ?? 0
-	);
+	// 1. Identificação da Duração do Serviço
+	const serviceDuration = $derived.by(() => {
+		if (!data?.services || !Array.isArray(data.services) || !serviceId) return 0;
+		const service = data.services.find((s: any) => String(s.id) === String(serviceId));
+		return service?.duration ?? 0;
+	});
 
-	// 2. Filtramos os agendamentos já existentes para a data no front (Performance!)
-	const dailyBookedRanges = $derived(
-		data.appointments
-			?.filter((a) => a.date === formState.date && a.status !== 'cancelled')
-			.map((a) => ({ start: a.start_at, end: a.end_at })) ?? []
-	);
+	// 2. Mapeamento de bloqueios (Agendamentos já existentes)
+	const dailyBookedRanges = $derived.by(() => {
+		const appointments = data?.appointments;
+		if (!appointments || !Array.isArray(appointments)) return [];
 
-	// 3. Helper para pegar o dia da semana (0-6)
+		const blockingStatuses = ['pending', 'confirmed'];
+
+		// Nota: Removi o filtro "a.date === selectedDate" pois sua query SQL
+		// já filtra por data no servidor. Mantemos apenas o filtro de status.
+		return appointments
+			.filter((a: any) => blockingStatuses.includes(a.status))
+			.map((a: any) => ({
+				start: a.start_at,
+				end: a.end_at
+			}));
+	});
+
 	function getDayOfWeek(dateStr: string) {
 		if (!dateStr) return 0;
 		const [y, m, d] = dateStr.split('-').map(Number);
+		// Retorna 0 (Dom) a 6 (Sáb)
 		return new Date(y, m - 1, d).getDay();
 	}
 
-	// 4. O MOTOR: Gera os chips de sugestão sempre que algo mudar
+	// 3. O Motor Reativo
 	const suggestedSlots = $derived.by(() => {
-		if (!formState.serviceId || !formState.date) return [];
+		console.group('🔍 Debug: Geração de Slots');
 
-		const dayOfWeek = getDayOfWeek(formState.date);
-		const schedule = data.workingHours.find((wh) => wh.day_of_week === dayOfWeek);
+		// Validação de sanidade inicial
+		const isDataReady = !!data && Array.isArray(data?.workingHours);
 
-		return generateSmartSlots(
-			formState.date,
-			serviceDuration,
+		console.log('1. Estado das Dependências:', {
+			serviceId,
+			selectedDate,
+			isDataReady,
+			duration: serviceDuration,
+			totalBooked: dailyBookedRanges.length
+		});
+
+		if (!serviceId || !selectedDate || !isDataReady) {
+			console.warn('⚠️ Abortado: Dados insuficientes para gerar slots.');
+			console.groupEnd();
+			return [];
+		}
+
+		const dayOfWeek = getDayOfWeek(selectedDate);
+		const schedule = data.workingHours.find((wh: any) => Number(wh.day_of_week) === dayOfWeek);
+
+		console.log('2. Horário de Trabalho Encontrado:', {
+			diaProcurado: dayOfWeek,
 			schedule,
-			data.user?.lunch_settings, // Assumindo que vem no data do user
-			dailyBookedRanges
-		);
+			isDayActive: schedule?.is_active
+		});
+
+		if (!schedule || !schedule.is_active) {
+			console.warn(`❌ Sem expediente configurado ou ativo para o dia da semana: ${dayOfWeek}`);
+			console.groupEnd();
+			return [];
+		}
+
+		try {
+			// Chamada ao serviço com tratamento de erro
+			const result = generateSmartSlots(
+				selectedDate,
+				serviceDuration,
+				schedule,
+				data.user?.lunch_settings,
+				dailyBookedRanges
+			);
+
+			console.log('3. Sucesso na Geração:', {
+				slotsGerados: result.length,
+				primeirosSlots: result.slice(0, 3)
+			});
+			console.groupEnd();
+			return result;
+		} catch (e) {
+			console.error('🔥 Erro Crítico no Motor de Slots:', e);
+			console.groupEnd();
+			return [];
+		}
 	});
 
-	// 5. Estado visual: dia cheio?
-	const isDayFull = $derived(formState.serviceId && suggestedSlots.length === 0);
+	const isDayFull = $derived(serviceId && suggestedSlots.length === 0);
 </script>
 
-<div class="space-y-2">
-	<Label class="text-[10px] font-bold text-muted-foreground uppercase">Horário</Label>
-
-	<div class="flex flex-col gap-2">
-		<div class="flex items-center gap-2">
-			<Input type="time" bind:value={formState.time} class="h-10 w-[110px] shrink-0 font-medium" />
+<div class="flex h-full items-center">
+	{#if !serviceId}
+		<span class="animate-in px-1 text-[10px] text-zinc-400 italic duration-500 fade-in">
+			Selecione um serviço para ver horários
+		</span>
+	{:else if isDayFull}
+		<div class="flex animate-in items-center gap-1.5 px-1 text-red-500 duration-300 zoom-in-95">
+			<div class="size-1 rounded-full bg-current"></div>
+			<span class="text-[10px] font-bold tracking-tight uppercase">Sem vagas hoje</span>
+		</div>
+	{:else}
+		<div class="no-scrollbar flex flex-1 items-center gap-2 overflow-x-auto pb-0.5">
+			{#each suggestedSlots as slot}
+				<button
+					type="button"
+					onclick={() => (start_at = slot)}
+					class="
+                        h-7 shrink-0 rounded-full border px-3 text-[10px] font-bold transition-all
+                        active:scale-95
+                        {start_at === slot
+						? 'border-zinc-900 bg-zinc-900 text-white shadow-sm'
+						: 'border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300 hover:bg-zinc-50'}
+                    "
+				>
+					{slot}
+				</button>
+			{/each}
 
 			{#if suggestedSlots.length > 0}
-				<div class="no-scrollbar flex flex-1 animate-in gap-2 overflow-x-auto pb-1 fade-in">
-					{#each suggestedSlots.slice(0, 8) as slot}
-						<button
-							type="button"
-							onclick={() => (formState.time = slot)}
-							class="
-                                h-9 shrink-0 rounded-full border px-4 text-xs font-bold transition-all
-                                active:scale-95
-                                {formState.time === slot
-								? 'border-primary bg-primary text-primary-foreground'
-								: 'bg-zinc-100/50 text-zinc-600 hover:bg-zinc-100 dark:bg-zinc-800/50'}
-                            "
-						>
-							{slot}
-						</button>
-					{/each}
-				</div>
+				<span class="shrink-0 pr-2 text-[9px] font-medium text-emerald-600 uppercase">
+					{suggestedSlots.length} vagas
+				</span>
 			{/if}
 		</div>
-
-		<div class="flex min-h-[16px] items-center gap-1.5 px-1">
-			{#if !formState.serviceId}
-				<span class="text-[10px] text-muted-foreground italic"
-					>Selecione um serviço para ver vagas</span
-				>
-			{:else if isDayFull}
-				<div class="flex animate-pulse items-center gap-1.5 text-red-600">
-					<div class="size-1.5 rounded-full bg-current"></div>
-					<span class="text-[10px] font-bold">Sem vagas para este serviço hoje</span>
-				</div>
-			{:else}
-				<div class="flex items-center gap-1.5 text-emerald-600">
-					<div class="size-1.5 rounded-full bg-current"></div>
-					<span class="text-[10px] font-bold">{suggestedSlots.length} horários disponíveis</span>
-				</div>
-			{/if}
-		</div>
-	</div>
+	{/if}
 </div>
 
 <style>
-	/* Estilo para garantir que o scroll horizontal seja fluido no mobile */
 	.no-scrollbar {
 		-ms-overflow-style: none;
 		scrollbar-width: none;

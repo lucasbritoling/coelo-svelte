@@ -379,13 +379,19 @@
 	</main>
 </div>
 
-<button
-	onclick={() => openDialog()}
-	class="fixed right-6 z-40 flex size-14 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-900 shadow-xl transition-transform active:scale-90"
-	style="bottom: 100px"
->
-	<Plus size={28} />
-</button>
+<!-- Wrapper centralizador para a FAB -->
+<div class="pointer-events-none fixed inset-x-0 z-40 flex justify-center" style="bottom: 100px">
+	<!-- Container que limita a largura ao layout do app (max-w-md = 448px) -->
+	<div class="relative flex w-full max-w-md justify-end px-6">
+		<button
+			onclick={() => openDialog()}
+			class="pointer-events-auto flex size-14 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-900 shadow-xl transition-transform active:scale-90"
+			aria-label="Adicionar"
+		>
+			<Plus size={28} />
+		</button>
+	</div>
+</div>
 
 <Dialog.Root bind:open={dialogOpen}>
 	<Dialog.Content class="w-[calc(100vw-2rem)] overflow-hidden rounded-[32px] p-0 sm:max-w-sm">

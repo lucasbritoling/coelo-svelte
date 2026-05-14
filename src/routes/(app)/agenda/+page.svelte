@@ -169,142 +169,145 @@
 				</button>
 			</div>
 		{:else}
-            <!-- 1. SOLICITAÇÕES/PENDENTES (Prioridade máxima de atenção) -->
-            {#if pendingApps.length > 0}
-                <section class="space-y-3">
-                    <p class="px-2 text-[10px] font-bold tracking-[0.2em] text-amber-600 uppercase">
-                        Pendentes
-                    </p>
-                    <div class="flex flex-col gap-2">
-                        {#each pendingApps as appt}
-                            <AppointmentCard {appt} highlighted={true} />
-                        {/each}
-                    </div>
-                </section>
-            {/if}
+			<!-- 1. SOLICITAÇÕES/PENDENTES (Prioridade máxima de atenção) -->
+			{#if pendingApps.length > 0}
+				<section class="space-y-3">
+					<p class="px-2 text-[10px] font-bold tracking-[0.2em] text-amber-600 uppercase">
+						Pendentes
+					</p>
+					<div class="flex flex-col gap-2">
+						{#each pendingApps as appt}
+							<AppointmentCard {appt} highlighted={true} />
+						{/each}
+					</div>
+				</section>
+			{/if}
 
-            <!-- 2. AGORA/PRÓXIMO (O foco principal do momento) -->
-            {#if groups.next}
-                <section class="space-y-3">
-                    <p class="px-2 text-[10px] font-bold tracking-[0.2em] text-blue-600 uppercase">Próximo</p>
-                    <AppointmentCard
-                        appt={groups.next}
-                        highlighted={true}
-                        soon={dateUtils.getSoonLabel(groups.next.start_at, ticker)}
-                    />
-                </section>
-            {/if}
+			<!-- 2. AGORA/PRÓXIMO (O foco principal do momento) -->
+			{#if groups.next}
+				<section class="space-y-3">
+					<p class="px-2 text-[10px] font-bold tracking-[0.2em] text-blue-600 uppercase">Próximo</p>
+					<AppointmentCard
+						appt={groups.next}
+						highlighted={true}
+						soon={dateUtils.getSoonLabel(groups.next.start_at, ticker)}
+					/>
+				</section>
+			{/if}
 
-            <!-- 3. DEPOIS (O restante do dia com vácuos/gaps) -->
-            {#if groups.later.length > 0}
-                <section class="space-y-6">
-                    {#each groups.later as item, i}
-                        {#if item.type === 'appointment'}
-                            {@const currentPeriod = getPeriod(item.start_at)}
-                            {@const prevItem = groups.later[i - 1]}
-                            {@const prevPeriod = prevItem
-                                ? getPeriod(prevItem.start_at)
-                                : groups.next
-                                    ? getPeriod(groups.next.start_at)
-                                    : null}
+			<!-- 3. DEPOIS (O restante do dia com vácuos/gaps) -->
+			{#if groups.later.length > 0}
+				<section class="space-y-6">
+					{#each groups.later as item, i}
+						{#if item.type === 'appointment'}
+							{@const currentPeriod = getPeriod(item.start_at)}
+							{@const prevItem = groups.later[i - 1]}
+							{@const prevPeriod = prevItem
+								? getPeriod(prevItem.start_at)
+								: groups.next
+									? getPeriod(groups.next.start_at)
+									: null}
 
-                            {#if currentPeriod !== prevPeriod}
-                                <div class="flex items-center gap-4 px-2 pt-2">
-                                    <span class="text-[10px] font-bold tracking-[0.2em] text-zinc-400 uppercase">
-                                        {currentPeriod}
-                                    </span>
-                                    <div class="h-px flex-1 bg-zinc-100"></div>
-                                </div>
-                            {/if}
+							{#if currentPeriod !== prevPeriod}
+								<div class="flex items-center gap-4 px-2 pt-2">
+									<span class="text-[10px] font-bold tracking-[0.2em] text-zinc-400 uppercase">
+										{currentPeriod}
+									</span>
+									<div class="h-px flex-1 bg-zinc-100"></div>
+								</div>
+							{/if}
 
-                            <AppointmentCard appt={item} />
-                        {:else}
-                            <GhostSlot
-                                duration={item.duration}
-                                startAt={item.start_at}
-                                onclick={() => {
-                                    selectedTime = item.start_at;
-                                    ui.modal = true;
-                                }}
-                            />
-                        {/if}
-                    {/each}
-                </section>
-            {/if}
+							<AppointmentCard appt={item} />
+						{:else}
+							<GhostSlot
+								duration={item.duration}
+								startAt={item.start_at}
+								onclick={() => {
+									selectedTime = item.start_at;
+									ui.modal = true;
+								}}
+							/>
+						{/if}
+					{/each}
+				</section>
+			{/if}
 
-            <!-- 4. ANTERIORES (Histórico do que já passou hoje) -->
-            {#if groups.past.length > 0}
-                <section class="space-y-3 pt-4">
-                    <div class="flex items-center gap-4 px-2">
-                        <p class="text-[10px] font-bold tracking-[0.2em] text-zinc-400 uppercase">
-                            Anteriores
-                        </p>
-                        <div class="h-px flex-1 bg-zinc-100/50"></div>
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        {#each groups.past as appt}
-                            <AppointmentCard {appt} dimmed={true} />
-                        {/each}
-                    </div>
-                </section>
-            {/if}
+			<!-- 4. ANTERIORES (Histórico do que já passou hoje) -->
+			{#if groups.past.length > 0}
+				<section class="space-y-3 pt-4">
+					<div class="flex items-center gap-4 px-2">
+						<p class="text-[10px] font-bold tracking-[0.2em] text-zinc-400 uppercase">Anteriores</p>
+						<div class="h-px flex-1 bg-zinc-100/50"></div>
+					</div>
+					<div class="flex flex-col gap-2">
+						{#each groups.past as appt}
+							<AppointmentCard {appt} dimmed={true} />
+						{/each}
+					</div>
+				</section>
+			{/if}
 
-            <!-- 5. CANCELADOS (Fim da página) -->
-            {#if cancelledApps.length > 0}
-                <section class="mt-8 space-y-3 border-t border-dashed border-zinc-200 pt-8">
-                    <p class="px-2 text-[10px] font-bold tracking-[0.2em] text-zinc-300 uppercase">
-                        Cancelados
-                    </p>
-                    <div class="flex flex-col gap-2">
-                        {#each cancelledApps as appt}
-                            <AppointmentCard {appt} dimmed={true} />
-                        {/each}
-                    </div>
-                </section>
-            {/if}
-        {/if}
+			<!-- 5. CANCELADOS (Fim da página) -->
+			{#if cancelledApps.length > 0}
+				<section class="mt-8 space-y-3 border-t border-dashed border-zinc-200 pt-8">
+					<p class="px-2 text-[10px] font-bold tracking-[0.2em] text-zinc-300 uppercase">
+						Cancelados
+					</p>
+					<div class="flex flex-col gap-2">
+						{#each cancelledApps as appt}
+							<AppointmentCard {appt} dimmed={true} />
+						{/each}
+					</div>
+				</section>
+			{/if}
+		{/if}
 
-		<!-- FABs: Link e Novo Agendamento -->
-		<div class="fixed right-4 bottom-24 z-40 flex flex-col items-end gap-2">
-			<!-- Botão: Copiar Link -->
-			<div class="flex flex-col items-end gap-2">
-				{#if ui.copied}
-					<span
-						transition:scale={{ duration: 150 }}
-						class="rounded-lg bg-zinc-900 px-3 py-1.5 text-[10px] font-bold text-white shadow-xl"
+		<div class="pointer-events-none fixed inset-x-0 bottom-24 z-40 flex justify-center">
+			<!-- Container que limita a largura (deve ser a mesma largura do seu conteúdo principal) -->
+			<div class="relative flex w-full max-w-md justify-end px-4">
+				<!-- Suas FABs (com pointer-events-auto para voltarem a ser clicáveis) -->
+				<div class="pointer-events-auto flex flex-col items-end gap-2">
+					<!-- Botão: Copiar Link -->
+					<div class="flex flex-col items-end gap-2">
+						{#if ui.copied}
+							<span
+								transition:scale={{ duration: 150 }}
+								class="rounded-lg bg-zinc-900 px-3 py-1.5 text-[10px] font-bold text-white shadow-xl"
+							>
+								LINK COPIADO!
+							</span>
+						{/if}
+
+						<button
+							onclick={() => {
+								navigator.clipboard.writeText(schedulingLink);
+								ui.copied = true;
+								setTimeout(() => (ui.copied = false), 2000);
+							}}
+							class="flex h-12 w-12 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-lg transition-all hover:bg-zinc-50 active:scale-90"
+							aria-label="Copiar link de agendamento"
+						>
+							{#if ui.copied}
+								<Check class="text-green-600" size={20} />
+							{:else}
+								<Link size={20} />
+							{/if}
+						</button>
+					</div>
+
+					<!-- Botão: Novo Agendamento (Idêntico ao de cima) -->
+					<button
+						onclick={() => {
+							selectedTime = '';
+							ui.modal = true;
+						}}
+						class="flex h-12 w-12 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-lg transition-all hover:bg-zinc-50 active:scale-90"
+						aria-label="Novo agendamento"
 					>
-						LINK COPIADO!
-					</span>
-				{/if}
-
-				<button
-					onclick={() => {
-						navigator.clipboard.writeText(schedulingLink);
-						ui.copied = true;
-						setTimeout(() => (ui.copied = false), 2000);
-					}}
-					class="flex h-12 w-12 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-lg transition-all hover:bg-zinc-50 active:scale-90"
-					aria-label="Copiar link de agendamento"
-				>
-					{#if ui.copied}
-						<Check class="text-green-600" size={20} />
-					{:else}
-						<Link size={20} />
-					{/if}
-				</button>
+						<CalendarPlus size={20} />
+					</button>
+				</div>
 			</div>
-
-			<!-- Botão: Novo Agendamento (Idêntico ao de cima) -->
-			<button
-				onclick={() => {
-					selectedTime = '';
-					ui.modal = true;
-				}}
-				class="flex h-12 w-12 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-lg transition-all hover:bg-zinc-50 active:scale-90"
-				aria-label="Novo agendamento"
-			>
-				<CalendarPlus size={20} />
-			</button>
 		</div>
 	</div>
 </div>

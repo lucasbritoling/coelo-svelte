@@ -136,6 +136,10 @@
 
 	let dialogMode = $derived(overrideForm.id ? 'edit' : 'new');
 	let isDeletingOverride = $state(false);
+	let confirmDelete = $state(false);
+	$effect(() => {
+		if (!dialogOpen) confirmDelete = false;
+	});
 	function openDialog(override?: any) {
 		if (override) {
 			overrideForm = {
@@ -554,28 +558,59 @@
 			</Button>
 
 			{#if dialogMode === 'edit'}
-				<!-- svelte-ignore node_invalid_placement_ssr -->
-				<form
-					method="POST"
-					action="?/deleteOverride"
-					use:enhance={() => {
-						isDeletingOverride = true;
-						return async ({ update }) => {
-							await update({ invalidateAll: true });
-							isDeletingOverride = false;
-							dialogOpen = false;
-						};
-					}}
-				>
-					<input type="hidden" name="id" value={overrideForm.id} />
-					<Button
-						type="submit"
-						variant="ghost"
-						class="h-10 w-full text-xs font-bold text-rose-500 hover:bg-rose-50"
+				<div class="mt-2 flex flex-col gap-2">
+					<!-- svelte-ignore node_invalid_placement_ssr -->
+					<form
+						method="POST"
+						action="?/deleteOverride"
+						use:enhance={() => {
+							isDeletingOverride = true;
+							return async ({ result, update }) => {
+								await update({ invalidateAll: true });
+								isDeletingOverride = false;
+								if (result.type === 'success') {
+									dialogOpen = false;
+									confirmDelete = false;
+									toast.success('Exceção removida');
+								}
+							};
+						}}
 					>
-						Excluir Exceção
-					</Button>
-				</form>
+						<input type="hidden" name="id" value={overrideForm.id} />
+
+						<Button
+							type={confirmDelete ? 'submit' : 'button'}
+							variant={confirmDelete ? 'destructive' : 'ghost'}
+							disabled={isDeletingOverride}
+							onclick={(e) => {
+								if (!confirmDelete) {
+									e.preventDefault();
+									confirmDelete = true;
+								}
+							}}
+							class="h-10 w-full text-xs font-bold transition-all duration-200"
+						>
+							{#if isDeletingOverride}
+								<LoaderCircle class="mr-2 size-3 animate-spin" />
+								Excluindo...
+							{:else if confirmDelete}
+								Confirmar Exclusão?
+							{:else}
+								<span class="text-rose-500">Excluir Exceção</span>
+							{/if}
+						</Button>
+					</form>
+
+					{#if confirmDelete}
+						<Button
+							variant="ghost"
+							class="h-8 w-full text-[10px] font-medium text-zinc-400"
+							onclick={() => (confirmDelete = false)}
+						>
+							Cancelar
+						</Button>
+					{/if}
+				</div>
 			{/if}
 		</form>
 	</Dialog.Content>

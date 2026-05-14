@@ -163,13 +163,19 @@
 </div>
 
 <!-- FAB (Estilo consistente) -->
-<button
-	onclick={startCreate}
-	class="fixed right-6 z-40 flex size-14 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-900 shadow-xl transition-all active:scale-90"
-	style="bottom: 100px"
->
-	<Plus size={28} />
-</button>
+<!-- Wrapper para centralizar a FAB de Clientes -->
+<div class="pointer-events-none fixed inset-x-0 z-40 flex justify-center" style="bottom: 100px">
+	<!-- Container que limita a largura ao layout do app (448px) -->
+	<div class="relative flex w-full max-w-md justify-end px-6">
+		<button
+			onclick={startCreate}
+			class="pointer-events-auto flex size-14 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-900 shadow-xl transition-all active:scale-90"
+			aria-label="Novo cliente"
+		>
+			<Plus size={28} />
+		</button>
+	</div>
+</div>
 
 <!-- Modais (ServiceForm já deve usar o estilo do Dialog refatorado) -->
 <ServiceForm formData={data.form} service={selectedService} bind:open={openForm} />

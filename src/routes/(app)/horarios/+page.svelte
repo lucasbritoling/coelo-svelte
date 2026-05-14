@@ -2,16 +2,13 @@
 	import { ui } from '$lib/state/ui.svelte';
 	import {
 		Plus,
-		Trash2,
 		CalendarX,
 		CalendarCheck,
 		LoaderCircle,
 		Pencil,
-		CheckCircle2,
-		XCircle,
 		Utensils,
 		ChevronLeft,
-		AlertTriangle
+		TriangleAlert
 	} from '@lucide/svelte';
 	import { goto, beforeNavigate } from '$app/navigation';
 	import * as Dialog from '$lib/components/ui/dialog';
@@ -296,22 +293,56 @@
 				{#if localLunch.has_lunch}
 					<div class="mt-5 flex items-center gap-3 border-t border-zinc-50 pt-5">
 						<Input
-							type="time"
-							bind:value={localLunch.lunch_start}
+							type="text"
+							inputmode="numeric"
+							value={localLunch.lunch_start}
+							oninput={(e) => {
+								const input = e.currentTarget;
+								// 1. Limpa tudo que não é número
+								let raw = input.value.replace(/\D/g, '');
+
+								// 2. Aplica a máscara de hora
+								if (raw.length >= 3) {
+									raw = raw.slice(0, 2) + ':' + raw.slice(2, 4);
+								}
+
+								// 3. O PULO DO GATO: Força o valor no elemento físico do DOM
+								// Isso impede que o caractere "burlado" apareça na tela
+								input.value = raw;
+
+								// 4. Atualiza o estado do Svelte
+								localLunch.lunch_start = raw;
+							}}
+							maxlength={5}
+							placeholder="12:00"
 							class="h-10 border-zinc-100 bg-zinc-50 text-center font-bold"
 						/>
 						<span class="text-[10px] font-bold text-zinc-300 uppercase">até</span>
 						<Input
-							type="time"
-							bind:value={localLunch.lunch_end}
+							type="text"
+							inputmode="numeric"
+							value={localLunch.lunch_end}
+							oninput={(e) => {
+								const input = e.currentTarget;
+								let raw = input.value.replace(/\D/g, '');
+
+								if (raw.length >= 3) {
+									raw = raw.slice(0, 2) + ':' + raw.slice(2, 4);
+								}
+
+								input.value = raw;
+								localLunch.lunch_end = raw;
+							}}
 							class="h-10 border-zinc-100 bg-zinc-50 text-center font-bold"
+							maxlength={5}
+							placeholder="13:00"
 						/>
 					</div>
 				{/if}
 			</div>
 		</section>
-		<!-- EXCEÇÕES -->
 
+		<!-- EXCEÇÕES -->
 		<section>
 			<div class="mb-3 flex items-center justify-between px-1">
 				<h2 class="text-[11px] font-bold tracking-widest text-muted-foreground uppercase">
@@ -517,7 +548,7 @@
 			<div
 				class="mb-4 flex size-16 items-center justify-center rounded-full bg-amber-50 text-amber-500"
 			>
-				<AlertTriangle size={32} />
+				<TriangleAlert size={32} />
 			</div>
 			<Dialog.Title class="text-lg font-bold text-zinc-900">Alterações pendentes</Dialog.Title>
 			<Dialog.Description class="mt-2 text-sm text-zinc-500">

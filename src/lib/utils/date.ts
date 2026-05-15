@@ -65,17 +65,28 @@ export const dateUtils = {
 	},
 
 	// Cálculo de "em quanto tempo" (Label Soon)
-	getSoonLabel: (startTime: string, ticker: number) => {
-		const [h, m] = startTime.split(':').map(Number);
-		const nowInSP = new Date(fmt.full.format(new Date(ticker)));
-		const target = new Date(nowInSP);
-		target.setHours(h, m, 0, 0);
+	parseTimeToMs: (timeStr: string, ticker: number) => {
+		const [h, m] = timeStr.split(':').map(Number);
+		const d = new Date(ticker);
+		d.setHours(h, m, 0, 0);
+		return d.getTime();
+	},
 
-		const diff = Math.floor((target.getTime() - nowInSP.getTime()) / 60000);
+	// Ajuste opcional no getSoonLabel para usar o ticker de forma mais consistente
+	getSoonLabel: (startTime: string, endTime: string, ticker: number) => {
+		const start = dateUtils.parseTimeToMs(startTime, ticker);
+		const end = dateUtils.parseTimeToMs(endTime, ticker);
 
-		if (diff <= 0 && diff > -30) return 'agora';
-		if (diff < 60 && diff > 0) return `em ${diff} min`;
-		return null;
+		if (ticker >= start && ticker <= end) return 'agora';
+
+		const diffMin = Math.floor((start - ticker) / 60000);
+
+		if (diffMin <= 0) return null;
+		if (diffMin < 60) return `em ${diffMin} min`;
+
+		const diffHours = Math.floor(diffMin / 60);
+		const remainingMin = diffMin % 60;
+		return `em ${diffHours}h${remainingMin > 0 ? remainingMin : ''}`;
 	},
 	handleSelection: (date: any, currentPath: string) => {
 		if (!date) return null;

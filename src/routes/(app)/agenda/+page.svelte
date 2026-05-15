@@ -77,6 +77,15 @@
 		const dx = touchStartX - e.changedTouches[0].screenX;
 		if (Math.abs(dx) > 80) navigateDay(dx > 0 ? 1 : -1);
 	}
+
+	const nextAppointmentId = $derived.by(() => {
+		const nowStr = dateUtils.toTime(ticker); // assume que você tem essa função
+		// Busca o primeiro item cujo start_at é maior que AGORA
+		const next = data.appointments
+			.filter((a) => a.status !== 'cancelled' && a.start_at > nowStr)
+			.sort((a, b) => a.start_at.localeCompare(b.start_at))[0];
+		return next?.id;
+	});
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -117,11 +126,21 @@
 			<!-- Renderização Cronológica Direta e Simplificada -->
 			<div class="flex flex-col gap-1.5">
 				{#each data.appointments as appt (appt.id)}
+					{@const startMs = dateUtils.parseTimeToMs(appt.start_at, ticker)}
+					{@const endMs = dateUtils.parseTimeToMs(appt.end_at, ticker)}
+
+					{@const isNext = appt.id === nextAppointmentId}
+
+					{@const isNow = ticker >= startMs && ticker <= endMs}
+
 					<AppointmentItem
 						{appt}
 						{showServiceColor}
 						currentTime={ticker}
-						soon={dateUtils.getSoonLabel(appt.start_at, ticker)}
+						/* Passa o label se for o próximo OU se for agora */
+						soon={isNext || isNow
+							? dateUtils.getSoonLabel(appt.start_at, appt.end_at, ticker)
+							: null}
 					/>
 				{/each}
 			</div>

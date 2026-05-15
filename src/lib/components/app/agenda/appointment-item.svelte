@@ -3,6 +3,7 @@
 	import { MessageCircle, CheckCircle2, XCircle } from '@lucide/svelte';
 	import { Badge } from '$lib/components/ui/badge';
 	import AppointmentItemAction from '$lib/components/app/agenda/appointment-item-action.svelte';
+	import { dateUtils } from '$lib/utils/date';
 
 	interface Props {
 		appt: Appointment;
@@ -14,12 +15,12 @@
 	let { appt, showServiceColor, soon = null, currentTime }: Props = $props();
 
 	// Verifica se o agendamento já terminou baseado no ticker
-	const isPast = $derived.by(() => {
-		const [hours, minutes] = appt.end_at.split(':').map(Number);
-		const endAtDate = new Date(currentTime);
-		endAtDate.setHours(hours, minutes, 0, 0);
-		return currentTime > endAtDate.getTime();
-	});
+	//const isPast = $derived.by(() => {
+	//	const [hours, minutes] = appt.end_at.split(':').map(Number);
+	//		const endAtDate = new Date(currentTime);
+	//		endAtDate.setHours(hours, minutes, 0, 0);
+	//		return currentTime > endAtDate.getTime();
+	//	});
 
 	const STATUS: Record<string, { label: string; bg: string; text: string; icon?: any }> = {
 		pending: { label: 'pendente', bg: '#FDE68A', text: '#78350F' },
@@ -45,12 +46,17 @@
 		};
 		return { style: '', class: tailwindMap[color] || 'bg-zinc-500' };
 	});
+	const isPast = $derived.by(() => {
+		if (appt.status === 'cancelled') return true;
+		const endMs = dateUtils.parseTimeToMs(appt.end_at, currentTime);
+		return currentTime > endMs;
+	});
 </script>
 
 <div
-	class="group relative flex items-center justify-between gap-2 rounded-xl border border-zinc-100 bg-card px-3 py-2 transition-all hover:border-zinc-200 active:scale-[0.995]"
-	class:opacity-40={isPast || appt.status === 'cancelled'}
-	class:grayscale-[0.5]={isPast || appt.status === 'cancelled'}
+	class="group relative flex items-center justify-between gap-2 rounded-xl border border-zinc-100 bg-card px-3 py-2 transition-all"
+	class:opacity-40={isPast}
+	class:grayscale-[0.5]={isPast}
 >
 	{#if showServiceColor}
 		<div

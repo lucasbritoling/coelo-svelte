@@ -46,18 +46,8 @@
 
 	// 3. O Motor Reativo
 	const suggestedSlots = $derived.by(() => {
-		console.group('🔍 Debug: Geração de Slots');
-
 		// Validação de sanidade inicial
 		const isDataReady = !!data && Array.isArray(data?.workingHours);
-
-		console.log('1. Estado das Dependências:', {
-			serviceId,
-			selectedDate,
-			isDataReady,
-			duration: serviceDuration,
-			totalBooked: dailyBookedRanges.length
-		});
 
 		if (!serviceId || !selectedDate || !isDataReady) {
 			console.warn('⚠️ Abortado: Dados insuficientes para gerar slots.');
@@ -67,12 +57,6 @@
 
 		const dayOfWeek = getDayOfWeek(selectedDate);
 		const schedule = data.workingHours.find((wh: any) => Number(wh.day_of_week) === dayOfWeek);
-
-		console.log('2. Horário de Trabalho Encontrado:', {
-			diaProcurado: dayOfWeek,
-			schedule,
-			isDayActive: schedule?.is_active
-		});
 
 		if (!schedule || !schedule.is_active) {
 			console.warn(`❌ Sem expediente configurado ou ativo para o dia da semana: ${dayOfWeek}`);
@@ -89,16 +73,8 @@
 				data.user?.lunch_settings,
 				dailyBookedRanges
 			);
-
-			console.log('3. Sucesso na Geração:', {
-				slotsGerados: result.length,
-				primeirosSlots: result.slice(0, 3)
-			});
-			console.groupEnd();
 			return result;
 		} catch (e) {
-			console.error('🔥 Erro Crítico no Motor de Slots:', e);
-			console.groupEnd();
 			return [];
 		}
 	});

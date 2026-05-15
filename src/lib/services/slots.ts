@@ -8,12 +8,8 @@ export function generateSmartSlots(
 	lunch: any,
 	bookedRanges: { start: string; end: string }[]
 ) {
-	console.group(`⚙️ Motor de Slots: ${date}`);
-
 	// 1. Validação de Entrada
 	if (!daySchedule?.is_active) {
-		console.warn('ℹ️ Dia inativo no cronograma.');
-		console.groupEnd();
 		return [];
 	}
 
@@ -37,13 +33,6 @@ export function generateSmartSlots(
 	const startMin = toMin(daySchedule.start_time);
 	const endMin = toMin(daySchedule.end_time);
 
-	console.log('📊 Configuração:', {
-		janela: `${daySchedule.start_time} até ${daySchedule.end_time}`,
-		minutos: `${startMin}min até ${endMin}min`,
-		duracaoServico: `${duration}min`,
-		intervaloPasso: `${interval}min`
-	});
-
 	// 2. Mapear Bloqueios (Agendamentos + Almoço)
 	const blocks = bookedRanges.map((r) => ({
 		s: toMin(r.start),
@@ -55,17 +44,12 @@ export function generateSmartSlots(
 		const lStart = toMin(lunch.lunch_start);
 		const lEnd = toMin(lunch.lunch_end);
 		blocks.push({ s: lStart, e: lEnd, origin: 'Almoço' });
-		console.log(
-			`🍴 Bloqueio de Almoço: ${lunch.lunch_start} - ${lunch.lunch_end} (${lStart}-${lEnd}min)`
-		);
 	}
 
 	if (blocks.length > 0) {
-		console.table(blocks);
 	}
 
 	// 3. Loop de Geração
-	console.log('🚶 Iniciando varredura de horários...');
 
 	for (let current = startMin; current + duration <= endMin; current += interval) {
 		const currentEnd = current + duration;
@@ -80,14 +64,9 @@ export function generateSmartSlots(
 
 		if (collision) {
 			// Log opcional para slots descartados (comentado para não poluir muito)
-			// console.debug(`  - Slot ${slotLabel} descartado: Colisão com ${collision.origin}`);
 		} else {
 			slots.push(slotLabel);
 		}
 	}
-
-	console.log(`✅ Finalizado: ${slots.length} slots gerados.`);
-	console.groupEnd();
-
 	return slots;
 }

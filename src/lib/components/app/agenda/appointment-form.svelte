@@ -162,7 +162,6 @@
 
 					// Captura o fuso exato do navegador no momento do clique e injeta no payload
 					const clientTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-					console.log('⏳ VALOR CLIENTTZ USEENHANCE: ', clientTz);
 					formData.append('tz', clientTz);
 					return async ({ result, update }) => {
 						await update();

@@ -6,63 +6,57 @@ import { superValidate } from 'sveltekit-superforms';
 import { zod4 } from 'sveltekit-superforms/adapters';
 import { customerSchema, serviceSchema } from '$lib/schemas/app';
 
-export const load: PageServerLoad = async ({ url, locals: { sql, user } }) => {
+interface DatabaseError extends Error {
+	code?: string;
+}
+
+// Função auxiliar para higienizar e garantir um fuso horário válido IANA
+function getSafeTimezone(cookies: any, platform: any, inputTz?: string | null): string {
+	const tz = inputTz || cookies.get('timezone') || platform?.cf?.timezone || 'America/Sao_Paulo';
+	try {
+		Intl.DateTimeFormat(undefined, { timeZone: tz });
+		return tz;
+	} catch (e) {
+		return 'America/Sao_Paulo'; // Fallback absoluto se a string for corrompida/inválida
+	}
+}
+
+export const load: PageServerLoad = async ({ url, cookies, platform, locals: { sql, user } }) => {
 	if (!user) throw redirect(303, '/login');
 
 	const dateParam = url.searchParams.get('date') || dateUtils.today();
 	const searchQuery = url.searchParams.get('q')?.trim() ?? '';
 
-	// Validação básica da data para evitar queries inúteis
+	// Resolve o fuso usando a esteira de resiliência tripla
+	const activeTz = getSafeTimezone(cookies, platform);
+	console.log('⏳ TIMEZONE ATIVA: ', activeTz);
+
 	if (!/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
 		throw error(400, 'Data inválida');
 	}
 
 	try {
-		// 1. Chamada paralela: RPC do Banco + Validação dos Formulários
 		const [rpcResult, customerForm, serviceForm] = await Promise.all([
-			sql`SELECT load_agenda(${user.id}::uuid, ${dateParam}::date, ${searchQuery}) as data`,
+			sql`SELECT load_agenda(${user.id}::uuid, ${dateParam}::date, ${searchQuery}, ${activeTz}) as data`,
 			superValidate(zod4(customerSchema)),
 			superValidate(zod4(serviceSchema))
 		]);
 
-		// 2. Extração dos dados da RPC
 		const agenda = rpcResult[0]?.data;
-
 		if (!agenda) {
 			throw error(500, 'Falha catastrófica ao estruturar os dados da agenda.');
 		}
 
-		// 3. Normalização dos Appointments (Traduzindo tstzrange para o Front)
-		// Garantimos que mapeamos o slot do banco para o padrão de exibição em SP
-		const sanitizedAppointments = (agenda.appointments || []).map((appt: any) => {
-			if (!appt.slot) return appt;
-
-			// Extrai os horários formatados ("14:00") e timestamps (ms) relativos ao fuso correto
-			const { start_at, end_at, startMs, endMs } = dateUtils.parseRange(appt.slot);
-
-			return {
-				...appt,
-				start_at, // Substitui pela string limpa local para manter compatibilidade com a UI
-				end_at, // Substitui pela string limpa local para manter compatibilidade com a UI
-				startMs, // Injetado para facilitar ordenações ou cálculos milimétricos no front se precisar
-				endMs // Injetado para facilitar ordenações ou cálculos milimétricos no front se precisar
-			};
-		});
-
 		return {
-			// Dados vindos da RPC mapeados de forma segura
-			appointments: sanitizedAppointments,
+			appointments: agenda.appointments ?? [],
 			customers: agenda.customers ?? [],
 			services: agenda.services ?? [],
 			workingHours: agenda.workingHours ?? [],
 			username: agenda.profile?.username ?? 'user',
-
-			// Contexto da página
 			selectedDate: dateParam,
+			timezone: activeTz,
 			customerForm,
 			serviceForm,
-
-			// User injetado com as configurações de almoço vindas do profile
 			user: {
 				...user,
 				lunch_settings: {
@@ -79,7 +73,7 @@ export const load: PageServerLoad = async ({ url, locals: { sql, user } }) => {
 };
 
 export const actions: Actions = {
-	create: async ({ request, locals: { sql, user } }) => {
+	create: async ({ request, cookies, platform, locals: { sql, user } }) => {
 		if (!user) return fail(401);
 
 		const formData = await request.formData();
@@ -88,33 +82,45 @@ export const actions: Actions = {
 		const date = formData.get('date')?.toString();
 		const start_at = formData.get('start_at')?.toString();
 		const end_at = formData.get('end_at')?.toString();
-		const tz = formData.get('tz')?.toString() || 'UTC';
+
+		// Alinha a resiliência da Action com a mesma estratégia do Load
+		const tz = getSafeTimezone(cookies, platform, formData.get('tz')?.toString());
+		console.log('⏳ TIMEZONE ACTION: ', tz);
 
 		if (!customer_id || !service_id || !date || !start_at || !end_at) {
 			return fail(400, { message: 'Dados incompletos.' });
 		}
 
-		// Formato tsrange: '[YYYY-MM-DD HH:MM:SS-03:00, YYYY-MM-DD HH:MM:SS-03:00)'
-		const slotValue = `[
-    ('${date} ${start_at}:00'::timestamp AT TIME ZONE '${tz}'), 
-    ('${date} ${end_at}:00'::timestamp AT TIME ZONE '${tz}')
-)`;
-		console.log(slotValue);
+		// Montagem limpa das strings locais para o banco processar
+		const startLocalStr = `${date} ${start_at}:00`;
+		const endLocalStr = `${date} ${end_at}:00`;
 
 		try {
+			// CORREÇÃO CRUCIAL: Passa as variáveis isoladas. O driver as converte em $1, $2, $3...
+			// O construtor tstzrange avalia os timestamps locais aplicando o fuso dinamicamente de forma segura.
 			await sql`
-                INSERT INTO appointments (customer_id, service_id, profile_id, slot, status)
-                VALUES (${customer_id}, ${service_id}, ${user.id}, ${slotValue}, 'pending')
-            `;
+        INSERT INTO appointments (customer_id, service_id, profile_id, slot, status)
+        VALUES (
+            ${customer_id}, 
+            ${service_id}, 
+            ${user.id}, 
+            tstzrange(
+                (${startLocalStr} || ' ' || ${tz})::timestamptz, 
+                (${endLocalStr} || ' ' || ${tz})::timestamptz
+            ), 
+            'pending'
+        )
+    `;
 			return { success: true };
-		} catch (err: any) {
-			// Erro 23P01: exclusion_violation (GIST EXCLUDE disparou)
-			if (err.code === '23P01') {
+		} catch (err) {
+			const dbError = err as DatabaseError;
+			// Erro 23P01: Restrição de exclusão do GIST (Horário conflitante detectado no Postgres)
+			if (dbError.code === '23P01') {
 				return fail(400, {
 					message: 'Horário indisponível: coincide com outro agendamento.'
 				});
 			}
-			console.error('Erro ao criar agendamento:', err);
+			console.error('Erro ao criar agendamento:', dbError);
 			return fail(500, { message: 'Erro interno ao salvar.' });
 		}
 	},

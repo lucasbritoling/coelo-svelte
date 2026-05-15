@@ -97,7 +97,7 @@
 					<Input
 						name="name"
 						bind:value={formState.name}
-						placeholder="Ex: Corte de Cabelo"
+						placeholder="Ex: Agendamento"
 						class="h-12 rounded-xl"
 						required
 					/>

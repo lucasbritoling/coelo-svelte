@@ -3,11 +3,8 @@ import type { Actions } from './$types';
 
 export const actions: Actions = {
 	updateAvatar: async ({ request, locals }) => {
-		console.log('--- Action updateAvatar Iniciada ---');
-
 		const session = await locals.session;
 		if (!session) {
-			console.error('Erro: Sessão não encontrada no servidor');
 			return fail(401);
 		}
 
@@ -69,9 +66,7 @@ export const actions: Actions = {
 				if (deleteError) {
 					// Logamos o erro mas não interrompemos o sucesso,
 					// pois o novo upload já foi concluído com êxito.
-					console.warn('Aviso: Não foi possível remover o arquivo antigo:', deleteError.message);
 				} else {
-					console.log('Arquivo antigo removido com sucesso:', oldFilePath);
 				}
 			}
 
@@ -80,10 +75,8 @@ export const actions: Actions = {
 				data: { publicUrl }
 			} = locals.supabase.storage.from('avatars').getPublicUrl(filePath);
 
-			console.log('Processo concluído com sucesso.');
 			return { success: true, avatarUrl: publicUrl };
 		} catch (err) {
-			console.error('Erro inesperado na Action:', err);
 			return fail(500);
 		}
 	}

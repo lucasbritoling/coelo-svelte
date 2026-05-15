@@ -72,22 +72,16 @@
 			enctype="multipart/form-data"
 			use:enhance={() => {
 				uploading = true;
-				console.log('Iniciando upload via enhance...');
 				return async ({ result, update }) => {
-					console.log('Resultado da Action recebido:', result);
-
 					if (result.type === 'error') {
-						console.error('Erro fatal (500) na Action');
 						toast.error('Erro crítico no servidor');
 					}
 
 					if (result.type === 'failure') {
-						console.warn('A Action retornou falha (400/4xx):', result.data);
 						toast.error(`Erro: ${result.data?.message || 'Verifique o arquivo'}`);
 					}
 
 					if (result.type === 'success') {
-						console.log('Upload confirmado pelo servidor:', result.data);
 						// O update() aqui vai atualizar o objeto 'form'
 						await invalidateAll();
 						await update();

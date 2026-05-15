@@ -29,7 +29,6 @@ export const load: PageServerLoad = async ({ url, cookies, platform, locals: { s
 
 	// Resolve o fuso usando a esteira de resiliência tripla
 	const activeTz = getSafeTimezone(cookies, platform);
-	//console.log('⏳ TIMEZONE ATIVA: ', activeTz);
 
 	if (!/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
 		throw error(400, 'Data inválida');
@@ -85,7 +84,6 @@ export const actions: Actions = {
 
 		// Alinha a resiliência da Action com a mesma estratégia do Load
 		const tz = getSafeTimezone(cookies, platform, formData.get('tz')?.toString());
-		console.log('⏳ TIMEZONE ACTION: ', tz);
 
 		if (!customer_id || !service_id || !date || !start_at || !end_at) {
 			return fail(400, { message: 'Dados incompletos.' });

@@ -32,9 +32,7 @@
 		if (navigator.share) {
 			try {
 				await navigator.share(shareData);
-			} catch (err) {
-				console.log('Share cancelled');
-			}
+			} catch (err) {}
 		} else {
 			// Para o Clipboard, somamos a mensagem + URL para não perder informação
 			const fullText = `${shareData.title}: ${message}\n\nLink: ${window.location.href}`;

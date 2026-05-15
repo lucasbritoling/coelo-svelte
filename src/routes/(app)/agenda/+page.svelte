@@ -11,7 +11,7 @@
 	import AgendaHeader from '$lib/components/app/agenda/agenda-header.svelte';
 	import AgendaStrip from '$lib/components/app/agenda/agenda-strip.svelte';
 	import AppointmentForm from '$lib/components/app/agenda/appointment-form.svelte';
-	import AppointmentCard from '$lib/components/app/agenda/appointment-card.svelte';
+	import AppointmentItem from '$lib/components/app/agenda/appointment-item.svelte';
 	import GhostSlot from '$lib/components/app/agenda/ghost-slot.svelte';
 	import { scale } from 'svelte/transition';
 
@@ -177,7 +177,7 @@
 					</p>
 					<div class="flex flex-col gap-2">
 						{#each pendingApps as appt}
-							<AppointmentCard {appt} highlighted={true} />
+							<AppointmentItem {appt} highlighted={true} />
 						{/each}
 					</div>
 				</section>
@@ -187,7 +187,7 @@
 			{#if groups.next}
 				<section class="space-y-3">
 					<p class="px-2 text-[10px] font-bold tracking-[0.2em] text-blue-600 uppercase">Próximo</p>
-					<AppointmentCard
+					<AppointmentItem
 						appt={groups.next}
 						highlighted={true}
 						soon={dateUtils.getSoonLabel(groups.next.start_at, ticker)}
@@ -217,7 +217,7 @@
 								</div>
 							{/if}
 
-							<AppointmentCard appt={item} />
+							<AppointmentItem appt={item} />
 						{:else}
 							<GhostSlot
 								duration={item.duration}
@@ -241,7 +241,7 @@
 					</div>
 					<div class="flex flex-col gap-2">
 						{#each groups.past as appt}
-							<AppointmentCard {appt} dimmed={true} />
+							<AppointmentItem {appt} dimmed={true} />
 						{/each}
 					</div>
 				</section>
@@ -255,7 +255,7 @@
 					</p>
 					<div class="flex flex-col gap-2">
 						{#each cancelledApps as appt}
-							<AppointmentCard {appt} dimmed={true} />
+							<AppointmentItem {appt} dimmed={true} />
 						{/each}
 					</div>
 				</section>

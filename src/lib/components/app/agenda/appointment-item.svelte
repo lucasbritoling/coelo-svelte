@@ -2,7 +2,7 @@
 	import type { Appointment, AppointmentStatus } from '$lib/types/appointment';
 	import { MessageCircle, CheckCircle2, XCircle } from '@lucide/svelte';
 	import { Badge } from '$lib/components/ui/badge';
-	import AppointmentCardAction from '$lib/components/app/agenda/appointment-card-action.svelte';
+	import AppointmentItemAction from '$lib/components/app/agenda/appointment-item-action.svelte';
 
 	interface Props {
 		appt: Appointment;
@@ -84,7 +84,7 @@
 				</div>
 			</div>
 
-			<AppointmentCardAction appointmentId={appt.id} appointmentStatus={appt.status} />
+			<AppointmentItemAction appointmentId={appt.id} appointmentStatus={appt.status} />
 		</div>
 
 		<div class="mt-4 flex items-center gap-2">

@@ -12,6 +12,7 @@
 	import AgendaStrip from '$lib/components/app/agenda/agenda-strip.svelte';
 	import AppointmentForm from '$lib/components/app/agenda/appointment-form.svelte';
 	import AppointmentItem from '$lib/components/app/agenda/appointment-item.svelte';
+	import GhostSlot from '$lib/components/app/agenda/ghost-slot.svelte';
 	import { scale } from 'svelte/transition';
 
 	// ── Props com Svelte 5 Runes ──────────────────────────────────
@@ -78,11 +79,27 @@
 		if (Math.abs(dx) > 80) navigateDay(dx > 0 ? 1 : -1);
 	}
 
+	// ── Engenharia de Horários e Lacunas Livres ───────────────────
+	const defaultDuration = $derived.by(() => {
+		if (data.services?.length === 1) {
+			return data.services[0].duration;
+		}
+		return data.user?.profile?.slot_interval ?? data.user?.slot_interval ?? 30;
+	});
+
+	const timeToMins = (t: string) => {
+		const [h, m] = t.split(':').map(Number);
+		return h * 60 + m;
+	};
+
+	const minsToTime = (m: number) => {
+		return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+	};
+
 	const nextAppointmentId = $derived.by(() => {
 		const today = new Date(ticker);
 		const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
-		// Se a data selecionada na agenda não for hoje, desativa a marcação de próximo imediato
 		if (data.selectedDate !== todayStr) return null;
 
 		const nowStr = dateUtils.toTime(ticker);
@@ -90,6 +107,77 @@
 			.filter((a) => a.status !== 'cancelled' && a.start_at > nowStr)
 			.sort((a, b) => a.start_at.localeCompare(b.start_at))[0];
 		return next?.id;
+	});
+
+	const agendaItems = $derived.by(() => {
+		const appointments = data.appointments || [];
+		if (appointments.length === 0) return [];
+
+		const items: Array<
+			| { type: 'appointment'; data: any; sortTime: string }
+			| { type: 'ghost'; startAt: string; duration: number; sortTime: string }
+		> = [];
+
+		// 1. Injeta os agendamentos reais
+		appointments.forEach((appt) => {
+			items.push({ type: 'appointment', data: appt, sortTime: appt.start_at });
+		});
+
+		// 2. Filtra os ativos (não cancelados) para mapear os blocos de tempo vago
+		const activeAppts = [...appointments]
+			.filter((a) => a.status !== 'cancelled')
+			.sort((a, b) => a.start_at.localeCompare(b.start_at));
+
+		const dayStartStr = data.user?.profile?.work_start ?? '08:00';
+		const dayEndStr = data.user?.profile?.work_end ?? '19:00';
+
+		const dayStart = timeToMins(dayStartStr);
+		const dayEnd = timeToMins(dayEndStr);
+		const slotLen = defaultDuration;
+
+		const fillGap = (startMin: number, endMin: number) => {
+			let current = startMin;
+			while (current + slotLen <= endMin) {
+				const timeStr = minsToTime(current);
+				items.push({
+					type: 'ghost',
+					startAt: timeStr,
+					duration: slotLen,
+					sortTime: timeStr
+				});
+				current += slotLen;
+			}
+		};
+
+		if (activeAppts.length > 0) {
+			const firstStart = timeToMins(activeAppts[0].start_at);
+			if (firstStart > dayStart) fillGap(dayStart, firstStart);
+
+			for (let i = 0; i < activeAppts.length - 1; i++) {
+				const currentEnd = timeToMins(activeAppts[i].end_at);
+				const nextStart = timeToMins(activeAppts[i + 1].start_at);
+				if (nextStart > currentEnd) fillGap(currentEnd, nextStart);
+			}
+
+			const lastEnd = timeToMins(activeAppts[activeAppts.length - 1].end_at);
+			if (dayEnd > lastEnd) fillGap(lastEnd, dayEnd);
+		} else {
+			fillGap(dayStart, dayEnd);
+		}
+
+		// 3. Aplica restrições temporais de passado e futuro
+		const today = new Date(ticker);
+		const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+		const isToday = data.selectedDate === todayStr;
+		const nowTimeStr = dateUtils.toTime(ticker);
+
+		return items
+			.filter((item) => {
+				if (item.type === 'appointment') return true;
+				if (isToday) return item.startAt >= nowTimeStr;
+				return data.selectedDate > todayStr;
+			})
+			.sort((a, b) => a.sortTime.localeCompare(b.sortTime));
 	});
 </script>
 
@@ -121,37 +209,47 @@
 				</div>
 				<p class="font-medium text-zinc-500">Nenhum agendamento</p>
 				<button
-					onclick={() => (ui.modal = true)}
+					onclick={() => {
+						selectedTime = '';
+						ui.modal = true;
+					}}
 					class="mt-4 text-sm font-bold text-zinc-900 underline underline-offset-4"
 				>
 					Criar um agora
 				</button>
 			</div>
 		{:else}
-			<!-- Renderização Cronológica Direta e Simplificada -->
+			<!-- Renderização Híbrida e Cronológica Amigável -->
 			<div class="flex flex-col gap-1.5">
-				{#each data.appointments as appt (appt.id)}
-					{@const startMs = dateUtils.parseTimeToMs(appt.start_at, ticker)}
-					{@const endMs = dateUtils.parseTimeToMs(appt.end_at, ticker)}
+				{#each agendaItems as item (item.type === 'appointment' ? item.data.id : `ghost-${item.startAt}`)}
+					{#if item.type === 'appointment'}
+						{@const startMs = dateUtils.parseTimeToMs(item.data.start_at, ticker)}
+						{@const endMs = dateUtils.parseTimeToMs(item.data.end_at, ticker)}
+						{@const isNext = item.data.id === nextAppointmentId}
+						{@const isNow = ticker >= startMs && ticker <= endMs}
+						{@const today = new Date(ticker)}
+						{@const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`}
+						{@const isToday = data.selectedDate === todayStr}
 
-					{@const isNext = appt.id === nextAppointmentId}
-					{@const isNow = ticker >= startMs && ticker <= endMs}
-
-					<!-- Validação local se a listagem atual corresponde a hoje -->
-					{@const today = new Date(ticker)}
-					{@const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`}
-					{@const isToday = data.selectedDate === todayStr}
-
-					<AppointmentItem
-						{appt}
-						{showServiceColor}
-						currentTime={ticker}
-						selectedDate={data.selectedDate}
-						/* 'soon' só é calculado se for hoje E (for o próximo ou estiver acontecendo agora) */
-						soon={isToday && (isNext || isNow)
-							? dateUtils.getSoonLabel(appt.start_at, appt.end_at, ticker)
-							: null}
-					/>
+						<AppointmentItem
+							appt={item.data}
+							{showServiceColor}
+							currentTime={ticker}
+							selectedDate={data.selectedDate}
+							soon={isToday && (isNext || isNow)
+								? dateUtils.getSoonLabel(item.data.start_at, item.data.end_at, ticker)
+								: null}
+						/>
+					{:else}
+						<GhostSlot
+							startAt={item.startAt}
+							duration={item.duration}
+							onclick={() => {
+								selectedTime = item.startAt;
+								ui.modal = true;
+							}}
+						/>
+					{/if}
 				{/each}
 			</div>
 		{/if}

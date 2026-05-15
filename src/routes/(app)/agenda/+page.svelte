@@ -120,6 +120,7 @@
 					<AppointmentItem
 						{appt}
 						{showServiceColor}
+						currentTime={ticker}
 						soon={dateUtils.getSoonLabel(appt.start_at, ticker)}
 					/>
 				{/each}

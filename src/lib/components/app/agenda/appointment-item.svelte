@@ -9,8 +9,8 @@
 		appt: Appointment;
 		showServiceColor: boolean;
 		soon?: string | null;
-		currentTime: number; // Ticker vindo do pai
-		selectedDate: string; // <-- Nova propriedade adicionada
+		currentTime: number;
+		selectedDate: string;
 	}
 
 	let { appt, showServiceColor, soon = null, currentTime, selectedDate }: Props = $props();
@@ -28,6 +28,7 @@
 	const categoryStyle = $derived.by(() => {
 		const color = appt.service_color || 'zinc';
 		if (color.startsWith('#')) return { style: `background-color: ${color}`, class: '' };
+
 		const tailwindMap: Record<string, string> = {
 			zinc: 'bg-zinc-500',
 			blue: 'bg-blue-500',
@@ -40,26 +41,50 @@
 		return { style: '', class: tailwindMap[color] || 'bg-zinc-500' };
 	});
 
-	// Controla o efeito visual de opacidade/passado com precisão de calendário
 	const isPast = $derived.by(() => {
 		if (appt.status === 'cancelled') return true;
 
-		// Gera a string do dia de hoje no formato YYYY-MM-DD local baseado no ticker
 		const today = new Date(currentTime);
 		const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
-		// 1. Se a data visualizada for anterior a hoje, está no passado absoluto
 		if (selectedDate < todayStr) return true;
-
-		// 2. Se a data visualizada for posterior a hoje, está no futuro absoluto (nunca aplica opacidade)
 		if (selectedDate > todayStr) return false;
 
-		// 3. Se for HOJE, avalia estritamente pelo horário de término
-		const endMs = dateUtils.parseTimeToMs(appt.end_at, currentTime);
-		return currentTime > endMs;
+		return currentTime > dateUtils.parseTimeToMs(appt.end_at, currentTime);
 	});
 </script>
 
+<!-- ── SNIPPETS (Blocos isolados de UI) ────────────────────────── -->
+{#snippet timeBlock(start: string, end: string)}
+	<div class="flex min-w-[45px] flex-col items-center justify-center border-r border-zinc-50 pr-2">
+		<span class="text-[11px] leading-tight font-bold text-zinc-900">{start}</span>
+		<span class="text-[9px] leading-tight font-medium text-zinc-400">{end}</span>
+	</div>
+{/snippet}
+
+{#snippet statusBadge(status: typeof currentStatus)}
+	{#if status}
+		<Badge
+			class="flex items-center gap-1 rounded-full border-none px-2 py-0.5 text-[9px] font-bold whitespace-nowrap shadow-none"
+			style="background: {status.bg}; color: {status.text}"
+		>
+			{#if status.icon}<status.icon size={10} strokeWidth={3} />{/if}
+			<span class="hidden xs:inline">{status.label}</span>
+		</Badge>
+	{/if}
+{/snippet}
+
+{#snippet whatsappButton(phone: string)}
+	<a
+		href="https://wa.me/{phone.replace(/\D/g, '')}"
+		target="_blank"
+		class="flex size-8 items-center justify-center text-zinc-400"
+	>
+		<MessageCircle size={15} />
+	</a>
+{/snippet}
+
+<!-- ── ESTRUTURA PRINCIPAL ────────────────────────────────────── -->
 <div
 	class="group relative flex items-center justify-between gap-2 rounded-xl border border-zinc-100 bg-card px-3 py-2 transition-all"
 	class:opacity-40={isPast}
@@ -72,10 +97,7 @@
 		></div>
 	{/if}
 
-	<div class="flex min-w-[45px] flex-col items-center justify-center border-r border-zinc-50 pr-2">
-		<span class="text-[11px] leading-tight font-bold text-zinc-900">{appt.start_at}</span>
-		<span class="text-[9px] leading-tight font-medium text-zinc-400">{appt.end_at}</span>
-	</div>
+	{@render timeBlock(appt.start_at, appt.end_at)}
 
 	<div class="min-w-0 flex-1">
 		<p
@@ -95,27 +117,11 @@
 			</span>
 		{/if}
 
-		{#if currentStatus}
-			<Badge
-				class="flex items-center gap-1 rounded-full border-none px-2 py-0.5 text-[9px] font-bold whitespace-nowrap shadow-none"
-				style="background: {currentStatus.bg}; color: {currentStatus.text}"
-			>
-				{#if currentStatus.icon}
-					<currentStatus.icon size={10} strokeWidth={3} />
-				{/if}
-				<span class="hidden xs:inline">{currentStatus.label}</span>
-			</Badge>
-		{/if}
+		{@render statusBadge(currentStatus)}
 
 		<div class="flex items-center gap-0.5">
 			{#if appt.customer_phone && appt.status !== 'cancelled'}
-				<a
-					href="https://wa.me/{appt.customer_phone.replace(/\D/g, '')}"
-					target="_blank"
-					class="flex size-8 items-center justify-center text-zinc-400"
-				>
-					<MessageCircle size={15} />
-				</a>
+				{@render whatsappButton(appt.customer_phone)}
 			{/if}
 			<AppointmentItemAction appointmentId={appt.id} appointmentStatus={appt.status} />
 		</div>

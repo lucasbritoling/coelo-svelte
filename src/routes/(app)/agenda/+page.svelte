@@ -23,6 +23,7 @@
 			selectedDate: string;
 			customers: any[];
 			services: any[];
+			workingHours: any[];
 			user: any;
 		};
 	}>();
@@ -118,54 +119,59 @@
 			| { type: 'ghost'; startAt: string; duration: number; sortTime: string }
 		> = [];
 
-		// 1. Injeta os agendamentos reais
+		// 1. Injeta os agendamentos reais (independentemente do status)
 		appointments.forEach((appt) => {
 			items.push({ type: 'appointment', data: appt, sortTime: appt.start_at });
 		});
 
-		// 2. Filtra os ativos (não cancelados) para mapear os blocos de tempo vago
-		const activeAppts = [...appointments]
-			.filter((a) => a.status !== 'cancelled')
-			.sort((a, b) => a.start_at.localeCompare(b.start_at));
+		// Mapeia o dia da semana atual para buscar as configurações corretas da tabela
+		const dayOfWeek = dateUtils.parseISO(data.selectedDate).getDay();
+		const currentDayConfig = data.workingHours?.find((wh) => wh.day_of_week === dayOfWeek);
 
-		const dayStartStr = data.user?.profile?.work_start ?? '08:00';
-		const dayEndStr = data.user?.profile?.work_end ?? '19:00';
+		// 2. Só calcula blocos livres se o dia atual possuir horário de trabalho ativo
+		if (currentDayConfig && currentDayConfig.is_active) {
+			const dayStart = timeToMins(currentDayConfig.start_time);
+			const dayEnd = timeToMins(currentDayConfig.end_time);
+			const slotLen = defaultDuration;
 
-		const dayStart = timeToMins(dayStartStr);
-		const dayEnd = timeToMins(dayEndStr);
-		const slotLen = defaultDuration;
+			const fillGap = (startMin: number, endMin: number) => {
+				let current = startMin;
+				while (current + slotLen <= endMin) {
+					const timeStr = minsToTime(current);
+					items.push({
+						type: 'ghost',
+						startAt: timeStr,
+						duration: slotLen,
+						sortTime: timeStr
+					});
+					current += slotLen;
+				}
+			};
 
-		const fillGap = (startMin: number, endMin: number) => {
-			let current = startMin;
-			while (current + slotLen <= endMin) {
-				const timeStr = minsToTime(current);
-				items.push({
-					type: 'ghost',
-					startAt: timeStr,
-					duration: slotLen,
-					sortTime: timeStr
-				});
-				current += slotLen;
+			// Filtra apenas agendamentos ativos que ocupam espaço na agenda física
+			const activeAppts = [...appointments]
+				.filter((a) => a.status !== 'cancelled')
+				.sort((a, b) => a.start_at.localeCompare(b.start_at));
+
+			if (activeAppts.length > 0) {
+				const firstStart = timeToMins(activeAppts[0].start_at);
+				if (firstStart > dayStart) fillGap(dayStart, firstStart);
+
+				for (let i = 0; i < activeAppts.length - 1; i++) {
+					const currentEnd = timeToMins(activeAppts[i].end_at);
+					const nextStart = timeToMins(activeAppts[i + 1].start_at);
+					if (nextStart > currentEnd) fillGap(currentEnd, nextStart);
+				}
+
+				const lastEnd = timeToMins(activeAppts[activeAppts.length - 1].end_at);
+				if (dayEnd > lastEnd) fillGap(lastEnd, dayEnd);
+			} else {
+				// Se houver agendamentos mas todos forem cancelados, preenche o expediente todo do dia
+				fillGap(dayStart, dayEnd);
 			}
-		};
-
-		if (activeAppts.length > 0) {
-			const firstStart = timeToMins(activeAppts[0].start_at);
-			if (firstStart > dayStart) fillGap(dayStart, firstStart);
-
-			for (let i = 0; i < activeAppts.length - 1; i++) {
-				const currentEnd = timeToMins(activeAppts[i].end_at);
-				const nextStart = timeToMins(activeAppts[i + 1].start_at);
-				if (nextStart > currentEnd) fillGap(currentEnd, nextStart);
-			}
-
-			const lastEnd = timeToMins(activeAppts[activeAppts.length - 1].end_at);
-			if (dayEnd > lastEnd) fillGap(lastEnd, dayEnd);
-		} else {
-			fillGap(dayStart, dayEnd);
 		}
 
-		// 3. Aplica restrições temporais de passado e futuro
+		// 3. Aplica as restrições temporais de passado e futuro
 		const today = new Date(ticker);
 		const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 		const isToday = data.selectedDate === todayStr;

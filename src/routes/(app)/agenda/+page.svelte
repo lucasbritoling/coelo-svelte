@@ -12,9 +12,9 @@
 	import AgendaStrip from '$lib/components/app/agenda/agenda-strip.svelte';
 	import AppointmentForm from '$lib/components/app/agenda/appointment-form.svelte';
 	import AppointmentItem from '$lib/components/app/agenda/appointment-item.svelte';
-	import GhostSlot from '$lib/components/app/agenda/ghost-slot.svelte';
 	import { scale } from 'svelte/transition';
 
+	// ── Props com Svelte 5 Runes ──────────────────────────────────
 	let { data } = $props<{
 		data: {
 			appointments: Appointment[];
@@ -26,7 +26,7 @@
 		};
 	}>();
 
-	// ── Lógica de Tempo ──────────────────────────────────────────
+	// ── Lógica de Tempo & Ticker ──────────────────────────────────
 	let ticker = $state(Date.now());
 	$effect(() => {
 		const timeout = setTimeout(
@@ -42,20 +42,22 @@
 		return () => clearTimeout(timeout);
 	});
 
+	// ── Estado de UI Local ────────────────────────────────────────
 	let ui = $state({ modal: false, copied: false });
 	let selectedTime = $state('');
+
 	$effect(() => {
 		globalUI.isModalOpen = ui.modal;
 	});
 
+	// ── Dados Derivados (Reatividade Limpa) ───────────────────────
 	const schedulingLink = $derived(`coelo.dev/${data.username}`);
-
-	// Reatividade baseada na Lib centralizada
-	const reactiveNow = $derived(dateUtils.toTime(ticker));
-	const isTodayView = $derived(data.selectedDate === dateUtils.today());
 	const headerLabel = $derived(dateUtils.getHeaderLabel(data.selectedDate));
 
-	// ── Navegação ────────────────────────────────────────────────
+	// Define se exibe a barra lateral de cor (Apenas se houver mais de 1 serviço no array do dia)
+	const showServiceColor = $derived(new Set(data.appointments.map((a) => a.service_id)).size > 1);
+
+	// ── Navegação de Datas ────────────────────────────────────────
 	function updateDate(newDate: string) {
 		if (!newDate || newDate === data.selectedDate) return;
 		const newUrl = new URL(page.url);
@@ -69,69 +71,11 @@
 		updateDate(dateUtils.fmt.iso.format(date));
 	}
 
+	// Gestos de Swipe
 	let touchStartX = 0;
 	function handleTouchEnd(e: TouchEvent) {
 		const dx = touchStartX - e.changedTouches[0].screenX;
 		if (Math.abs(dx) > 80) navigateDay(dx > 0 ? 1 : -1);
-	}
-
-	// ── Organização de Grupos ────────────────────────────────────
-	const groups = $derived.by(() => {
-		// 1. Mapeie todos para o tipo 'appointment' logo de cara
-		const appointments = activeApps.map((a) => ({ ...a, type: 'appointment' as const }));
-
-		// 2. Corrija o retorno para dias que não são "hoje"
-		if (!isTodayView) {
-			return { past: [], next: null, later: appointments };
-		}
-
-		// O restante da sua lógica de "Hoje" (past, upcoming, gaps)
-		// precisará usar esse novo array 'appointments' que já tem o 'type'
-		const past = appointments.filter((a) => a.start_at < reactiveNow);
-		const upcoming = appointments.filter((a) => a.start_at >= reactiveNow);
-
-		const next = upcoming[0] || null;
-		const laterRaw = upcoming.slice(1);
-
-		const laterWithGaps = [];
-		for (let i = 0; i < laterRaw.length; i++) {
-			const current = laterRaw[i];
-			const prev = i === 0 ? next : laterRaw[i - 1];
-
-			if (prev) {
-				const gapMinutes = calculateGap(prev.end_at, current.start_at);
-				if (gapMinutes >= 30) {
-					laterWithGaps.push({ type: 'gap' as const, duration: gapMinutes, start_at: prev.end_at });
-				}
-			}
-			laterWithGaps.push(current); // Já tem o type: 'appointment'
-		}
-
-		return { past, next, later: laterWithGaps };
-	});
-
-	// NOVOS
-	// Filtros de Status (Cemitério e Pendentes)
-	const pendingApps = $derived(data.appointments.filter((a) => a.status === 'pending'));
-	const cancelledApps = $derived(data.appointments.filter((a) => a.status === 'cancelled'));
-
-	// Filtro de Agendamentos Ativos (Confirmados/Concluídos)
-	const activeApps = $derived(
-		data.appointments.filter((a) => a.status !== 'pending' && a.status !== 'cancelled')
-	);
-
-	// Helper para decidir quando mostrar o divisor de período
-	function getPeriod(time: string) {
-		const hour = parseInt(time.split(':')[0]);
-		if (hour < 12) return 'MANHÃ';
-		if (hour < 18) return 'TARDE';
-		return 'NOITE';
-	}
-
-	function calculateGap(end: string, nextStart: string) {
-		const [h1, m1] = end.split(':').map(Number);
-		const [h2, m2] = nextStart.split(':').map(Number);
-		return h2 * 60 + m2 - (h1 * 60 + m1);
 	}
 </script>
 
@@ -152,9 +96,10 @@
 		}}
 		onOpenSearch={() => toast('Busca em breve!')}
 	/>
+
 	<AgendaStrip selectedDate={data.selectedDate} onSelect={updateDate} />
 
-	<div class="flex-1 space-y-8 overflow-y-auto px-4 pt-4 pb-20">
+	<div class="flex-1 space-y-2 overflow-y-auto px-4 pt-4 pb-20">
 		{#if data.appointments.length === 0}
 			<div class="flex flex-col items-center justify-center py-20 text-center">
 				<div class="mb-4 rounded-full bg-zinc-100 p-4 text-zinc-400">
@@ -169,103 +114,21 @@
 				</button>
 			</div>
 		{:else}
-			<!-- 1. SOLICITAÇÕES/PENDENTES (Prioridade máxima de atenção) -->
-			{#if pendingApps.length > 0}
-				<section class="space-y-3">
-					<p class="px-2 text-[10px] font-bold tracking-[0.2em] text-amber-600 uppercase">
-						Pendentes
-					</p>
-					<div class="flex flex-col gap-2">
-						{#each pendingApps as appt}
-							<AppointmentItem {appt} highlighted={true} />
-						{/each}
-					</div>
-				</section>
-			{/if}
-
-			<!-- 2. AGORA/PRÓXIMO (O foco principal do momento) -->
-			{#if groups.next}
-				<section class="space-y-3">
-					<p class="px-2 text-[10px] font-bold tracking-[0.2em] text-blue-600 uppercase">Próximo</p>
+			<!-- Renderização Cronológica Direta e Simplificada -->
+			<div class="flex flex-col gap-1.5">
+				{#each data.appointments as appt (appt.id)}
 					<AppointmentItem
-						appt={groups.next}
-						highlighted={true}
-						soon={dateUtils.getSoonLabel(groups.next.start_at, ticker)}
+						{appt}
+						{showServiceColor}
+						soon={dateUtils.getSoonLabel(appt.start_at, ticker)}
 					/>
-				</section>
-			{/if}
-
-			<!-- 3. DEPOIS (O restante do dia com vácuos/gaps) -->
-			{#if groups.later.length > 0}
-				<section class="space-y-6">
-					{#each groups.later as item, i}
-						{#if item.type === 'appointment'}
-							{@const currentPeriod = getPeriod(item.start_at)}
-							{@const prevItem = groups.later[i - 1]}
-							{@const prevPeriod = prevItem
-								? getPeriod(prevItem.start_at)
-								: groups.next
-									? getPeriod(groups.next.start_at)
-									: null}
-
-							{#if currentPeriod !== prevPeriod}
-								<div class="flex items-center gap-4 px-2 pt-2">
-									<span class="text-[10px] font-bold tracking-[0.2em] text-zinc-400 uppercase">
-										{currentPeriod}
-									</span>
-									<div class="h-px flex-1 bg-zinc-100"></div>
-								</div>
-							{/if}
-
-							<AppointmentItem appt={item} />
-						{:else}
-							<GhostSlot
-								duration={item.duration}
-								startAt={item.start_at}
-								onclick={() => {
-									selectedTime = item.start_at;
-									ui.modal = true;
-								}}
-							/>
-						{/if}
-					{/each}
-				</section>
-			{/if}
-
-			<!-- 4. ANTERIORES (Histórico do que já passou hoje) -->
-			{#if groups.past.length > 0}
-				<section class="space-y-3 pt-4">
-					<div class="flex items-center gap-4 px-2">
-						<p class="text-[10px] font-bold tracking-[0.2em] text-zinc-400 uppercase">Anteriores</p>
-						<div class="h-px flex-1 bg-zinc-100/50"></div>
-					</div>
-					<div class="flex flex-col gap-2">
-						{#each groups.past as appt}
-							<AppointmentItem {appt} dimmed={true} />
-						{/each}
-					</div>
-				</section>
-			{/if}
-
-			<!-- 5. CANCELADOS (Fim da página) -->
-			{#if cancelledApps.length > 0}
-				<section class="mt-8 space-y-3 border-t border-dashed border-zinc-200 pt-8">
-					<p class="px-2 text-[10px] font-bold tracking-[0.2em] text-zinc-300 uppercase">
-						Cancelados
-					</p>
-					<div class="flex flex-col gap-2">
-						{#each cancelledApps as appt}
-							<AppointmentItem {appt} dimmed={true} />
-						{/each}
-					</div>
-				</section>
-			{/if}
+				{/each}
+			</div>
 		{/if}
 
+		<!-- ── FABs Flutuantes (Bottom Actions) ─────────────────────── -->
 		<div class="pointer-events-none fixed inset-x-0 bottom-24 z-40 flex justify-center">
-			<!-- Container que limita a largura (deve ser a mesma largura do seu conteúdo principal) -->
 			<div class="relative flex w-full max-w-md justify-end px-4">
-				<!-- Suas FABs (com pointer-events-auto para voltarem a ser clicáveis) -->
 				<div class="pointer-events-auto flex flex-col items-end gap-2">
 					<!-- Botão: Copiar Link -->
 					<div class="flex flex-col items-end gap-2">
@@ -295,7 +158,7 @@
 						</button>
 					</div>
 
-					<!-- Botão: Novo Agendamento (Idêntico ao de cima) -->
+					<!-- Botão: Novo Agendamento -->
 					<button
 						onclick={() => {
 							selectedTime = '';
@@ -317,8 +180,7 @@
 	bind:open={ui.modal}
 	initialTime={selectedTime}
 	onSuccess={() => {
-		selectedTime = ''; // Limpa o horário sugerido após sucesso
-		// O modal fecha sozinho pelo bind:open interno ou pelo onSuccess
+		selectedTime = '';
 	}}
 />
 

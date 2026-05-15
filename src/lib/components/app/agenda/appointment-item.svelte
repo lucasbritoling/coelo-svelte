@@ -136,7 +136,7 @@
 	}
 
 	.appointment-card.is-past {
-		opacity: 0.4;
+		opacity: 0.5;
 		filter: grayscale(0.5);
 	}
 
@@ -162,14 +162,14 @@
 	}
 
 	.time-start {
-		font-size: 11px;
+		font-size: 12.5px;
 		line-height: 1.25;
-		font-weight: 700;
+		font-weight: 500;
 		color: rgb(24 24 27); /* zinc-900 */
 	}
 
 	.time-end {
-		font-size: 9px;
+		font-size: 9.5px;
 		line-height: 1.25;
 		font-weight: 500;
 		color: rgb(161 161 170); /* zinc-400 */
@@ -181,7 +181,7 @@
 		white-space: nowrap;
 		font-size: 0.875rem;
 		line-height: 1.25rem;
-		font-weight: 600;
+		font-weight: 450;
 		letter-spacing: -0.025em;
 	}
 
@@ -197,15 +197,14 @@
 	}
 
 	.soon-label {
-		animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 		border-radius: 0.375rem;
 		background-color: rgb(239 246 255); /* blue-50 */
 		padding-left: 0.375rem;
 		padding-right: 0.375rem;
 		padding-top: 0.125rem;
 		padding-bottom: 0.125rem;
-		font-size: 9px;
-		font-weight: 900;
+		font-size: 10px;
+		font-weight: 600;
 		color: rgb(37 99 235); /* blue-600 */
 	}
 

@@ -1,4 +1,4 @@
-import { today, getLocalTimeZone } from '@internationalized/date';
+import { today } from '@internationalized/date';
 
 const TIMEZONE = 'America/Sao_Paulo';
 
@@ -27,35 +27,25 @@ export const fmt = {
 	weekdayShort: new Intl.DateTimeFormat('pt-BR', {
 		weekday: 'short',
 		timeZone: TIMEZONE
-	}),
-
-	// Para cálculos de "agora" e "em X min"
-	full: new Intl.DateTimeFormat('en-US', {
-		timeZone: TIMEZONE,
-		year: 'numeric',
-		month: 'numeric',
-		day: 'numeric',
-		hour: 'numeric',
-		minute: 'numeric',
-		second: 'numeric',
-		hour12: false
 	})
 };
 
 /**
- * Utilitários de data
+ * Utilitários de data robustos para TSTZRANGE e Cloudflare Edge
  */
 export const dateUtils = {
 	// Pega string ISO de hoje em SP: "2026-05-11"
 	today: () => today(TIMEZONE).toString(),
 
-	// Converte Date ou Ticker para string de hora: "14:30"
+	// Converte Date ou Ticker (timestamp) para string de hora local de SP: "14:30"
 	toTime: (date: Date | number) => fmt.time.format(date),
 
-	// Converte string "2026-05-11" para objeto Date real (evita erro de fuso local)
+	// Converte string "2026-05-11" para objeto Date focado no meio do dia local de SP
+	// (Evita que o fuso puxe a data para o dia anterior)
 	parseISO: (isoString: string) => {
 		const [y, m, d] = isoString.split('-').map(Number);
-		return new Date(y, m - 1, d);
+		// Forçar meio-dia evita problemas de fuso ao converter para manipulações puras de calendário
+		return new Date(y, m - 1, d, 12, 0, 0);
 	},
 
 	// Formata o label do header
@@ -64,22 +54,54 @@ export const dateUtils = {
 		return fmt.header.format(dateUtils.parseISO(isoDate));
 	},
 
-	// Cálculo de "em quanto tempo" (Label Soon)
-	parseTimeToMs: (timeStr: string, ticker: number) => {
-		const [h, m] = timeStr.split(':').map(Number);
-		const d = new Date(ticker);
-		d.setHours(h, m, 0, 0);
-		return d.getTime();
+	/**
+	 * AJUSTADO: Faz o parse de um timestamp absoluto limpando aspas da serialização JSON do Postgres
+	 */
+	parseAbsoluteToMs: (dateInput: string | Date | number) => {
+		if (typeof dateInput === 'number') return dateInput;
+		if (dateInput instanceof Date) return dateInput.getTime();
+
+		// Remove TODAS as aspas (inclusive as escapadas \") e normaliza o espaço para 'T'
+		const normalized = dateInput.replace(/"/g, '').trim().replace(' ', 'T');
+		return Date.parse(normalized);
 	},
 
-	// Ajuste opcional no getSoonLabel para usar o ticker de forma mais consistente
-	getSoonLabel: (startTime: string, endTime: string, ticker: number) => {
-		const start = dateUtils.parseTimeToMs(startTime, ticker);
-		const end = dateUtils.parseTimeToMs(endTime, ticker);
+	/**
+	 * CORRIGIDO: Força a string para o fuso -03:00 de Brasília de forma explícita.
+	 * Isso blinda o comportamento na Cloudflare Edge (UTC) e no Navegador local.
+	 */
+	parseTimeToMs: (timeStr: string, selectedDateStr: string) => {
+		// Ao cravar o sufixo -03:00, o motor do JS calcula os milissegundos UTC exatos,
+		// não importando em qual fuso horário o servidor ou o cliente estão rodando.
+		const isoWithTz = `${selectedDateStr}T${timeStr}:00-03:00`;
+		return Date.parse(isoWithTz);
+	},
 
-		if (ticker >= start && ticker <= end) return 'agora';
+	/**
+	 * CORRIGIDO: Destrincha a string tstzrange limpando as aspas internas do JSON
+	 * Entrada tratada: "[\"2026-05-15 12:00:00+00\",\"2026-05-15 12:30:00+00\")"
+	 */
+	parseRange: (rangeStr: string) => {
+		// Remove colchetes, parênteses E aspas duplas de uma vez só
+		const clean = rangeStr.replace(/[\[\]\(\)"]/g, '');
+		const [startStr, endStr] = clean.split(',');
 
-		const diffMin = Math.floor((start - ticker) / 60000);
+		const startMs = dateUtils.parseAbsoluteToMs(startStr);
+		const endMs = dateUtils.parseAbsoluteToMs(endStr);
+
+		return {
+			start_at: dateUtils.toTime(startMs), // Agora vai aplicar os -3h de SP perfeitamente!
+			end_at: dateUtils.toTime(endMs),
+			startMs,
+			endMs
+		};
+	},
+
+	// Ajuste do getSoonLabel utilizando o novo parser absoluto
+	getSoonLabel: (startMs: number, endMs: number, ticker: number) => {
+		if (ticker >= startMs && ticker <= endMs) return 'agora';
+
+		const diffMin = Math.floor((startMs - ticker) / 60000);
 
 		if (diffMin <= 0) return null;
 		if (diffMin < 60) return `em ${diffMin} min`;
@@ -88,17 +110,13 @@ export const dateUtils = {
 		const remainingMin = diffMin % 60;
 		return `em ${diffHours}h${remainingMin > 0 ? remainingMin : ''}`;
 	},
+
 	handleSelection: (date: any, currentPath: string) => {
 		if (!date) return null;
-
 		const dateString = date.toString();
-
-		// Se estiver na agenda, retorna o destino da navegação
 		if (currentPath.includes('/agenda')) {
 			return `/agenda?date=${dateString}`;
 		}
-
-		// Caso contrário, apenas retorna a string para atualizar estados locais
 		return dateString;
 	}
 };

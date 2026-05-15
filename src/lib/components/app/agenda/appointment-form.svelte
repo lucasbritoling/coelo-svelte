@@ -157,8 +157,12 @@
 			<form
 				method="POST"
 				action="?/create"
-				use:enhance={() => {
+				use:enhance={({ formData }) => {
 					isSubmitting = true;
+
+					// Captura o fuso exato do navegador no momento do clique e injeta no payload
+					const clientTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+					formData.append('tz', clientTz);
 					return async ({ result, update }) => {
 						await update();
 						isSubmitting = false;

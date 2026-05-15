@@ -26,15 +26,35 @@ export const load: PageServerLoad = async ({ url, locals: { sql, user } }) => {
 		]);
 
 		// 2. Extração dos dados da RPC
-		// O postgres.js retorna um array de linhas, pegamos a primeira (.data vem do alias no SQL)
-		const agenda = rpcResult[0].data;
+		const agenda = rpcResult[0]?.data;
+
+		if (!agenda) {
+			throw error(500, 'Falha catastrófica ao estruturar os dados da agenda.');
+		}
+
+		// 3. Normalização dos Appointments (Traduzindo tstzrange para o Front)
+		// Garantimos que mapeamos o slot do banco para o padrão de exibição em SP
+		const sanitizedAppointments = (agenda.appointments || []).map((appt: any) => {
+			if (!appt.slot) return appt;
+
+			// Extrai os horários formatados ("14:00") e timestamps (ms) relativos ao fuso correto
+			const { start_at, end_at, startMs, endMs } = dateUtils.parseRange(appt.slot);
+
+			return {
+				...appt,
+				start_at, // Substitui pela string limpa local para manter compatibilidade com a UI
+				end_at, // Substitui pela string limpa local para manter compatibilidade com a UI
+				startMs, // Injetado para facilitar ordenações ou cálculos milimétricos no front se precisar
+				endMs // Injetado para facilitar ordenações ou cálculos milimétricos no front se precisar
+			};
+		});
 
 		return {
-			// Dados vindos da RPC
-			appointments: agenda.appointments,
-			customers: agenda.customers,
-			services: agenda.services,
-			workingHours: agenda.workingHours,
+			// Dados vindos da RPC mapeados de forma segura
+			appointments: sanitizedAppointments,
+			customers: agenda.customers ?? [],
+			services: agenda.services ?? [],
+			workingHours: agenda.workingHours ?? [],
 			username: agenda.profile?.username ?? 'user',
 
 			// Contexto da página
@@ -46,9 +66,9 @@ export const load: PageServerLoad = async ({ url, locals: { sql, user } }) => {
 			user: {
 				...user,
 				lunch_settings: {
-					has_lunch: agenda.profile.has_lunch,
-					lunch_start: agenda.profile.lunch_start,
-					lunch_end: agenda.profile.lunch_end
+					has_lunch: agenda.profile?.has_lunch ?? false,
+					lunch_start: agenda.profile?.lunch_start ?? '12:00:00',
+					lunch_end: agenda.profile?.lunch_end ?? '13:00:00'
 				}
 			}
 		};
@@ -68,13 +88,18 @@ export const actions: Actions = {
 		const date = formData.get('date')?.toString();
 		const start_at = formData.get('start_at')?.toString();
 		const end_at = formData.get('end_at')?.toString();
+		const tz = formData.get('tz')?.toString() || 'UTC';
 
 		if (!customer_id || !service_id || !date || !start_at || !end_at) {
 			return fail(400, { message: 'Dados incompletos.' });
 		}
 
-		// Formato tsrange: '[YYYY-MM-DD HH:MM:SS, YYYY-MM-DD HH:MM:SS)'
-		const slotValue = `[${date} ${start_at}:00, ${date} ${end_at}:00)`;
+		// Formato tsrange: '[YYYY-MM-DD HH:MM:SS-03:00, YYYY-MM-DD HH:MM:SS-03:00)'
+		const slotValue = `[
+    ('${date} ${start_at}:00'::timestamp AT TIME ZONE '${tz}'), 
+    ('${date} ${end_at}:00'::timestamp AT TIME ZONE '${tz}')
+)`;
+		console.log(slotValue);
 
 		try {
 			await sql`

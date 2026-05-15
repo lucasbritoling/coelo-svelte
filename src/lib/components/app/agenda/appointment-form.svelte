@@ -16,7 +16,7 @@
 	import { Label } from '$lib/components/ui/label';
 	import { Input } from '$lib/components/ui/input';
 	import { Textarea } from '$lib/components/ui/textarea';
-	import { dateUtils, fmt } from '$lib/utils/date';
+	import { createFormatters, dateUtils } from '$lib/utils/date';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import CustomerForm from '../customer-form.svelte';
@@ -331,7 +331,9 @@
 								{#if formState.date === dateUtils.today()}
 									Hoje
 								{:else}
-									{fmt.header.format(dateUtils.parseISO(formState.date)).replace('.', '')}
+									{createFormatters(data.timezone)
+										.header.format(dateUtils.parseISO(formState.date))
+										.replace('.', '')}
 								{/if}
 							</span>
 						</button>

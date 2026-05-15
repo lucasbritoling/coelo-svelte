@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { dateUtils } from '$lib/utils/date';
+	import { dateUtils, createFormatters } from '$lib/utils/date';
 	import { ui as globalUI } from '$lib/state/ui.svelte';
 	import type { Appointment } from '$lib/types/appointment';
 	import { Check, CalendarDays, Link, CalendarPlus } from '@lucide/svelte';
@@ -54,7 +54,7 @@
 
 	// ── Dados Derivados (Reatividade Limpa) ───────────────────────
 	const schedulingLink = $derived(`coelo.dev/${data.username}`);
-	const headerLabel = $derived(dateUtils.getHeaderLabel(data.selectedDate));
+	const headerLabel = $derived(dateUtils.getHeaderLabel(data.selectedDate, data.timezone));
 
 	// Define se exibe a barra lateral de cor (Apenas se houver mais de 1 serviço no array do dia)
 	const showServiceColor = $derived(new Set(data.appointments.map((a) => a.service_id)).size > 1);
@@ -70,7 +70,10 @@
 	function navigateDay(offset: number) {
 		const date = dateUtils.parseISO(data.selectedDate);
 		date.setDate(date.getDate() + offset);
-		updateDate(dateUtils.fmt.iso.format(date));
+
+		// CORREÇÃO: Cria o formatador usando o fuso dinâmico do load
+		const formatters = createFormatters(data.timezone);
+		updateDate(formatters.iso.format(date));
 	}
 
 	// Gestos de Swipe
@@ -98,12 +101,13 @@
 	};
 
 	const nextAppointmentId = $derived.by(() => {
-		const today = new Date(ticker);
-		const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+		// Descobre se hoje é o dia selecionado usando o fuso dinâmico
+		const isToday = data.selectedDate === dateUtils.today(data.timezone);
+		if (!isToday) return null;
 
-		if (data.selectedDate !== todayStr) return null;
+		// Força a string de hora atual a ser gerada exatamente sob o fuso dinâmico correto
+		const nowStr = dateUtils.toTime(ticker, data.timezone);
 
-		const nowStr = dateUtils.toTime(ticker);
 		const next = data.appointments
 			.filter((a) => a.status !== 'cancelled' && a.start_at > nowStr)
 			.sort((a, b) => a.start_at.localeCompare(b.start_at))[0];
@@ -112,16 +116,39 @@
 
 	const agendaItems = $derived.by(() => {
 		const appointments = data.appointments || [];
-		if (appointments.length === 0) return [];
 
 		// Array primário (agendamentos misturados com slots individuais)
 		const rawItems: Array<
-			| { type: 'appointment'; data: any; sortTime: string }
+			| { type: 'appointment'; data: any; sortTime: string; isPast: boolean }
 			| { type: 'ghost'; startAt: string; duration: number; sortTime: string }
 		> = [];
 
+		// Pegamos as referências de tempo baseadas no fuso dinâmico
+		const todayStr = dateUtils.today(data.timezone);
+		const isSelectedToday = data.selectedDate === todayStr;
+
 		appointments.forEach((appt) => {
-			rawItems.push({ type: 'appointment', data: appt, sortTime: appt.start_at });
+			// Regra de opacidade/passado para o agendamento:
+			let apptIsPast = false;
+
+			if (appt.status === 'cancelled' || appt.status === 'concluído' || appt.status === 'faltou') {
+				apptIsPast = true;
+			} else if (data.selectedDate < todayStr) {
+				// 1. Datas anteriores: Sempre passado/opaco
+				apptIsPast = true;
+			} else if (isSelectedToday) {
+				// 2. No dia de hoje: Se o limite superior (end_at) já passou do ticker atual
+				const endMs = dateUtils.parseTimeToMs(appt.end_at, data.selectedDate, data.timezone);
+				apptIsPast = ticker > endMs;
+			}
+			// 3. Datas futuras: Mantém apptIsPast = false (preservada)
+
+			rawItems.push({
+				type: 'appointment',
+				data: appt,
+				sortTime: appt.start_at,
+				isPast: apptIsPast
+			});
 		});
 
 		const dayOfWeek = dateUtils.parseISO(data.selectedDate).getDay();
@@ -167,34 +194,29 @@
 			}
 		}
 
-		// Filtrar passado vs futuro
-		const today = new Date(ticker);
-		const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-		const isToday = data.selectedDate === todayStr;
-		const nowTimeStr = dateUtils.toTime(ticker);
+		const nowTimeStr = dateUtils.toTime(ticker, data.timezone);
 
+		// Filtragem limpa do que deve sumir (slots vazios passados)
 		const filteredItems = rawItems
 			.filter((item) => {
-				if (item.type === 'appointment') return true;
-				if (isToday) return item.startAt >= nowTimeStr;
+				if (item.type === 'appointment') return true; // Mantém os passados para exibi-los opacos
+				if (isSelectedToday) return item.startAt >= nowTimeStr;
 				return data.selectedDate > todayStr;
 			})
 			.sort((a, b) => a.sortTime.localeCompare(b.sortTime));
 
-		// ── NOVA ETAPA: Agrupar slots livres contíguos ──
+		// Agrupar slots livres contíguos
 		const groupedItems = [];
 		let currentGhostGroup: { type: 'ghost-group'; slots: any[]; sortTime: string } | null = null;
 
 		for (const item of filteredItems) {
 			if (item.type === 'appointment') {
-				// Qualquer appointment quebra a sequência de slots vazios
 				if (currentGhostGroup) {
 					groupedItems.push(currentGhostGroup);
 					currentGhostGroup = null;
 				}
 				groupedItems.push(item);
 			} else if (item.type === 'ghost') {
-				// Inicia ou adiciona à sanfona
 				if (!currentGhostGroup) {
 					currentGhostGroup = {
 						type: 'ghost-group',
@@ -209,7 +231,6 @@
 			}
 		}
 
-		// Adiciona o último grupo pendente, se houver
 		if (currentGhostGroup) {
 			groupedItems.push(currentGhostGroup);
 		}
@@ -257,26 +278,35 @@
 			</div>
 		{:else}
 			<div class="flex flex-col gap-1.5">
-				<!-- Agora iteramos sobre `groupedItems`, a key muda levemente para o ghost-group -->
 				{#each agendaItems as item (item.type === 'appointment' ? item.data.id : `ghost-group-${item.sortTime}`)}
 					{#if item.type === 'appointment'}
-						{@const startMs = dateUtils.parseTimeToMs(item.data.start_at, ticker)}
-						{@const endMs = dateUtils.parseTimeToMs(item.data.end_at, ticker)}
+						{@const startMs = dateUtils.parseTimeToMs(
+							item.data.start_at,
+							data.selectedDate,
+							data.timezone
+						)}
+						{@const endMs = dateUtils.parseTimeToMs(
+							item.data.end_at,
+							data.selectedDate,
+							data.timezone
+						)}
 						{@const isNext = item.data.id === nextAppointmentId}
 						{@const isNow = ticker >= startMs && ticker <= endMs}
-						{@const today = new Date(ticker)}
-						{@const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`}
-						{@const isToday = data.selectedDate === todayStr}
+						{@const isToday = data.selectedDate === dateUtils.today(data.timezone)}
 
-						<AppointmentItem
-							appt={item.data}
-							{showServiceColor}
-							currentTime={ticker}
-							selectedDate={data.selectedDate}
-							soon={isToday && (isNext || isNow)
-								? dateUtils.getSoonLabel(item.data.start_at, item.data.end_at, ticker)
-								: null}
-						/>
+						<!-- Aplicamos a classe de opacidade de forma reativa e suave aqui -->
+						<div class="transition-opacity duration-300" class:opacity-40={item.isPast}>
+							<AppointmentItem
+								appt={item.data}
+								{showServiceColor}
+								currentTime={ticker}
+								selectedDate={data.selectedDate}
+								timezone={data.timezone}
+								soon={isToday && (isNext || isNow)
+									? dateUtils.getSoonLabel(startMs, endMs, ticker)
+									: null}
+							/>
+						</div>
 					{:else if item.type === 'ghost-group'}
 						<GhostSlot
 							slots={item.slots}

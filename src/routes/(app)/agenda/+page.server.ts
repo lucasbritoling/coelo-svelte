@@ -29,7 +29,7 @@ export const load: PageServerLoad = async ({ url, cookies, platform, locals: { s
 
 	// Resolve o fuso usando a esteira de resiliência tripla
 	const activeTz = getSafeTimezone(cookies, platform);
-	console.log('⏳ TIMEZONE ATIVA: ', activeTz);
+	//console.log('⏳ TIMEZONE ATIVA: ', activeTz);
 
 	if (!/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
 		throw error(400, 'Data inválida');

@@ -11,9 +11,17 @@
 		soon?: string | null;
 		currentTime: number;
 		selectedDate: string;
+		timezone: string; // <--- 1. RECEBE O FUSO ATIVO DO PAI
 	}
 
-	let { appt, showServiceColor, soon = null, currentTime, selectedDate }: Props = $props();
+	let {
+		appt,
+		showServiceColor,
+		soon = null,
+		currentTime,
+		selectedDate,
+		timezone
+	}: Props = $props();
 
 	const STATUS: Record<string, { label: string; bg: string; text: string; icon?: any }> = {
 		pending: { label: 'pendente', bg: '#FDE68A', text: '#78350F' },
@@ -41,16 +49,24 @@
 		return { style: '', class: tailwindMap[color] || 'bg-zinc-500' };
 	});
 
+	// 2. CÁLCULO DE PASSADO TOTALMENTE ATRELADO AO FUSO HORÁRIO
 	const isPast = $derived.by(() => {
 		if (appt.status === 'cancelled') return true;
+		if (appt.status === 'concluído' || appt.status === 'faltou') return true;
 
-		const today = new Date(currentTime);
-		const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+		// Descobre a data textual de "hoje" considerando o fuso dinâmico do cliente
+		const todayStr = dateUtils.today(timezone);
 
+		// Se a data selecionada na agenda for anterior a hoje, é passado puro
 		if (selectedDate < todayStr) return true;
+		// Se a data selecionada for posterior, com certeza é futuro
 		if (selectedDate > todayStr) return false;
 
-		return currentTime > dateUtils.parseTimeToMs(appt.end_at, currentTime);
+		// Se for o dia de hoje, descobrimos o timestamp ms exato do fim do atendimento aplicando o fuso
+		const endMs = dateUtils.parseTimeToMs(appt.end_at, selectedDate, timezone);
+
+		// Compara com o ticker do currentTime atualizado em tempo real pelo pai
+		return currentTime > endMs;
 	});
 </script>
 

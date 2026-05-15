@@ -10,17 +10,10 @@
 		showServiceColor: boolean;
 		soon?: string | null;
 		currentTime: number; // Ticker vindo do pai
+		selectedDate: string; // <-- Nova propriedade adicionada
 	}
 
-	let { appt, showServiceColor, soon = null, currentTime }: Props = $props();
-
-	// Verifica se o agendamento já terminou baseado no ticker
-	//const isPast = $derived.by(() => {
-	//	const [hours, minutes] = appt.end_at.split(':').map(Number);
-	//		const endAtDate = new Date(currentTime);
-	//		endAtDate.setHours(hours, minutes, 0, 0);
-	//		return currentTime > endAtDate.getTime();
-	//	});
+	let { appt, showServiceColor, soon = null, currentTime, selectedDate }: Props = $props();
 
 	const STATUS: Record<string, { label: string; bg: string; text: string; icon?: any }> = {
 		pending: { label: 'pendente', bg: '#FDE68A', text: '#78350F' },
@@ -46,8 +39,22 @@
 		};
 		return { style: '', class: tailwindMap[color] || 'bg-zinc-500' };
 	});
+
+	// Controla o efeito visual de opacidade/passado com precisão de calendário
 	const isPast = $derived.by(() => {
 		if (appt.status === 'cancelled') return true;
+
+		// Gera a string do dia de hoje no formato YYYY-MM-DD local baseado no ticker
+		const today = new Date(currentTime);
+		const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+		// 1. Se a data visualizada for anterior a hoje, está no passado absoluto
+		if (selectedDate < todayStr) return true;
+
+		// 2. Se a data visualizada for posterior a hoje, está no futuro absoluto (nunca aplica opacidade)
+		if (selectedDate > todayStr) return false;
+
+		// 3. Se for HOJE, avalia estritamente pelo horário de término
 		const endMs = dateUtils.parseTimeToMs(appt.end_at, currentTime);
 		return currentTime > endMs;
 	});

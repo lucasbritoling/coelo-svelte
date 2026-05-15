@@ -79,8 +79,13 @@
 	}
 
 	const nextAppointmentId = $derived.by(() => {
-		const nowStr = dateUtils.toTime(ticker); // assume que você tem essa função
-		// Busca o primeiro item cujo start_at é maior que AGORA
+		const today = new Date(ticker);
+		const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+		// Se a data selecionada na agenda não for hoje, desativa a marcação de próximo imediato
+		if (data.selectedDate !== todayStr) return null;
+
+		const nowStr = dateUtils.toTime(ticker);
 		const next = data.appointments
 			.filter((a) => a.status !== 'cancelled' && a.start_at > nowStr)
 			.sort((a, b) => a.start_at.localeCompare(b.start_at))[0];
@@ -130,15 +135,20 @@
 					{@const endMs = dateUtils.parseTimeToMs(appt.end_at, ticker)}
 
 					{@const isNext = appt.id === nextAppointmentId}
-
 					{@const isNow = ticker >= startMs && ticker <= endMs}
+
+					<!-- Validação local se a listagem atual corresponde a hoje -->
+					{@const today = new Date(ticker)}
+					{@const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`}
+					{@const isToday = data.selectedDate === todayStr}
 
 					<AppointmentItem
 						{appt}
 						{showServiceColor}
 						currentTime={ticker}
-						/* Passa o label se for o próximo OU se for agora */
-						soon={isNext || isNow
+						selectedDate={data.selectedDate}
+						/* 'soon' só é calculado se for hoje E (for o próximo ou estiver acontecendo agora) */
+						soon={isToday && (isNext || isNow)
 							? dateUtils.getSoonLabel(appt.start_at, appt.end_at, ticker)
 							: null}
 					/>

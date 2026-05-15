@@ -114,21 +114,19 @@
 		const appointments = data.appointments || [];
 		if (appointments.length === 0) return [];
 
-		const items: Array<
+		// Array primário (agendamentos misturados com slots individuais)
+		const rawItems: Array<
 			| { type: 'appointment'; data: any; sortTime: string }
 			| { type: 'ghost'; startAt: string; duration: number; sortTime: string }
 		> = [];
 
-		// 1. Injeta os agendamentos reais (independentemente do status)
 		appointments.forEach((appt) => {
-			items.push({ type: 'appointment', data: appt, sortTime: appt.start_at });
+			rawItems.push({ type: 'appointment', data: appt, sortTime: appt.start_at });
 		});
 
-		// Mapeia o dia da semana atual para buscar as configurações corretas da tabela
 		const dayOfWeek = dateUtils.parseISO(data.selectedDate).getDay();
 		const currentDayConfig = data.workingHours?.find((wh) => wh.day_of_week === dayOfWeek);
 
-		// 2. Só calcula blocos livres se o dia atual possuir horário de trabalho ativo
 		if (currentDayConfig && currentDayConfig.is_active) {
 			const dayStart = timeToMins(currentDayConfig.start_time);
 			const dayEnd = timeToMins(currentDayConfig.end_time);
@@ -138,7 +136,7 @@
 				let current = startMin;
 				while (current + slotLen <= endMin) {
 					const timeStr = minsToTime(current);
-					items.push({
+					rawItems.push({
 						type: 'ghost',
 						startAt: timeStr,
 						duration: slotLen,
@@ -148,7 +146,6 @@
 				}
 			};
 
-			// Filtra apenas agendamentos ativos que ocupam espaço na agenda física
 			const activeAppts = [...appointments]
 				.filter((a) => a.status !== 'cancelled')
 				.sort((a, b) => a.start_at.localeCompare(b.start_at));
@@ -166,24 +163,58 @@
 				const lastEnd = timeToMins(activeAppts[activeAppts.length - 1].end_at);
 				if (dayEnd > lastEnd) fillGap(lastEnd, dayEnd);
 			} else {
-				// Se houver agendamentos mas todos forem cancelados, preenche o expediente todo do dia
 				fillGap(dayStart, dayEnd);
 			}
 		}
 
-		// 3. Aplica as restrições temporais de passado e futuro
+		// Filtrar passado vs futuro
 		const today = new Date(ticker);
 		const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 		const isToday = data.selectedDate === todayStr;
 		const nowTimeStr = dateUtils.toTime(ticker);
 
-		return items
+		const filteredItems = rawItems
 			.filter((item) => {
 				if (item.type === 'appointment') return true;
 				if (isToday) return item.startAt >= nowTimeStr;
 				return data.selectedDate > todayStr;
 			})
 			.sort((a, b) => a.sortTime.localeCompare(b.sortTime));
+
+		// ── NOVA ETAPA: Agrupar slots livres contíguos ──
+		const groupedItems = [];
+		let currentGhostGroup: { type: 'ghost-group'; slots: any[]; sortTime: string } | null = null;
+
+		for (const item of filteredItems) {
+			if (item.type === 'appointment') {
+				// Qualquer appointment quebra a sequência de slots vazios
+				if (currentGhostGroup) {
+					groupedItems.push(currentGhostGroup);
+					currentGhostGroup = null;
+				}
+				groupedItems.push(item);
+			} else if (item.type === 'ghost') {
+				// Inicia ou adiciona à sanfona
+				if (!currentGhostGroup) {
+					currentGhostGroup = {
+						type: 'ghost-group',
+						slots: [],
+						sortTime: item.sortTime
+					};
+				}
+				currentGhostGroup.slots.push({
+					startAt: item.startAt,
+					duration: item.duration
+				});
+			}
+		}
+
+		// Adiciona o último grupo pendente, se houver
+		if (currentGhostGroup) {
+			groupedItems.push(currentGhostGroup);
+		}
+
+		return groupedItems;
 	});
 </script>
 
@@ -225,9 +256,9 @@
 				</button>
 			</div>
 		{:else}
-			<!-- Renderização Híbrida e Cronológica Amigável -->
 			<div class="flex flex-col gap-1.5">
-				{#each agendaItems as item (item.type === 'appointment' ? item.data.id : `ghost-${item.startAt}`)}
+				<!-- Agora iteramos sobre `groupedItems`, a key muda levemente para o ghost-group -->
+				{#each agendaItems as item (item.type === 'appointment' ? item.data.id : `ghost-group-${item.sortTime}`)}
 					{#if item.type === 'appointment'}
 						{@const startMs = dateUtils.parseTimeToMs(item.data.start_at, ticker)}
 						{@const endMs = dateUtils.parseTimeToMs(item.data.end_at, ticker)}
@@ -246,12 +277,11 @@
 								? dateUtils.getSoonLabel(item.data.start_at, item.data.end_at, ticker)
 								: null}
 						/>
-					{:else}
+					{:else if item.type === 'ghost-group'}
 						<GhostSlot
-							startAt={item.startAt}
-							duration={item.duration}
-							onclick={() => {
-								selectedTime = item.startAt;
+							slots={item.slots}
+							onSlotClick={(time) => {
+								selectedTime = time;
 								ui.modal = true;
 							}}
 						/>

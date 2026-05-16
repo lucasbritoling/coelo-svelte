@@ -148,15 +148,15 @@ export const actions: Actions = {
 		try {
 			// Executa a função orquestradora nativa no Postgres em uma única chamada de rede
 			const [result] = await sql<{ appointment_id: string }[]>`
-                SELECT public.finish_self_booking(
-                    ${profile_id}::uuid,
-                    ${service_id}::uuid,
-                    ${selected_date}::date,
-                    ${slot_start}::time,
-                    ${customer_name}::text,
-                    ${customer_phone}::text
-                ) AS appointment_id
-            `;
+            SELECT public.finish_self_booking(
+                ${profile_id}::uuid,
+                ${service_id}::uuid,
+                ${selected_date}::date,
+                ${slot_start}::time,
+                ${customer_name}::text,
+                ${customer_phone}::text
+            ) AS appointment_id
+        `;
 
 			return {
 				success: true,
@@ -178,10 +178,21 @@ export const actions: Actions = {
 				});
 			}
 
+			if (err.message.includes('SERVICE_INACTIVE')) {
+				return fail(400, {
+					message: 'Este serviço não está aceitando novos agendamentos no momento.'
+				});
+			}
+
 			if (err.message.includes('SERVICE_NOT_FOUND')) {
 				return fail(404, { message: 'O serviço solicitado não foi encontrado.' });
 			}
 
+			if (err.message.includes('PROFILE_ID_NULL')) {
+				return fail(400, { message: 'Perfil do profissional inválido ou ausente.' });
+			}
+
+			// Fallback para qualquer outro erro inesperado do banco ou da rede
 			return fail(500, { message: 'Erro interno ao processar seu agendamento.' });
 		}
 	}

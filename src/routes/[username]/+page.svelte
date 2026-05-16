@@ -18,6 +18,7 @@
 		Clock
 	} from '@lucide/svelte';
 	import { sanitizePhone, formatPhoneMask, isValidPhone } from '$lib/utils/phone';
+	import { toast } from 'svelte-sonner'; // Adicione este import
 
 	let { data } = $props();
 
@@ -294,8 +295,17 @@
 				use:enhance={() => {
 					isLoading = true;
 					return async ({ result }) => {
-						if (result.type === 'success' && result.data?.appointmentId)
+						if (result.type === 'success' && result.data?.appointmentId) {
+							toast.success('Agendamento realizado com sucesso!');
 							await goto(`/${result.data.appointmentId}`, { replaceState: true });
+						}
+
+						if (result.type === 'failure') {
+							// Pega a mensagem exata que veio do fail() da Action do SvelteKit
+							const errorMessage = result.data?.message || 'Erro ao processar agendamento.';
+							toast.error(errorMessage);
+						}
+
 						isLoading = false;
 					};
 				}}

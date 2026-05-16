@@ -3,7 +3,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
-	import { Clock, LoaderCircle, CalendarClock, Coffee, Trash2 } from '@lucide/svelte';
+	import { Clock, LoaderCircle, CalendarClock } from '@lucide/svelte';
 	import { enhance } from '$app/forms';
 	import { toast } from 'svelte-sonner';
 
@@ -12,7 +12,6 @@
 		name: string;
 		duration: number;
 		min_notice_hours: number;
-		buffer_after_min: number;
 	}
 
 	let {
@@ -34,8 +33,7 @@
 		id: '',
 		name: '',
 		duration: 30,
-		min_notice_hours: 2,
-		buffer_after_min: 0
+		min_notice_hours: 2
 	});
 
 	// --- Efeitos ---
@@ -49,8 +47,7 @@
 				id: service?.id ?? '',
 				name: service?.name ?? initialName,
 				duration: service?.duration ?? 30,
-				min_notice_hours: service?.min_notice_hours ?? 2,
-				buffer_after_min: service?.buffer_after_min ?? 0
+				min_notice_hours: service?.min_notice_hours ?? 2
 			};
 		}
 	});
@@ -91,7 +88,6 @@
 			<input type="hidden" name="id" value={formState.id} />
 
 			<div class="space-y-6 px-6 pb-8">
-				<!-- Nome -->
 				<div class="grid gap-2">
 					<Label class="text-[11px] font-bold tracking-widest text-zinc-400 uppercase">Nome</Label>
 					<Input
@@ -103,7 +99,6 @@
 					/>
 				</div>
 
-				<!-- Duração -->
 				<div class="grid gap-2">
 					<Label class="text-[11px] font-bold tracking-widest text-zinc-400 uppercase"
 						>Duração (minutos)</Label
@@ -119,8 +114,7 @@
 							class="h-12 rounded-xl pl-11 font-bold"
 							required
 							oninput={(e) => {
-								// Remove tudo que não for de 0 a 9 em tempo real
-								formState.duration = e.currentTarget.value.replace(/\D/g, '');
+								formState.duration = Number(e.currentTarget.value.replace(/\D/g, ''));
 							}}
 						/>
 					</div>
@@ -132,53 +126,26 @@
 					<CalendarClock size={14} /> Configurações de Agenda
 				</div>
 
-				<div class="grid grid-cols-2 gap-4">
-					<!-- Antecedência -->
-					<div class="grid gap-2">
-						<Label class="text-[11px] font-bold tracking-widest text-zinc-400 uppercase"
-							>Antecedência (horas)</Label
-						>
-						<div class="relative">
-							<Input
-								name="min_notice_hours"
-								type="text"
-								placeholder="2"
-								inputmode="numeric"
-								bind:value={formState.min_notice_hours}
-								class="h-12 rounded-xl  font-bold"
-								oninput={(e) => {
-									// Remove tudo que não for de 0 a 9 em tempo real
-									formState.min_notice_hours = e.currentTarget.value.replace(/\D/g, '');
-								}}
-							/>
-						</div>
-					</div>
-
-					<!-- Buffer -->
-					<div class="grid gap-2">
-						<Label class="text-[11px] font-bold tracking-widest text-zinc-400 uppercase"
-							>Intervalo (minutos)</Label
-						>
-						<div class="relative">
-							<Coffee class="absolute top-4 left-4 size-4 text-zinc-400" />
-							<Input
-								name="buffer_after_min"
-								type="text"
-								placeholder="0"
-								inputmode="numeric"
-								bind:value={formState.buffer_after_min}
-								class="h-12 rounded-xl pl-11 font-bold"
-								oninput={(e) => {
-									// Remove tudo que não for de 0 a 9 em tempo real
-									formState.buffer_after_min = e.currentTarget.value.replace(/\D/g, '');
-								}}
-							/>
-						</div>
+				<div class="grid gap-2">
+					<Label class="text-[11px] font-bold tracking-widest text-zinc-400 uppercase"
+						>Antecedência Mínima (horas)</Label
+					>
+					<div class="relative">
+						<Input
+							name="min_notice_hours"
+							type="text"
+							placeholder="2"
+							inputmode="numeric"
+							bind:value={formState.min_notice_hours}
+							class="h-12 rounded-xl font-bold"
+							oninput={(e) => {
+								formState.min_notice_hours = Number(e.currentTarget.value.replace(/\D/g, ''));
+							}}
+						/>
 					</div>
 				</div>
 			</div>
 
-			<!-- Footer com Botões unificados -->
 			<div class="flex gap-3 border-t p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
 				{#if formState.id}
 					<Button
@@ -214,7 +181,6 @@
 </Dialog.Root>
 
 <style>
-	/* Remove as setinhas padrão do input number para manter o visual limpo */
 	input::-webkit-outer-spin-button,
 	input::-webkit-inner-spin-button {
 		-webkit-appearance: none;

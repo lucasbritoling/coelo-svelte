@@ -80,6 +80,10 @@
 	});
 
 	const isDayFull = $derived(serviceId && suggestedSlots.length === 0);
+	const orderedSlots = $derived.by(() => {
+		if (!start_at || !suggestedSlots.includes(start_at)) return suggestedSlots;
+		return [start_at, ...suggestedSlots.filter((s) => s !== start_at)];
+	});
 </script>
 
 <div class="flex h-full items-center">
@@ -94,7 +98,7 @@
 		</div>
 	{:else}
 		<div class="no-scrollbar flex flex-1 items-center gap-2 overflow-x-auto pb-0.5">
-			{#each suggestedSlots as slot}
+			{#each orderedSlots as slot}
 				<button
 					type="button"
 					onclick={() => (start_at = slot)}
@@ -110,9 +114,9 @@
 				</button>
 			{/each}
 
-			{#if suggestedSlots.length > 0}
+			{#if orderedSlots.length > 0}
 				<span class="shrink-0 pr-2 text-[9px] font-medium text-emerald-600 uppercase">
-					{suggestedSlots.length} vagas
+					{orderedSlots.length} vagas
 				</span>
 			{/if}
 		</div>

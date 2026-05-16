@@ -15,7 +15,6 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Label } from '$lib/components/ui/label';
 	import { Input } from '$lib/components/ui/input';
-	import { Textarea } from '$lib/components/ui/textarea';
 	import { createFormatters, dateUtils } from '$lib/utils/date';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
@@ -178,6 +177,7 @@
 				class="flex flex-col space-y-6 p-6 pt-0 pb-4"
 			>
 				<input type="hidden" name="customer_id" value={formState.customerId} />
+				<input type="hidden" name="service_id" value={formState.serviceId} />
 				<input type="hidden" name="end_at" value={end_at} />
 				<input type="hidden" name="date" value={formState.date} />
 
@@ -297,9 +297,6 @@
 							{/each}
 						</div>
 					</div>
-				{:else if data.services.length === 1}
-					<!-- Se houver apenas um, mantemos o input oculto para o POST funcionar -->
-					<input type="hidden" name="service_id" value={data.services[0].id} />
 				{/if}
 
 				<div class="space-y-3">
@@ -352,14 +349,6 @@
 						</div>
 					</div>
 				</div>
-
-				{#if end_at}
-					<div class="rounded-2xl bg-zinc-50 py-3 text-center transition-all">
-						<p class="text-[11px] font-medium text-zinc-500">
-							Término previsto às <span class="text-sm font-bold text-zinc-900">{end_at}</span>
-						</p>
-					</div>
-				{/if}
 
 				<div>
 					<Button

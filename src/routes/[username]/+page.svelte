@@ -84,7 +84,7 @@
 				: currentStep === 'time'
 					? !!selectedSlot
 					: currentStep === 'confirm'
-						? customerName.length > 1 && customerPhone.length > 7
+						? customerName.length > 2 && customerPhone.length > 7
 						: false
 	);
 
@@ -134,8 +134,16 @@
 	// Função que limpa letras/símbolos e trava em 11 caracteresmax
 	function tratarInput(e: Event) {
 		const target = e.target as HTMLInputElement;
+
+		// 1. Remove instantaneamente qualquer caractere que não seja número (0-9)
 		const apenasNumeros = target.value.replace(/\D/g, '');
+
+		// 2. Limita estritamente a 11 dígitos
 		rawPhone = apenasNumeros.slice(0, 11);
+
+		// 3. FORCE o DOM a atualizar imediatamente se o usuário tentar digitar letras
+		// Isso impede que qualquer caractere inválido chegue a aparecer na tela
+		target.value = formatarMascarar(rawPhone);
 	}
 
 	// Função que monta a máscara (11) 99999-9999 dinamicamente
@@ -316,6 +324,7 @@
 					<Input
 						id="phone"
 						type="tel"
+						inputmode="numeric"
 						value={customerPhone}
 						oninput={tratarInput}
 						onblur={() => (phoneTouched = true)}

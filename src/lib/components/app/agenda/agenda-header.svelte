@@ -3,20 +3,26 @@
 	import { Plus, Search, ChevronDown, Settings } from '@lucide/svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { navigating } from '$app/state';
+	import { dateUtils } from '$lib/utils/date';
 
-	let { headerLabel, selectedDate, user, onDateSelect, onOpenAppointment, onOpenSearch } = $props<{
-		headerLabel: string;
-		selectedDate: string;
-		user: any;
-		onDateSelect: (d: any) => void;
-		onOpenAppointment: () => void;
-		onOpenSearch: () => void;
-	}>();
+	let { headerLabel, selectedDate, user, timezone, onDateSelect, onOpenAppointment, onOpenSearch } =
+		$props<{
+			headerLabel: string;
+			selectedDate: string;
+			user: any;
+			timezone: string;
+			onDateSelect: (d: any) => void;
+			onOpenAppointment: () => void;
+			onOpenSearch: () => void;
+		}>();
 
 	function goToToday(e: MouseEvent) {
 		e.stopPropagation();
-		const today = new Date().toISOString().split('T')[0];
-		onDateSelect(today);
+
+		// Descobre o "hoje" real e seguro baseado no fuso geográfico correto
+		const realTodayStr = dateUtils.today(timezone);
+
+		onDateSelect(realTodayStr);
 	}
 </script>
 

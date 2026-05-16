@@ -11,20 +11,17 @@
 
         // Se houver apenas 1 slot no grupo, ele renderiza direto sem modo sanfona
         const isSingle = $derived(slots.length === 1);
-        
-        // 🔥 Extrai o primeiro slot com segurança de forma reativa e tipada
-        const firstSlot = $derived(slots[0]);
 
         const formatDuration = (d: number) =>
                 d >= 60 ? `${Math.floor(d / 60)}h${d % 60 || ''}` : `${d} min`;
 </script>
 
 {#if isSingle}
-        <button onclick={() => onSlotClick(firstSlot.startAt)} class="ghost-slot-btn group">
+        <button onclick={() => onSlotClick(slots[0].startAt)} class="ghost-slot-btn group">
                 <div class="content-group group-hover:text-zinc-500">
-                        <span class="time-stamp">{firstSlot.startAt}</span>
+                        <span class="time-stamp">{slots[0].startAt}</span>
                         <div class="divider-line"></div>
-                        <span class="label-text">{formatDuration(firstSlot.duration)} livre</span>
+                        <span class="label-text">{formatDuration(slots[0].duration)} livre</span>
                 </div>
                 <div class="action-circle group-hover:bg-zinc-200 group-hover:text-zinc-600">
                         <span class="plus-icon">+</span>

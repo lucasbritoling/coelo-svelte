@@ -26,6 +26,9 @@
 	const slots = $derived(data.slots);
 	const multiService = $derived(services.length > 1);
 
+	// Otimização O(1) usando Set reativo para desabilitar dias vazios instantaneamente
+	const availableDaysSet = $derived(new Set(data.availableDays || []));
+
 	// ── Steps ────────────────────────────────────────────────────────
 	type StepId = 'service' | 'date' | 'time' | 'confirm';
 	const steps = $derived<StepId[]>(
@@ -109,6 +112,15 @@
 	function formatSlot(t: string) {
 		return t?.slice(0, 5) ?? '';
 	}
+
+	// Função que avalia cada quadrado do calendário do shadcn (bits-ui)
+	function isDateDisabled(date: any) {
+		// Converte o objeto CalendarDate para string no padrão 'YYYY-MM-DD'
+		const dateString = `${date.year}-${String(date.month).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`;
+
+		// Se o dia NÃO estiver na lista de dias disponíveis retornada da RPC, desativa-o
+		return !availableDaysSet.has(dateString);
+	}
 </script>
 
 <svelte:head>
@@ -116,10 +128,11 @@
 </svelte:head>
 
 {#if data.uiState === 'unavailable'}
-	<!-- mantém o estado indisponível como estava -->
+	<div class="mx-auto max-w-sm px-4 py-12 text-center text-sm text-muted-foreground">
+		Nenhum serviço ativo disponível para agendamento no momento.
+	</div>
 {:else}
 	<div class="mx-auto max-w-sm px-4 pb-24">
-		<!-- HEADER (inalterado) -->
 		<header class="mb-6 pt-6 text-center">
 			<div class="mx-auto mb-3 size-20 overflow-hidden rounded-full border bg-muted shadow-sm">
 				{#if professional.avatar_url}
@@ -134,7 +147,6 @@
 			<p class="text-sm text-muted-foreground">@{professional.username}</p>
 		</header>
 
-		<!-- STEPPER NAV -->
 		<div class="mb-3 flex items-center justify-between gap-2">
 			<Button
 				variant="outline"
@@ -145,12 +157,11 @@
 				<ArrowLeft class="mr-1 size-3.5" /> Voltar
 			</Button>
 
-			<!-- dots -->
 			<div class="flex items-center gap-1.5">
 				{#each steps as _, i}
 					<div
 						class="h-1.5 rounded-full transition-all duration-200
-          {i === stepIndex
+                        {i === stepIndex
 							? 'w-5 bg-foreground'
 							: i < stepIndex
 								? 'w-1.5 bg-foreground/40'
@@ -164,12 +175,10 @@
 					Avançar <ArrowRight class="ml-1 size-3.5" />
 				</Button>
 			{:else}
-				<!-- submit fica dentro do form, botão avançar vira fantasma para manter layout -->
 				<div class="w-[72px]"></div>
 			{/if}
 		</div>
 
-		<!-- CONTEXT BAR -->
 		<div
 			class="mb-4 flex min-h-8 flex-wrap items-center justify-center gap-x-3 gap-y-1
               rounded-lg border bg-muted/40 px-3 py-1.5 text-xs text-muted-foreground"
@@ -202,16 +211,14 @@
 			{/if}
 		</div>
 
-		<!-- STEP PANELS -->
-
 		{#if currentStep === 'service'}
 			<div class="flex flex-col gap-2">
 				{#each services as service}
 					<button
 						onclick={() => selectService(service.id)}
 						class="flex items-center justify-between rounded-xl border p-4 text-left
-                 transition-all hover:bg-muted/50
-                 {selectedServiceId === service.id
+                        transition-all hover:bg-muted/50
+                        {selectedServiceId === service.id
 							? 'border-foreground ring-1 ring-foreground'
 							: 'border-border'}"
 					>
@@ -229,6 +236,7 @@
 			<Calendar
 				bind:value={calendarValue}
 				fixedWeeks
+				{isDateDisabled}
 				onValueChange={(v) => v && updateDate(v.toString())}
 				class="w-full rounded-xl border"
 				minValue={today(getLocalTimeZone())}

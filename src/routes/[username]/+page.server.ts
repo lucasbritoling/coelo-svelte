@@ -6,9 +6,10 @@ export const load: PageServerLoad = async ({ params, url, locals: { sql, supabas
 	const date = url.searchParams.get('date');
 	const serviceId = url.searchParams.get('serviceId');
 
+	// 1. Busca perfil, serviços e a nova config de slot_generation_mode
 	const [profile] = await sql<any[]>`
         SELECT 
-            p.id, p.full_name, p.username, p.avatar_url,
+            p.id, p.full_name, p.username, p.avatar_url, p.slot_generation_mode,
             COALESCE(
                 json_agg(
                     json_build_object(
@@ -38,22 +39,46 @@ export const load: PageServerLoad = async ({ params, url, locals: { sql, supabas
 	const services = profile.services;
 	const activeServicesCount = services.length;
 
-	// 1. Determinar o Estado da UI
-	// 'unavailable' | 'single_service' | 'multiple_services'
+	// Determinar o Estado da UI
 	let uiState: 'unavailable' | 'single_service' | 'multiple_services' = 'multiple_services';
-
 	if (activeServicesCount === 0) {
 		uiState = 'unavailable';
 	} else if (activeServicesCount === 1) {
 		uiState = 'single_service';
 	}
 
-	// 2. Definir o serviço selecionado logicamente
-	// Se for single_service, ignora o que está na URL e usa o único disponível
+	// Definir o serviço selecionado logicamente
 	const selectedService =
 		uiState === 'single_service' ? services[0] : services.find((s: any) => s.id === serviceId);
 
-	// 3. Busca de Slots (RPC Cumulativa)
+	// 2. LOGICA DE DIAS DISPONÍVEIS (Para o Calendário)
+	let availableDays: string[] = [];
+
+	if (selectedService) {
+		// Define a janela de busca do calendário: Hoje até +35 dias
+		const today = new Date();
+		const endDate = new Date();
+		endDate.setDate(today.getDate() + 90);
+
+		const startDateStr = today.toISOString().split('T')[0];
+		const endDateStr = endDate.toISOString().split('T')[0];
+
+		// Roda a nova RPC para descobrir quais dias possuem horários livres
+		const daysRows = await sql<any[]>`
+            SELECT available_date::text 
+            FROM get_available_days_selfbooking(
+                ${profile.id}, 
+                ${selectedService.id}, 
+                ${startDateStr}::date, 
+                ${endDateStr}::date, 
+                ${selectedService.duration}::integer,
+                ${profile.slot_generation_mode ?? 'flexible'}
+            )
+        `;
+		availableDays = daysRows.map((r) => r.available_date);
+	}
+
+	// 3. Busca de Slots (Se uma data foi clicada)
 	let slots = [];
 	if (date && selectedService) {
 		slots = await sql`
@@ -63,7 +88,7 @@ export const load: PageServerLoad = async ({ params, url, locals: { sql, supabas
                 ${selectedService.id}, 
                 ${date}::date, 
                 ${selectedService.duration}::integer,
-				${profile.buffer_behavior ?? 'flexible'}
+                ${profile.slot_generation_mode ?? 'flexible'}
             )
         `;
 	}
@@ -77,12 +102,12 @@ export const load: PageServerLoad = async ({ params, url, locals: { sql, supabas
 		},
 		services,
 		slots,
-		uiState, // 'unavailable' | 'single_service' | 'multiple_services'
+		availableDays, // Array de strings ['2026-05-16', '2026-05-18', ...]
+		uiState,
 		selectedDate: date,
 		selectedServiceId: selectedService?.id ?? null
 	};
 };
-
 export const actions: Actions = {
 	finishSelfBooking: async ({ request, locals: { sql } }) => {
 		const formData = await request.formData();

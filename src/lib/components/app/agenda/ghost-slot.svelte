@@ -16,17 +16,17 @@
 
         {#if totalSlots === 0}
                 <p>Nenhum slot neste grupo.</p>
-        {:ELSEIF isSingle}
+        {:else if isSingle}
                 <button onclick={() => onSlotClick(slots[0].startAt)}>
                         {slots[0].startAt} - ({slots[0].duration} min) [Agendar]
                 </button>
-        {:ELSE}
+        {:else}
                 <button onclick={() => (isExpanded = !isExpanded)}>
                         {slots[0].startAt} - Ver {totalSlots} horários {isExpanded ? '▲' : '▼'}
                 </button>
 
                 {#if isExpanded}
-                        <div style="margin-left: 20px; display: flex; flex-col; gap: 5px; padding-top: 5px;">
+                        <div style="margin-left: 20px; display: flex; flex-direction: column; gap: 5px; padding-top: 5px;">
                                 {#each slots as slot}
                                         <button onclick={() => onSlotClick(slot.startAt)}>
                                                 {slot.startAt} - ({slot.duration} min) [+]

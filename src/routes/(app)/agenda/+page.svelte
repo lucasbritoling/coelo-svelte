@@ -260,65 +260,46 @@
 	<AgendaStrip selectedDate={data.selectedDate} onSelect={updateDate} />
 
 	<div class="flex-1 space-y-2 overflow-y-auto px-4 pt-4 pb-20">
-		{#if data.appointments.length === 0}
-			<div class="flex flex-col items-center justify-center py-20 text-center">
-				<div class="mb-4 rounded-full bg-zinc-100 p-4 text-zinc-400">
-					<CalendarDays size={32} />
-				</div>
-				<p class="font-medium text-zinc-500">Nenhum agendamento</p>
-				<button
-					onclick={() => {
-						selectedTime = '';
-						ui.modal = true;
-					}}
-					class="mt-4 text-sm font-bold text-zinc-900 underline underline-offset-4"
-				>
-					Criar um agora
-				</button>
-			</div>
-		{:else}
-			<div class="flex flex-col gap-1.5">
-				{#each agendaItems as item (item.type === 'appointment' ? item.data.id : `ghost-group-${item.sortTime}`)}
-					{#if item.type === 'appointment'}
-						{@const startMs = dateUtils.parseTimeToMs(
-							item.data.start_at,
-							data.selectedDate,
-							data.timezone
-						)}
-						{@const endMs = dateUtils.parseTimeToMs(
-							item.data.end_at,
-							data.selectedDate,
-							data.timezone
-						)}
-						{@const isNext = item.data.id === nextAppointmentId}
-						{@const isNow = ticker >= startMs && ticker <= endMs}
-						{@const isToday = data.selectedDate === dateUtils.today(data.timezone)}
+		<div class="flex flex-col gap-1.5">
+			{#each agendaItems as item (item.type === 'appointment' ? item.data.id : `ghost-group-${item.sortTime}`)}
+				{#if item.type === 'appointment'}
+					{@const startMs = dateUtils.parseTimeToMs(
+						item.data.start_at,
+						data.selectedDate,
+						data.timezone
+					)}
+					{@const endMs = dateUtils.parseTimeToMs(
+						item.data.end_at,
+						data.selectedDate,
+						data.timezone
+					)}
+					{@const isNext = item.data.id === nextAppointmentId}
+					{@const isNow = ticker >= startMs && ticker <= endMs}
+					{@const isToday = data.selectedDate === dateUtils.today(data.timezone)}
 
-						<!-- Aplicamos a classe de opacidade de forma reativa e suave aqui -->
-						<div class="transition-opacity duration-300" class:opacity-40={item.isPast}>
-							<AppointmentItem
-								appt={item.data}
-								{showServiceColor}
-								currentTime={ticker}
-								selectedDate={data.selectedDate}
-								timezone={data.timezone}
-								soon={isToday && (isNext || isNow)
-									? dateUtils.getSoonLabel(startMs, endMs, ticker)
-									: null}
-							/>
-						</div>
-					{:else if item.type === 'ghost-group'}
-						<GhostSlot
-							slots={item.slots}
-							onSlotClick={(time) => {
-								selectedTime = time;
-								ui.modal = true;
-							}}
+					<div class="transition-opacity duration-300" class:opacity-40={item.isPast}>
+						<AppointmentItem
+							appt={item.data}
+							{showServiceColor}
+							currentTime={ticker}
+							selectedDate={data.selectedDate}
+							timezone={data.timezone}
+							soon={isToday && (isNext || isNow)
+								? dateUtils.getSoonLabel(startMs, endMs, ticker)
+								: null}
 						/>
-					{/if}
-				{/each}
-			</div>
-		{/if}
+					</div>
+				{:else if item.type === 'ghost-group'}
+					<GhostSlot
+						slots={item.slots}
+						onSlotClick={(time) => {
+							selectedTime = time;
+							ui.modal = true;
+						}}
+					/>
+				{/if}
+			{/each}
+		</div>
 
 		<!-- ── FABs Flutuantes (Bottom Actions) ─────────────────────── -->
 		<div class="pointer-events-none fixed inset-x-0 bottom-24 z-40 flex justify-center">

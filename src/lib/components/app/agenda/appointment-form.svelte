@@ -361,17 +361,6 @@
 					</div>
 				{/if}
 
-				<div class="space-y-2">
-					<Label class="px-1 text-[10px] font-bold text-zinc-400 uppercase">Notas</Label>
-					<Input
-						type="text"
-						name="notes"
-						bind:value={formState.notes}
-						placeholder="opcional"
-						class="h-10 rounded-2xl border-zinc-100 bg-zinc-50/50"
-					/>
-				</div>
-
 				<div>
 					<Button
 						type="submit"

@@ -133,7 +133,7 @@ export const actions: Actions = {
 		const selected_date = formData.get('selected_date') as string;
 		const slot_start = formData.get('slot_start') as string; // Ex: "14:30:00"
 
-		// Validação básica de payload
+		// Validação básica de payload de entrada
 		if (
 			!profile_id ||
 			!service_id ||
@@ -146,78 +146,40 @@ export const actions: Actions = {
 		}
 
 		try {
-			// Executa tudo dentro de uma transação isolada e segura no Postgres
-			const appointmentId = await sql.begin(async (sql) => {
-				// 1. Garante a existência do cliente (Get ou Create)
-				let [customer] = await sql`
-                    SELECT id FROM public.customers 
-                    WHERE phone = ${customer_phone} AND profile_id = ${profile_id}::uuid
-                `;
-
-				if (!customer) {
-					[customer] = await sql`
-                        INSERT INTO public.customers (name, phone, profile_id)
-                        VALUES (${customer_name}, ${customer_phone}, ${profile_id}::uuid)
-                        RETURNING id
-                    `;
-				}
-
-				// 2. Captura a timezone do profissional para bater o horário perfeitamente
-				const [prof] =
-					await sql`SELECT timezone FROM public.profiles WHERE id = ${profile_id}::uuid`;
-				const tz = prof?.timezone || 'America/Sao_Paulo';
-
-				// 3. Tenta capturar e travar o slot físico (Lock de Concorrência à prova de falhas)
-				const [lockedSlot] = await sql`
-                    UPDATE public.generated_slots
-                    SET is_booked = true
-                    WHERE id = (
-                        SELECT id FROM public.generated_slots
-                        WHERE profile_id = ${profile_id}::uuid
-                          AND service_id = ${service_id}::uuid
-                          AND slot_date = ${selected_date}::date
-                          AND (lower(slot) AT TIME ZONE ${tz})::time = ${slot_start}::time
-                          AND is_available = true
-                          AND is_booked = false
-                        FOR UPDATE SKIP LOCKED
-                        LIMIT 1
-                    )
-                    RETURNING id, slot
-                `;
-
-				// Se duas requisições paralelas tentarem o mesmo slot, uma delas receberá undefined aqui
-				if (!lockedSlot) {
-					throw new Error('SLOT_ALREADY_BOOKED');
-				}
-
-				// 4. Cria o registro oficial na tabela de appointments
-				const [appointment] = await sql`
-                    INSERT INTO public.appointments (customer_id, service_id, profile_id, status, slot)
-                    VALUES (${customer.id}, ${service_id}::uuid, ${profile_id}::uuid, 'pending'::appointment_status, ${lockedSlot.slot})
-                    RETURNING id
-                `;
-
-				// 5. Vincula o ID do agendamento de volta no slot para fins de auditoria/cancelamento
-				await sql`
-                    UPDATE public.generated_slots
-                    SET appointment_id = ${appointment.id}
-                    WHERE id = ${lockedSlot.id}
-                `;
-
-				return appointment.id;
-			});
+			// Executa a função orquestradora nativa no Postgres em uma única chamada de rede
+			const [result] = await sql<{ appointment_id: string }[]>`
+                SELECT public.finish_self_booking(
+                    ${profile_id}::uuid,
+                    ${service_id}::uuid,
+                    ${selected_date}::date,
+                    ${slot_start}::time,
+                    ${customer_name}::text,
+                    ${customer_phone}::text
+                ) AS appointment_id
+            `;
 
 			return {
 				success: true,
-				appointmentId
+				appointmentId: result.appointment_id
 			};
 		} catch (err: any) {
-			console.error('--- FALHA NO AGENDAMENTO ---', err.message);
+			console.error('--- FALHA NO SELFBOOKING ---', err.message);
 
-			if (err.message === 'SLOT_ALREADY_BOOKED') {
+			// Tratamento amigável das exceções de negócio lançadas pelo Postgres
+			if (err.message.includes('SLOT_ALREADY_BOOKED')) {
 				return fail(409, {
 					message: 'Ops! Alguém acabou de reservar esse horário. Por favor, escolha outro.'
 				});
+			}
+
+			if (err.message.includes('INSUFFICIENT_NOTICE')) {
+				return fail(400, {
+					message: 'O tempo mínimo de antecedência exigido para este serviço não foi respeitado.'
+				});
+			}
+
+			if (err.message.includes('SERVICE_NOT_FOUND')) {
+				return fail(404, { message: 'O serviço solicitado não foi encontrado.' });
 			}
 
 			return fail(500, { message: 'Erro interno ao processar seu agendamento.' });

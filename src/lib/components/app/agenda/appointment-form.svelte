@@ -363,11 +363,12 @@
 
 				<div class="space-y-2">
 					<Label class="px-1 text-[10px] font-bold text-zinc-400 uppercase">Notas</Label>
-					<Textarea
+					<Input
+						type="text"
 						name="notes"
 						bind:value={formState.notes}
-						placeholder="Algum detalhe importante?"
-						class="min-h-[80px] resize-none rounded-2xl border-zinc-100 bg-zinc-50/50"
+						placeholder="opcional"
+						class="h-10 rounded-2xl border-zinc-100 bg-zinc-50/50"
 					/>
 				</div>
 

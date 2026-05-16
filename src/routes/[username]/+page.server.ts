@@ -163,7 +163,7 @@ export const actions: Actions = {
 				appointmentId: result.appointment_id
 			};
 		} catch (err: any) {
-			console.error('--- FALHA NO SELFBOOKING ---', err.message);
+			//console.error('--- FALHA NO SELFBOOKING ---', err.message);
 
 			// Tratamento amigável das exceções de negócio lançadas pelo Postgres
 			if (err.message.includes('SLOT_ALREADY_BOOKED')) {

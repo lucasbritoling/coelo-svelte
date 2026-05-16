@@ -23,7 +23,6 @@ export const load: PageServerLoad = async ({ url, cookies, platform, locals: { s
 	if (!user) throw redirect(303, '/login');
 
 	const dateParam = url.searchParams.get('date') || dateUtils.today();
-	const searchQuery = url.searchParams.get('q')?.trim() ?? '';
 	const activeTz = getSafeTimezone(cookies, platform);
 
 	if (!/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
@@ -31,8 +30,13 @@ export const load: PageServerLoad = async ({ url, cookies, platform, locals: { s
 	}
 
 	try {
+		// Executa em paralelo a chamada limpa do banco e as validações do Superforms
 		const [rpcResult, customerForm, serviceForm] = await Promise.all([
-			sql`SELECT load_agenda(${user.id}::uuid, ${dateParam}::date, ${searchQuery}, ${activeTz}) as data`,
+			sql`SELECT public.load_agenda(
+				${user.id}::uuid, 
+				${dateParam}::date, 
+				${activeTz}::text
+			) as data`,
 			superValidate(zod4(customerSchema)),
 			superValidate(zod4(serviceSchema))
 		]);
@@ -44,7 +48,6 @@ export const load: PageServerLoad = async ({ url, cookies, platform, locals: { s
 
 		return {
 			appointments: agenda.appointments ?? [],
-			customers: agenda.customers ?? [],
 			services: agenda.services ?? [],
 			workingHours: agenda.workingHours ?? [],
 			username: agenda.profile?.username ?? 'user',
@@ -52,12 +55,15 @@ export const load: PageServerLoad = async ({ url, cookies, platform, locals: { s
 			timezone: activeTz,
 			customerForm,
 			serviceForm,
+			// Mantido array vazio por compatibilidade com componentes que dependem da prop
+			customers: [],
+			favoriteGhostSlotInterval: agenda.profile?.favorite_ghost_slot_interval ?? 30,
 			user: {
 				...user,
 				lunch_settings: {
 					has_lunch: agenda.profile?.has_lunch ?? false,
-					lunch_start: agenda.profile?.lunch_start ?? '12:00:00',
-					lunch_end: agenda.profile?.lunch_end ?? '13:00:00'
+					lunch_start: agenda.profile?.lunch_start ?? '12:00',
+					lunch_end: agenda.profile?.lunch_end ?? '13:00'
 				}
 			}
 		};
@@ -71,62 +77,46 @@ export const actions: Actions = {
 	create: async ({ request, cookies, platform, locals: { sql, user } }) => {
 		if (!user) return fail(401);
 
+		// Resolve o formData de uma vez
 		const formData = await request.formData();
+
 		const customer_id = formData.get('customer_id')?.toString();
 		const service_id = formData.get('service_id')?.toString();
 		const date = formData.get('date')?.toString();
 		const start_at = formData.get('start_at')?.toString();
 		const end_at = formData.get('end_at')?.toString();
-		const tz = getSafeTimezone(cookies, platform, formData.get('tz')?.toString());
 
 		if (!customer_id || !service_id || !date || !start_at || !end_at) {
 			return fail(400, { message: 'Dados incompletos.' });
 		}
 
+		// Evita processamento desnecessário de string antes da validação acima
+		const tz = getSafeTimezone(cookies, platform, formData.get('tz')?.toString());
 		const startLocalStr = `${date} ${start_at}:00`;
 		const endLocalStr = `${date} ${end_at}:00`;
 
 		try {
-			await sql.begin(async (sql) => {
-				// 1. Cria o agendamento retornando o ID e o range de tempo gerado
-				const result = await sql`
-                    INSERT INTO appointments (customer_id, service_id, profile_id, slot, status)
-                    VALUES (
-                        ${customer_id}, 
-                        ${service_id}, 
-                        ${user.id}, 
-                        tstzrange(
-                            (${startLocalStr} || ' ' || ${tz})::timestamptz, 
-                            (${endLocalStr} || ' ' || ${tz})::timestamptz
-                        ), 
-                        'pending'
-                    )
-                    RETURNING id, slot
-                `;
-
-				const newAppt = result[0];
-
-				// 2. Bloqueia defensivamente qualquer slot gerado que sobreponha (&&) o novo agendamento
-				await sql`
-                    UPDATE public.generated_slots
-                    SET is_booked = true, appointment_id = ${newAppt.id}
-                    WHERE profile_id = ${user.id}
-                      AND slot && ${newAppt.slot}
-                `;
-
-				// 3. Roda o refresh para garantir consistência da esteira
-				await sql`SELECT public.refresh_profile_slots(${user.id}, 90)`;
-			});
+			// 1 ÚNICO ROUND-TRIP DE REDE: Toda a transação ocorre nativamente no banco
+			await sql`
+				SELECT public.action_create_appointment(
+					${customer_id}, 
+					${service_id}, 
+					${user.id}, 
+					${startLocalStr}, 
+					${endLocalStr}, 
+					${tz}
+				)
+			`;
 
 			return { success: true };
 		} catch (err) {
-			const dbError = err as DatabaseError;
-			if (dbError.code === '23P01') {
+			// O Postgres repassa o código de erro de exclusão (23P01) normalmente através da função
+			if (err.code === '23P01') {
 				return fail(400, {
 					message: 'Horário indisponível: coincide com outro agendamento.'
 				});
 			}
-			console.error('Erro ao criar agendamento:', dbError);
+			console.error('Erro ao criar agendamento:', err);
 			return fail(500, { message: 'Erro interno ao salvar.' });
 		}
 	},

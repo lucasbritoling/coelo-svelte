@@ -16,7 +16,6 @@
 	import { Label } from '$lib/components/ui/label';
 	import { Input } from '$lib/components/ui/input';
 	import { createFormatters, dateUtils } from '$lib/utils/date';
-	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import CustomerForm from '../customer-form.svelte';
 	import { ui } from '$lib/state/ui.svelte';
@@ -25,7 +24,7 @@
 	// Props
 	let {
 		data,
-		open = $bindable(), // Permite que o pai feche o modal ou reaja à abertura
+		open = $bindable(),
 		initialTime = '',
 		onSuccess
 	} = $props<{
@@ -45,7 +44,36 @@
 	});
 	let showCustomerModal = $state(false);
 
-	// Sincroniza o initialTime quando ele muda (ex: clique em Ghost Slot)
+	// Estados de Busca Local de Clientes
+	let customerQuery = $state('');
+	let isSearching = $state(false);
+	let localCustomers = $state<Array<{ id: string; name: string }>>([]);
+	let searchTimeout: ReturnType<typeof setTimeout>;
+	let selectedCustomer = $state<{ id: string; name: string } | null>(null);
+
+	// 🔍 DEBUG 1: Monitorar abertura do modal e trigger da busca inicial
+	$effect(() => {
+		console.log('--- [EFFECT: OPEN CHANGED] ---');
+		console.log('Modal está aberto (open):', open);
+		console.log('customerQuery atual:', customerQuery);
+
+		if (open && !customerQuery) {
+			console.log('=> Disparando fetch inicial para carregar top clientes...');
+			fetch('/api/customers?q=')
+				.then((res) => {
+					console.log('Status da resposta do fetch inicial:', res.status);
+					return res.json();
+				})
+				.then((data) => {
+					console.log('Dados recebidos do fetch inicial:', data);
+					localCustomers = data;
+					console.log('Estado localCustomers atualizado para:', localCustomers);
+				})
+				.catch((err) => console.error('Erro no fetch inicial:', err));
+		}
+	});
+
+	// Sincroniza o initialTime quando ele muda
 	$effect(() => {
 		if (open) {
 			formState.start_at = initialTime;
@@ -53,42 +81,50 @@
 		}
 	});
 
-	// Estados de Busca
-	let customerQuery = $state('');
-	let isSearching = $state(false);
-	let searchTimeout: ReturnType<typeof setTimeout>;
-
-	// Encontra o cliente selecionado para mostrar no estado "selecionado"
-	let selectedCustomer = $derived(data.customers.find((c) => c.id === formState.customerId));
-
+	// Busca os clientes na API Route com Debounce
 	function handleSearch(e: Event) {
 		const val = (e.target as HTMLInputElement).value;
 		customerQuery = val;
 		isSearching = true;
 
-		clearTimeout(searchTimeout);
-		searchTimeout = setTimeout(() => {
-			const newUrl = new URL(page.url);
-			if (val) newUrl.searchParams.set('q', val);
-			else newUrl.searchParams.delete('q');
+		console.log('--- [INPUT: handleSearch] ---');
+		console.log('Usuário digitou:', val);
 
-			goto(newUrl.search, {
-				keepFocus: true,
-				replaceState: true,
-				noScroll: true
-			}).finally(() => {
+		clearTimeout(searchTimeout);
+		searchTimeout = setTimeout(async () => {
+			console.log('=> Executando fetch de busca por:', val);
+			try {
+				const res = await fetch(`/api/customers?q=${encodeURIComponent(val)}`);
+				console.log('Status da resposta da busca:', res.status);
+				if (res.ok) {
+					localCustomers = await res.json();
+					console.log('Resultados da busca aplicados em localCustomers:', localCustomers);
+				}
+			} catch (err) {
+				console.error('Erro ao buscar clientes no input:', err);
+			} finally {
 				isSearching = false;
-			});
-		}, 300); // 300ms de debounce para não sobrecarregar o servidor
+			}
+		}, 250);
 	}
 
+	// 🔍 DEBUG 2: Monitorar mudanças no estado de seleção
+	$effect(() => {
+		console.log('--- [STATE MONITOR] ---');
+		console.log('formState.customerId:', formState.customerId);
+		console.log('selectedCustomer Object:', selectedCustomer);
+	});
+
 	let isSubmitting = $state(false);
+
 	$effect(() => {
 		if (data.services?.length === 1) {
 			formState.serviceId = data.services[0].id;
 		}
 	});
+
 	const selectedService = $derived(data.services.find((s) => s.id === formState.serviceId));
+
 	const end_at = $derived.by(() => {
 		if (!formState.start_at || !selectedService) return '';
 		const [h, m] = formState.start_at.split(':').map(Number);
@@ -103,40 +139,29 @@
 	function handleTimeInput(e: Event) {
 		const input = e.target as HTMLInputElement;
 		let value = input.value.replace(/\D/g, '');
-
 		if (value.length > 4) value = value.slice(0, 4);
-
-		// Validação robusta de horas (primeiros 2 dígitos)
 		if (value.length >= 2) {
 			let hours = parseInt(value.slice(0, 2));
 			if (hours > 23) value = '23' + value.slice(2);
 		}
-
-		// Validação robusta de minutos (últimos 2 dígitos)
 		if (value.length === 4) {
 			let mins = parseInt(value.slice(2, 4));
 			if (mins > 59) value = value.slice(0, 2) + '59';
 		}
-
 		if (value.length >= 3) {
 			value = value.slice(0, 2) + ':' + value.slice(2);
 		}
-
 		formState.start_at = value;
 		input.value = value;
 	}
 
-	// Gerencia a abertura e o fechamento do modal
 	$effect(() => {
-		if (open) {
-			// Sincroniza estado inicial ao abrir
-			formState.start_at = initialTime;
-			formState.date = data.selectedDate || dateUtils.today();
-		} else {
-			// Limpa apenas os campos específicos ao fechar
+		if (!open) {
 			formState.customerId = '';
 			formState.notes = '';
 			customerQuery = '';
+			selectedCustomer = null;
+			localCustomers = [];
 		}
 	});
 </script>
@@ -147,9 +172,6 @@
 	>
 		<div class="px-6 py-4 pb-1">
 			<h2 class="text-xl font-bold">Novo Agendamento</h2>
-			<!--<p class="text-sm text-zinc-500 capitalize">
-				{dateUtils.getHeaderLabel(data.selectedDate)}
-			</p>-->
 		</div>
 
 		<div class="no-scrollbar overflow-y-auto">
@@ -158,8 +180,6 @@
 				action="?/create"
 				use:enhance={({ formData }) => {
 					isSubmitting = true;
-
-					// Captura o fuso exato do navegador no momento do clique e injeta no payload
 					const clientTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 					formData.append('tz', clientTz);
 					return async ({ result, update }) => {
@@ -168,9 +188,6 @@
 						if (result.type === 'success') {
 							onSuccess();
 							open = false;
-							formState.customerId = '';
-							customerQuery = '';
-							formState.notes = '';
 						}
 					};
 				}}
@@ -193,17 +210,18 @@
 						{/if}
 					</div>
 
-					<!-- Área de Chips (Agora com Scroll Horizontal) -->
+					<!-- Área de Chips assíncronos -->
 					<div class="group h-6.5">
 						<div
 							class="no-scrollbar flex flex-nowrap items-center gap-2 overflow-x-auto scroll-smooth pb-1"
 						>
-							<!-- 1. SEMPRE PRIMEIRO: Cliente Selecionado -->
+							<!-- 1. Cliente Selecionado Localmente -->
 							{#if selectedCustomer}
 								<button
 									type="button"
 									onclick={() => {
 										formState.customerId = '';
+										selectedCustomer = null;
 										customerQuery = '';
 									}}
 									class="flex shrink-0 items-center gap-2 rounded-full border border-zinc-900 bg-zinc-900 px-3 py-1.5 text-white shadow-md transition-all active:scale-95"
@@ -213,14 +231,15 @@
 								</button>
 							{/if}
 
-							<!-- 2. Lista dos demais clientes (Filtrada) -->
-							{#each data.customers
+							<!-- 2. Lista vinda do estado local (localCustomers) -->
+							{#each localCustomers
 								.filter((c) => c.id !== formState.customerId)
-								.slice(0, 10) as customer}
+								.slice(0, 5) as customer}
 								<button
 									type="button"
 									onclick={() => {
 										formState.customerId = customer.id;
+										selectedCustomer = customer;
 										customerQuery = '';
 									}}
 									class="flex shrink-0 items-center gap-2 rounded-full border border-zinc-100 bg-zinc-50 px-3 py-1.5 text-zinc-600 transition-all hover:border-zinc-200 active:scale-95"
@@ -229,8 +248,8 @@
 								</button>
 							{/each}
 
-							<!-- 3. SEMPRE POR ÚLTIMO: Botão de Criar -->
-							{#if customerQuery && !isSearching}
+							<!-- 3. Botão de Criar Novo se não encontrar -->
+							{#if customerQuery && !isSearching && !localCustomers.some((c) => c.name.toLowerCase() === customerQuery.toLowerCase())}
 								<button
 									type="button"
 									onclick={() => (showCustomerModal = true)}
@@ -258,7 +277,7 @@
 								type="button"
 								onclick={() => {
 									customerQuery = '';
-									handleSearch({ target: { value: '' } } as any);
+									localCustomers = [];
 								}}
 								class="absolute top-1/2 right-4 -translate-y-1/2 text-zinc-400"
 							>
@@ -281,7 +300,7 @@
 									type="button"
 									onclick={() => (formState.serviceId = service.id)}
 									class="flex items-center justify-between rounded-2xl border px-4 py-3 transition-all
-                                    {formState.serviceId === service.id
+									{formState.serviceId === service.id
 										? 'border-zinc-900 bg-zinc-900 text-white shadow-md'
 										: 'border-zinc-100 bg-white text-zinc-600 hover:border-zinc-200'}"
 								>
@@ -299,6 +318,7 @@
 					</div>
 				{/if}
 
+				<!-- SEÇÃO DATA E INÍCIO -->
 				<div class="space-y-3">
 					<div class="flex items-center gap-2 px-1 text-zinc-400">
 						<Clock size={14} />
@@ -377,9 +397,17 @@
 	formData={data.customerForm}
 	initialName={customerQuery}
 	onSuccess={(newCustomer) => {
-		// Assume que o onSuccess retorna o objeto do cliente ou o ID
-		const id = newCustomer?.id || newCustomer;
-		formState.customerId = id;
+		console.log('--- [CALLBACK: CustomerForm onSuccess] ---');
+		console.log('O que o CustomerForm retornou:', newCustomer);
+
+		if (newCustomer) {
+			formState.customerId = newCustomer.id;
+			selectedCustomer = {
+				id: newCustomer.id,
+				name: newCustomer.name
+			};
+			console.log('Novo cliente setado no estado:', selectedCustomer);
+		}
 		customerQuery = '';
 		showCustomerModal = false;
 	}}

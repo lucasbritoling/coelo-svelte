@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { generateSmartSlots } from '$lib/services/slots.ts';
+	import { dateUtils } from '$lib/utils/date';
 
 	let {
 		data,
@@ -79,10 +80,28 @@
 		}
 	});
 
-	const isDayFull = $derived(serviceId && suggestedSlots.length === 0);
+	// ── Filtragem de Segurança contra Horários Passados ──────────────────
+	const cleanSuggestedSlots = $derived.by(() => {
+		const todayStr = dateUtils.today(data.timezone);
+
+		// 1. Se a data selecionada for ANTERIOR a hoje, não sugere vaga nenhuma
+		if (selectedDate < todayStr) return [];
+
+		// 2. Se for HOJE, filtra para remover as horas que já passaram do relógio
+		if (selectedDate === todayStr) {
+			// Se você tiver o `ticker` nesse componente use-o, senão pegamos a hora atual do fuso
+			const nowTimeStr = dateUtils.toTime(Date.now(), data.timezone); // Ex: "14:30"
+			return suggestedSlots.filter((slot) => slot >= nowTimeStr);
+		}
+
+		// 3. Se for data futura, mantém todos os slots calculados
+		return suggestedSlots;
+	});
+
+	const isDayFull = $derived(serviceId && cleanSuggestedSlots.length === 0);
 	const orderedSlots = $derived.by(() => {
-		if (!start_at || !suggestedSlots.includes(start_at)) return suggestedSlots;
-		return [start_at, ...suggestedSlots.filter((s) => s !== start_at)];
+		if (!start_at || !cleanSuggestedSlots.includes(start_at)) return cleanSuggestedSlots;
+		return [start_at, ...cleanSuggestedSlots.filter((s) => s !== start_at)];
 	});
 </script>
 

@@ -152,9 +152,16 @@
 	}
 
 	.appointment-card.is-past {
-		opacity: 0.5;
-		filter: grayscale(0.5);
-	}
+	/* Aumenta a opacidade para 0.85 (quase total, mas ainda perceptível) */
+	opacity: 1; 
+	
+	/* Transforma a borda sólida original em tracejada e discreta */
+	border-style: dashed;
+	border-color: rgb(0 0 0); /* zinc-300: um tom ligeiramente mais escuro que o original para dar contraste ao tracejado */
+	
+	/* Opcional: remove ou suaviza o grayscale se achar que ele desbota demais as cores dos serviços */
+	filter: grayscale(0); 
+}
 
 	.service-indicator {
 		position: absolute;

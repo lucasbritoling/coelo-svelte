@@ -5,7 +5,6 @@
 	import { page } from '$app/state';
 
 	import { Calendar } from '$lib/components/ui/calendar/index.js';
-	import * as RadioGroup from '$lib/components/ui/radio-group';
 	import { Label } from '$lib/components/ui/label/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
@@ -18,6 +17,7 @@
 		CalendarDays,
 		Clock
 	} from '@lucide/svelte';
+	import { sanitizePhone, formatPhoneMask, isValidPhone } from '$lib/utils/phone';
 
 	let { data } = $props();
 
@@ -48,7 +48,7 @@
 	let isLoading = $state(false);
 
 	// 2. Runa derivada: calcula a máscara em tempo real para o bind:value
-	let customerPhone = $derived(formatarMascarar(rawPhone));
+	let customerPhone = $derived(formatPhoneMask(rawPhone));
 
 	const selectedService = $derived(services.find((s: any) => s.id === selectedServiceId));
 
@@ -128,23 +128,19 @@
 	}
 
 	// 3. Regras de validação estritas (mínimo 11, máximo 11)
-	const isPhoneValid = $derived(rawPhone.length === 11);
-	const showPhoneError = $derived(phoneTouched && !isPhoneValid && rawPhone.length > 0);
+	const isPhoneValid = $derived(isValidPhone(rawPhone));
+    const showPhoneError = $derived(phoneTouched && !isPhoneValid && rawPhone.length > 0);
 
 	// Função que limpa letras/símbolos e trava em 11 caracteresmax
 	function tratarInput(e: Event) {
-		const target = e.target as HTMLInputElement;
+        const target = e.target as HTMLInputElement;
+        
+        // Limpa e atualiza o estado reativo
+        rawPhone = sanitizePhone(target.value);
 
-		// 1. Remove instantaneamente qualquer caractere que não seja número (0-9)
-		const apenasNumeros = target.value.replace(/\D/g, '');
-
-		// 2. Limita estritamente a 11 dígitos
-		rawPhone = apenasNumeros.slice(0, 11);
-
-		// 3. FORCE o DOM a atualizar imediatamente se o usuário tentar digitar letras
-		// Isso impede que qualquer caractere inválido chegue a aparecer na tela
-		target.value = formatarMascarar(rawPhone);
-	}
+        // Força a atualização imediata do valor visual no elemento do DOM
+        target.value = formatPhoneMask(rawPhone);
+    }
 
 	// Função que monta a máscara (11) 99999-9999 dinamicamente
 	function formatarMascarar(v: string) {

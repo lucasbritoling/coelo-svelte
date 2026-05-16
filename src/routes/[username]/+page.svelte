@@ -129,18 +129,18 @@
 
 	// 3. Regras de validação estritas (mínimo 11, máximo 11)
 	const isPhoneValid = $derived(isValidPhone(rawPhone));
-    const showPhoneError = $derived(phoneTouched && !isPhoneValid && rawPhone.length > 0);
+	const showPhoneError = $derived(phoneTouched && !isPhoneValid && rawPhone.length > 0);
 
 	// Função que limpa letras/símbolos e trava em 11 caracteresmax
 	function tratarInput(e: Event) {
-        const target = e.target as HTMLInputElement;
-        
-        // Limpa e atualiza o estado reativo
-        rawPhone = sanitizePhone(target.value);
+		const target = e.target as HTMLInputElement;
 
-        // Força a atualização imediata do valor visual no elemento do DOM
-        target.value = formatPhoneMask(rawPhone);
-    }
+		// Limpa e atualiza o estado reativo
+		rawPhone = sanitizePhone(target.value);
+
+		// Força a atualização imediata do valor visual no elemento do DOM
+		target.value = formatPhoneMask(rawPhone);
+	}
 
 	// Função que monta a máscara (11) 99999-9999 dinamicamente
 	function formatarMascarar(v: string) {

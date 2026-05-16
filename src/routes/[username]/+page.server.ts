@@ -98,10 +98,11 @@ export const load: PageServerLoad = async ({
         `;
 	}
 
-	// 4. ATIVAÇÃO DO CACHE DE BORDA (Cloudflare Pages)
+	// 4. ATIVAÇÃO DO CACHE DE BORDA OTIMIZADO
 	if (selectedService) {
 		setHeaders({
-			'cache-control': 'public, max-age=10, s-maxage=60'
+			// Cache local de 1s, permite que a borda sirva cache por até 9s enquanto atualiza em background
+			'cache-control': 'public, max-age=1, stale-while-revalidate=9'
 		});
 	}
 

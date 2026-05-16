@@ -59,7 +59,7 @@
 		const schedule = data.workingHours.find((wh: any) => Number(wh.day_of_week) === dayOfWeek);
 
 		if (!schedule || !schedule.is_active) {
-			console.warn(`❌ Sem expediente configurado ou ativo para o dia da semana: ${dayOfWeek}`);
+			//console.warn(`❌ Sem expediente configurado ou ativo para o dia da semana: ${dayOfWeek}`);
 			console.groupEnd();
 			return [];
 		}

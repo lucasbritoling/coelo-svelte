@@ -238,24 +238,28 @@ export const actions: Actions = {
 
 		try {
 			const txResult = await sql.begin(async (sql) => {
-				// 1. Remove o agendamento do banco
-				const result = await sql`
-                    DELETE FROM appointments 
-                    WHERE id = ${id} AND profile_id = ${user.id}
-                    RETURNING id
-                `;
+				// 1. PRIMEIRO: Libera o slot enquanto o vínculo com o ID do agendamento ainda existe
+				const slotResult = await sql`
+                UPDATE public.generated_slots
+                SET 
+                    is_booked = false, 
+                    appointment_id = NULL,
+                    is_available = true
+                WHERE appointment_id = ${id} AND profile_id = ${user.id}
+            `;
 
-				if (result.count === 0) return { error: 'not_found' };
+				// 2. SEGUNDO: Remove o agendamento do banco com segurança
+				const appointmentResult = await sql`
+                DELETE FROM appointments 
+                WHERE id = ${id} AND profile_id = ${user.id}
+                RETURNING id
+            `;
 
-				// 2. Libera o slot que estava preso a este ID deletado
-				await sql`
-                    UPDATE public.generated_slots
-                    SET is_booked = false, appointment_id = NULL
-                    WHERE appointment_id = ${id} AND profile_id = ${user.id}
-                `;
+				if (appointmentResult.count === 0) return { error: 'not_found' };
 
-				// 3. Atualiza os metadados da tabela física
-				await sql`SELECT public.refresh_profile_slots(${user.id}, 90)`;
+				// Gemini: manter esse log de debug para validar o comportamento do banco
+				//console.log(`[DEBUG] Slots liberados: ${slotResult.count} | Agendamentos deletados: ${appointmentResult.count}`);
+
 				return { success: true };
 			});
 

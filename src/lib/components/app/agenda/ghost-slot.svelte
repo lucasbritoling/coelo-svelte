@@ -7,35 +7,25 @@
 	let isExpanded = $state(false);
 
 	const totalSlots = $derived(slots?.length ?? 0);
-	const isSingle = $derived(totalSlots === 1);
 </script>
 
 {#if totalSlots > 0}
 	<div class="ghost-group">
-		{#if isSingle}
-			<button class="slot-row" onclick={() => onSlotClick(slots[0].startAt)}>
-				<span class="dot"></span>
-				<span class="time">{slots[0].startAt}</span>
-				<span class="label">livre</span>
-			</button>
-		{:else}
-			<button class="slot-row toggle" onclick={() => (isExpanded = !isExpanded)}>
-				<span class="dot"></span>
-				<span class="time">{slots[0].startAt}</span>
-				<span class="label">+{totalSlots} livres</span>
-				<span class="chevron" class:open={isExpanded}>›</span>
-			</button>
+		<button class="ghost-card" onclick={() => (isExpanded = !isExpanded)}>
+			<span class="free-label"
+				>+{totalSlots} horário{totalSlots > 1 ? 's' : ''} livre{totalSlots > 1 ? 's' : ''}</span
+			>
+			<span class="chevron" class:open={isExpanded}>›</span>
+		</button>
 
-			{#if isExpanded}
-				<div class="expanded">
-					{#each slots as slot}
-						<button class="slot-row sub" onclick={() => onSlotClick(slot.startAt)}>
-							<span class="dot small"></span>
-							<span class="time">{slot.startAt}</span>
-						</button>
-					{/each}
-				</div>
-			{/if}
+		{#if isExpanded}
+			<div class="expanded">
+				{#each slots as slot}
+					<button class="ghost-card sub" onclick={() => onSlotClick(slot.startAt)}>
+						<span class="time-start">{slot.startAt}</span>
+					</button>
+				{/each}
+			</div>
 		{/if}
 	</div>
 {/if}
@@ -44,71 +34,57 @@
 	.ghost-group {
 		display: flex;
 		flex-direction: column;
-		width: fit-content;
-		min-width: 130px;
+		gap: 3px;
+		width: 100%;
 	}
 
-	.slot-row {
+	.ghost-card {
 		all: unset;
+		box-sizing: border-box;
 		display: flex;
 		align-items: center;
-		gap: 6px;
-		padding: 4px 8px 4px 6px;
-		border-left: 2px solid #c8e6c9;
+		gap: 0.5rem;
+		border-radius: 0.75rem;
+		outline: 1.5px dashed #d4d4d8;
+		outline-offset: -1px;
+		background: #fafafa;
+		padding: 0.45rem 0.75rem 0.45rem 0.9rem;
 		cursor: pointer;
-		border-radius: 0 4px 4px 0;
-		transition:
-			background 0.12s,
-			border-color 0.12s;
+		transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
 		white-space: nowrap;
+		width: 100%;
 	}
 
-	.slot-row:hover {
-		background: #f1f8f1;
-		border-color: #66bb6a;
+	.ghost-card:hover {
+		background: #f4f4f5;
+		outline-color: #a1a1aa;
 	}
 
-	.slot-row:active {
-		background: #e8f5e9;
+	.ghost-card:active {
+		background: #e4e4e7;
 	}
 
-	.dot {
-		width: 6px;
-		height: 6px;
-		border-radius: 50%;
-		background: #81c784;
-		flex-shrink: 0;
+	.time-start {
+		font-size: 12.5px;
+		line-height: 1.25;
+		font-weight: 600;
+		color: #52525b;
 	}
 
-	.dot.small {
-		width: 4px;
-		height: 4px;
-		background: #a5d6a7;
-	}
-
-	.time {
-		font-family: 'JetBrains Mono', 'Fira Mono', 'Courier New', monospace;
-		font-size: 0.78rem;
-		font-weight: 500;
-		color: #2e7d32;
+	.free-label {
+		font-size: 0.75rem;
+		font-weight: 400;
+		color: #a1a1aa;
 		letter-spacing: 0.01em;
-	}
-
-	.label {
-		font-family: system-ui, sans-serif;
-		font-size: 0.68rem;
-		color: #81c784;
-		letter-spacing: 0.04em;
-		text-transform: lowercase;
+		flex: 1;
 	}
 
 	.chevron {
-		font-size: 0.85rem;
-		color: #a5d6a7;
+		font-size: 1rem;
+		color: #a1a1aa;
 		line-height: 1;
 		transform: rotate(90deg);
 		transition: transform 0.18s ease;
-		margin-left: 2px;
 	}
 
 	.chevron.open {
@@ -118,20 +94,13 @@
 	.expanded {
 		display: flex;
 		flex-direction: column;
-		padding-left: 10px;
-		border-left: 2px solid #e8f5e9;
-		margin-left: 6px;
-		gap: 1px;
+		gap: 3px;
+		padding-left: 1rem;
 		animation: slide-down 0.15s ease;
 	}
 
-	.slot-row.sub {
-		border-left: none;
-		padding-left: 4px;
-	}
-
-	.slot-row.sub:hover {
-		border-color: transparent;
+	.ghost-card.sub {
+		outline-color: #e4e4e7;
 	}
 
 	@keyframes slide-down {

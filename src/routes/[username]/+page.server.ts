@@ -62,7 +62,8 @@ export const load: PageServerLoad = async ({ params, url, locals: { sql, supabas
                 ${profile.id}, 
                 ${selectedService.id}, 
                 ${date}::date, 
-                ${selectedService.duration}::integer
+                ${selectedService.duration}::integer,
+				${profile.buffer_behavior ?? 'flexible'}
             )
         `;
 	}

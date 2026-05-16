@@ -42,8 +42,13 @@
 	let calendarValue = $state(data.selectedDate ? parseDate(data.selectedDate) : null);
 	let selectedSlot = $state<any>(null);
 	let customerName = $state('');
-	let customerPhone = $state('');
+	// 1. Runa de estado: guarda sempre os 11 dígitos limpos (ex: 11999999999)
+	let rawPhone = $state('');
+	let phoneTouched = $state(false);
 	let isLoading = $state(false);
+
+	// 2. Runa derivada: calcula a máscara em tempo real para o bind:value
+	let customerPhone = $derived(formatarMascarar(rawPhone));
 
 	const selectedService = $derived(services.find((s: any) => s.id === selectedServiceId));
 
@@ -120,6 +125,25 @@
 
 		// Se o dia NÃO estiver na lista de dias disponíveis retornada da RPC, desativa-o
 		return !availableDaysSet.has(dateString);
+	}
+
+	// 3. Regras de validação estritas (mínimo 11, máximo 11)
+	const isPhoneValid = $derived(rawPhone.length === 11);
+	const showPhoneError = $derived(phoneTouched && !isPhoneValid && rawPhone.length > 0);
+
+	// Função que limpa letras/símbolos e trava em 11 caracteresmax
+	function tratarInput(e: Event) {
+		const target = e.target as HTMLInputElement;
+		const apenasNumeros = target.value.replace(/\D/g, '');
+		rawPhone = apenasNumeros.slice(0, 11);
+	}
+
+	// Função que monta a máscara (11) 99999-9999 dinamicamente
+	function formatarMascarar(v: string) {
+		if (!v) return '';
+		if (v.length <= 2) return `(${v}`;
+		if (v.length <= 6) return `(${v.slice(0, 2)}) ${v.slice(2)}`;
+		return `(${v.slice(0, 2)}) ${v.slice(2, 7)}-${v.slice(7, 11)}`;
 	}
 </script>
 
@@ -273,18 +297,38 @@
 				}}
 				class="flex flex-col gap-4"
 			>
+				<!-- Inputs ocultos enviados ao backend -->
 				<input type="hidden" name="selected_date" value={data.selectedDate} />
 				<input type="hidden" name="slot_start" value={selectedSlot?.slot_start} />
 				<input type="hidden" name="service_id" value={selectedServiceId} />
 				<input type="hidden" name="profile_id" value={professional.id} />
+				<!-- NOVO: Envia o telefone limpo (ex: 11999999999) -->
+				<input type="hidden" name="customer_phone" value={rawPhone} />
 
 				<div class="space-y-2">
 					<Label for="name">Seu nome</Label>
 					<Input id="name" name="customer_name" bind:value={customerName} required />
 				</div>
+
 				<div class="space-y-2">
 					<Label for="phone">WhatsApp</Label>
-					<Input id="phone" name="customer_phone" type="tel" bind:value={customerPhone} required />
+					<!-- AJUSTADO: Removido o atributo name daqui para não sobrescrever o hidden -->
+					<Input
+						id="phone"
+						type="tel"
+						value={customerPhone}
+						oninput={tratarInput}
+						onblur={() => (phoneTouched = true)}
+						placeholder="(11) 99999-9999"
+						required
+						class={showPhoneError ? 'border-red-500 focus-visible:ring-red-500' : ''}
+					/>
+
+					{#if showPhoneError}
+						<p class="animate-in text-xs font-medium text-red-500 duration-150 fade-in">
+							O telefone deve ter exatamente 11 dígitos.
+						</p>
+					{/if}
 				</div>
 
 				<Button type="submit" class="mt-2 w-full" disabled={isLoading || !canAdvance}>

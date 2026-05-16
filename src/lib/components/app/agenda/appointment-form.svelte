@@ -51,25 +51,15 @@
 	let searchTimeout: ReturnType<typeof setTimeout>;
 	let selectedCustomer = $state<{ id: string; name: string } | null>(null);
 
-	// 🔍 DEBUG 1: Monitorar abertura do modal e trigger da busca inicial
+	// Trigger da busca inicial ao abrir
 	$effect(() => {
-		console.log('--- [EFFECT: OPEN CHANGED] ---');
-		console.log('Modal está aberto (open):', open);
-		console.log('customerQuery atual:', customerQuery);
-
 		if (open && !customerQuery) {
-			console.log('=> Disparando fetch inicial para carregar top clientes...');
 			fetch('/api/customers?q=')
-				.then((res) => {
-					console.log('Status da resposta do fetch inicial:', res.status);
-					return res.json();
-				})
+				.then((res) => res.json())
 				.then((data) => {
-					console.log('Dados recebidos do fetch inicial:', data);
 					localCustomers = data;
-					console.log('Estado localCustomers atualizado para:', localCustomers);
 				})
-				.catch((err) => console.error('Erro no fetch inicial:', err));
+				.catch(() => {});
 		}
 	});
 
@@ -87,33 +77,20 @@
 		customerQuery = val;
 		isSearching = true;
 
-		console.log('--- [INPUT: handleSearch] ---');
-		console.log('Usuário digitou:', val);
-
 		clearTimeout(searchTimeout);
 		searchTimeout = setTimeout(async () => {
-			console.log('=> Executando fetch de busca por:', val);
 			try {
 				const res = await fetch(`/api/customers?q=${encodeURIComponent(val)}`);
-				console.log('Status da resposta da busca:', res.status);
 				if (res.ok) {
 					localCustomers = await res.json();
-					console.log('Resultados da busca aplicados em localCustomers:', localCustomers);
 				}
-			} catch (err) {
-				console.error('Erro ao buscar clientes no input:', err);
+			} catch {
+				// Erro silenciado para manter comportamento constante
 			} finally {
 				isSearching = false;
 			}
 		}, 250);
 	}
-
-	// 🔍 DEBUG 2: Monitorar mudanças no estado de seleção
-	$effect(() => {
-		console.log('--- [STATE MONITOR] ---');
-		console.log('formState.customerId:', formState.customerId);
-		console.log('selectedCustomer Object:', selectedCustomer);
-	});
 
 	let isSubmitting = $state(false);
 
@@ -397,16 +374,12 @@
 	formData={data.customerForm}
 	initialName={customerQuery}
 	onSuccess={(newCustomer) => {
-		console.log('--- [CALLBACK: CustomerForm onSuccess] ---');
-		console.log('O que o CustomerForm retornou:', newCustomer);
-
 		if (newCustomer) {
 			formState.customerId = newCustomer.id;
 			selectedCustomer = {
 				id: newCustomer.id,
 				name: newCustomer.name
 			};
-			console.log('Novo cliente setado no estado:', selectedCustomer);
 		}
 		customerQuery = '';
 		showCustomerModal = false;

@@ -223,37 +223,17 @@ export const actions: Actions = {
 
 	delete: async ({ request, locals: { sql, user } }) => {
 		if (!user) return fail(401);
+
 		const id = (await request.formData()).get('id')?.toString();
 		if (!id) return fail(400, { message: 'ID obrigatório.' });
 
 		try {
-			const txResult = await sql.begin(async (sql) => {
-				// 1. PRIMEIRO: Libera o slot enquanto o vínculo com o ID do agendamento ainda existe
-				const slotResult = await sql`
-                UPDATE public.generated_slots
-                SET 
-                    is_booked = false, 
-                    appointment_id = NULL,
-                    is_available = true
-                WHERE appointment_id = ${id} AND profile_id = ${user.id}
-            `;
+			// Uma única chamada ao banco resolve todo o problema
+			const [result] = await sql<{ was_cancelled: boolean }[]>`
+            SELECT public.action_cancel_appointment(${id}, ${user.id}) AS was_cancelled
+        `;
 
-				// 2. SEGUNDO: Remove o agendamento do banco com segurança
-				const appointmentResult = await sql`
-                DELETE FROM appointments 
-                WHERE id = ${id} AND profile_id = ${user.id}
-                RETURNING id
-            `;
-
-				if (appointmentResult.count === 0) return { error: 'not_found' };
-
-				// Gemini: manter esse log de debug para validar o comportamento do banco
-				//console.log(`[DEBUG] Slots liberados: ${slotResult.count} | Agendamentos deletados: ${appointmentResult.count}`);
-
-				return { success: true };
-			});
-
-			if (txResult?.error === 'not_found') {
+			if (!result?.was_cancelled) {
 				return fail(404, { message: 'Agendamento não encontrado.' });
 			}
 

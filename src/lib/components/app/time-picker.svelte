@@ -111,7 +111,7 @@
 			Selecione um serviço para ver horários
 		</span>
 	{:else if isDayFull}
-		<div class="flex animate-in items-center gap-1.5 px-1 text-red-500 duration-300 zoom-in-95">
+		<div class="flex animate-in items-center gap-1.5 px-1 text-zinc-400 duration-300 zoom-in-95">
 			<div class="size-1 rounded-full bg-current"></div>
 			<span class="text-[10px] font-bold tracking-tight uppercase">Sem vagas hoje</span>
 		</div>

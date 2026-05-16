@@ -39,7 +39,6 @@ export const actions: Actions = {
 		try {
 			const { id, ...data } = form.data;
 
-			// Criamos o objeto removendo undefineds e garantindo tipos corretos
 			const payload: Record<string, any> = {
 				name: data.name,
 				duration: data.duration,
@@ -49,30 +48,37 @@ export const actions: Actions = {
 				buffer_after_min: data.buffer_after_min ?? 0
 			};
 
-			// Fail Fast: Só incluímos o ID se ele realmente existir (Update)
-			// Se for string vazia ou undefined, deixamos o gen_random_uuid() agir
 			if (id && id.trim() !== '') {
 				payload.id = id;
 			}
 
-			const [row] = await sql`
-                INSERT INTO services ${sql(payload)}
-                ON CONFLICT (id) DO UPDATE SET
-                    name = EXCLUDED.name,
-                    duration = EXCLUDED.duration,
-                    is_active = EXCLUDED.is_active,
-                    min_notice_hours = EXCLUDED.min_notice_hours,
-                    buffer_after_min = EXCLUDED.buffer_after_min
-                RETURNING id, name
-            `;
+			// ⚡ Usamos uma transação para amarrar o salvamento ao refresh da esteira
+			const row = await sql.begin(async (sql) => {
+				const [insertedRow] = await sql`
+                    INSERT INTO services ${sql(payload)}
+                    ON CONFLICT (id) DO UPDATE SET
+                        name = EXCLUDED.name,
+                        duration = EXCLUDED.duration,
+                        is_active = EXCLUDED.is_active,
+                        min_notice_hours = EXCLUDED.min_notice_hours,
+                        buffer_after_min = EXCLUDED.buffer_after_min
+                    RETURNING id, name
+                `;
+
+				// 🔄 Dispara o recálculo da esteira de slots para os próximos 90 dias
+				// A nossa procedure já limpa internamente os slots livres futuros antes de recriar
+				await sql`SELECT public.refresh_profile_slots(${user.id}, 90)`;
+
+				return insertedRow;
+			});
 
 			return {
 				success: true,
-				service: { id: row.id, name: row.name } // Enviamos o objeto que precisamos
+				service: { id: row.id, name: row.name }
 			};
 		} catch (err) {
 			console.error('Erro no upsert:', err);
-			return message(form, 'Erro técnico ao salvar serviço.', { status: 500 });
+			return message(form, 'Erro técnico ao salvar serviço e atualizar agenda.', { status: 500 });
 		}
 	},
 
@@ -88,15 +94,25 @@ export const actions: Actions = {
 		if (!id) return fail(400, { message: 'ID ausente' });
 
 		try {
-			await sql`
-                DELETE FROM services 
-                WHERE id = ${id} AND profile_id = ${user.id}
-            `;
+			// ⚡ Transação para amarrar o delete ao recálculo da agenda
+			await sql.begin(async (sql) => {
+				await sql`
+                    DELETE FROM services 
+                    WHERE id = ${id} AND profile_id = ${user.id}
+                `;
+
+				// 🔄 Como o serviço sumiu, forçamos a esteira a se reorganizar
+				// para os serviços que restaram ativos nos próximos 90 dias
+				await sql`SELECT public.refresh_profile_slots(${user.id}, 90)`;
+			});
+
 			return { success: true };
 		} catch (err: any) {
-			// Tratamento de Foreign Key (ex: serviço em uso em agendamentos)
+			// Tratamento de Foreign Key (ex: serviço já possui agendamentos marcados)
 			if (err.code === '23503') {
-				return fail(400, { message: 'Serviço possui agendamentos. Ocultar?' });
+				return fail(400, {
+					message: 'Este serviço possui agendamentos vinculados e não pode ser excluído.'
+				});
 			}
 			return fail(500, { message: 'Erro interno ao excluir serviço' });
 		}
@@ -115,18 +131,31 @@ export const actions: Actions = {
 		if (!id) return fail(400);
 
 		try {
-			const result = await sql`
-                UPDATE services 
-                SET is_active = ${is_active}
-                WHERE id = ${id} AND profile_id = ${user.id}
-                RETURNING id
-            `;
+			// ⚡ Transação para garantir consistência entre o status e a grade de horários
+			await sql.begin(async (sql) => {
+				const result = await sql`
+                    UPDATE services 
+                    SET is_active = ${is_active}
+                    WHERE id = ${id} AND profile_id = ${user.id}
+                    RETURNING id
+                `;
 
-			if (result.count === 0) return fail(404, { message: 'Não encontrado.' });
+				if (result.count === 0) {
+					// Lança um erro para forçar o rollback da transação caso o ID não exista/não seja do usuário
+					throw new Error('NOT_FOUND');
+				}
+
+				// 🔄 Sincroniza a esteira de agendamentos com o novo estado do serviço
+				await sql`SELECT public.refresh_profile_slots(${user.id}, 90)`;
+			});
 
 			return { success: true };
-		} catch (err) {
-			return fail(500, { message: 'Erro interno ao atualizar status.' });
+		} catch (err: any) {
+			if (err.message === 'NOT_FOUND') {
+				return fail(404, { message: 'Serviço não encontrado.' });
+			}
+			console.error('Erro no updateStatus:', err);
+			return fail(500, { message: 'Erro interno ao atualizar status e sincronizar agenda.' });
 		}
 	}
 };

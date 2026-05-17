@@ -6,13 +6,20 @@ export const GET: RequestHandler = async ({ url, locals: { sql, user } }) => {
 
 	const searchQuery = url.searchParams.get('q')?.trim() ?? '';
 
+	// Remove tudo o que não for número para buscar no campo de telefone limpo do banco
+	const cleanPhoneQuery = searchQuery.replace(/\D/g, '');
+
 	try {
-		// Executa a busca otimizada isolada que removemos do load principal
+		// Executa a busca otimizada por Nome ou Telefone
 		const customers = await sql`
-			SELECT id, name 
+			SELECT id, name, phone 
 			FROM public.customers 
 			WHERE profile_id = ${user.id}::uuid
-			  AND (${searchQuery} = '' OR lower(name) LIKE ${'%' + searchQuery.toLowerCase() + '%'})
+			  AND (
+				${searchQuery} = '' 
+				OR lower(name) LIKE ${'%' + searchQuery.toLowerCase() + '%'}
+				OR (${cleanPhoneQuery} != '' AND phone LIKE ${'%' + cleanPhoneQuery + '%'})
+			  )
 			ORDER BY name 
 			LIMIT 50
 		`;

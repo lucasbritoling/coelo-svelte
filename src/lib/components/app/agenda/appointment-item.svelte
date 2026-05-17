@@ -292,6 +292,7 @@
 		display: flex;
 		align-items: center;
 		gap: 8px;
+		padding-left: 0px !important;
 		padding: 0 12px;
 		flex-shrink: 0;
 	}

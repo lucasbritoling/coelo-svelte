@@ -43,16 +43,16 @@ export const actions: Actions = {
 				name: data.name,
 				duration: data.duration,
 				profile_id: user.id,
-				is_active: data.is_active ?? true,
-				min_notice_hours: data.min_notice_hours ?? 2,
-				buffer_after_min: data.buffer_after_min ?? 0
+				is_active: data.is_active,
+				min_notice_hours: data.min_notice_hours,
+				buffer_after_min: data.buffer_after_min,
+				color: data.color
 			};
 
 			if (id && id.trim() !== '') {
 				payload.id = id;
 			}
 
-			// ⚡ Usamos uma transação para amarrar o salvamento ao refresh da esteira
 			const row = await sql.begin(async (sql) => {
 				const [insertedRow] = await sql`
                     INSERT INTO services ${sql(payload)}
@@ -61,12 +61,12 @@ export const actions: Actions = {
                         duration = EXCLUDED.duration,
                         is_active = EXCLUDED.is_active,
                         min_notice_hours = EXCLUDED.min_notice_hours,
-                        buffer_after_min = EXCLUDED.buffer_after_min
+                        buffer_after_min = EXCLUDED.buffer_after_min,
+                        color = EXCLUDED.color
                     RETURNING id, name
                 `;
 
-				// 🔄 Dispara o recálculo da esteira de slots para os próximos 90 dias
-				// A nossa procedure já limpa internamente os slots livres futuros antes de recriar
+				// Dispara o recálculo da esteira de slots
 				await sql`SELECT public.refresh_profile_slots(${user.id}, 90)`;
 
 				return insertedRow;

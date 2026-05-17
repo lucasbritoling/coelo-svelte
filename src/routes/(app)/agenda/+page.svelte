@@ -56,8 +56,8 @@
 	const schedulingLink = $derived(`coelo.dev/${data.username}`);
 	const headerLabel = $derived(dateUtils.getHeaderLabel(data.selectedDate, data.timezone));
 
-	// Define se exibe a barra lateral de cor (Apenas se houver mais de 1 serviço no array do dia)
-	const showServiceColor = $derived(new Set(data.appointments.map((a) => a.service_id)).size > 1);
+	// Define se exibe a barra lateral de cor (Se o profissional possuir 2 ou mais serviços cadastrados no total)
+	const showServiceColor = $derived((data.services?.length ?? 0) >= 2);
 
 	// ── Navegação de Datas ────────────────────────────────────────
 	function updateDate(newDate: string) {

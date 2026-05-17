@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Appointment } from '$lib/types/appointment';
-	import { MessageCircle, CheckCircle2, XCircle, Clock, ChevronDown } from '@lucide/svelte';
+	import { MessageCircle, CheckCircle2, XCircle, Clock, ChevronDown, User } from '@lucide/svelte';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
 	import AppointmentItemAction from '$lib/components/app/agenda/appointment-item-action.svelte';
@@ -24,79 +24,45 @@
 		timezone
 	}: Props = $props();
 
-	// Controle de expansão nativo do Svelte 5
 	let isExpanded = $state(false);
 
-	const STATUS: Record<string, { label: string; variant: any; class: string; icon?: any }> = {
-		pending: {
-			label: 'Pendente',
-			variant: 'outline',
-			class: 'bg-[#1e293b]/40 text-[#60a5fa] border-[#3b82f6]/20 font-medium px-2.5 py-1 gap-1.5',
-			icon: Clock
-		},
-		confirmed: {
-			label: 'Confirmado',
-			variant: 'outline',
-			class: 'bg-[#14532d]/30 text-[#4ade80] border-[#22c55e]/20 font-medium px-2.5 py-1 gap-1.5',
-			icon: CheckCircle2
-		},
-		cancelled: {
-			label: 'Cancelado',
-			variant: 'outline',
-			class: 'bg-[#4c0519]/40 text-[#f87171] border-[#ef4444]/20 font-medium px-2.5 py-1 gap-1.5',
-			icon: XCircle
-		},
-		concluído: {
-			label: 'Concluído',
-			variant: 'secondary',
-			class: 'bg-zinc-800/80 text-zinc-400 font-medium px-2.5 py-1',
-			icon: CheckCircle2
-		},
-		faltou: {
-			label: 'Não compareceu',
-			variant: 'destructive',
-			class: 'font-medium px-2.5 py-1',
-			icon: XCircle
-		}
+	// Otimizado: Removidas strings longas de classes do JS. Mapeamos apenas semântica.
+	const STATUS_MAP: Record<string, { label: string; variant: any; type: string; icon?: any }> = {
+		pending: { label: 'Pendente', variant: 'outline', type: 'pending', icon: Clock },
+		confirmed: { label: 'Confirmado', variant: 'outline', type: 'confirmed', icon: CheckCircle2 },
+		cancelled: { label: 'Cancelado', variant: 'outline', type: 'cancelled', icon: XCircle },
+		concluído: { label: 'Concluído', variant: 'secondary', type: 'completed', icon: CheckCircle2 },
+		faltou: { label: 'Não compareceu', variant: 'destructive', type: 'no-show', icon: XCircle }
 	};
 
-	const currentStatus = $derived(STATUS[appt.status]);
+	const currentStatus = $derived(STATUS_MAP[appt.status]);
 
+	// Lógica de iniciais enxuta e direta
+	const initials = $derived.by(() => {
+		const name = appt.customer_name?.trim();
+		if (!name) return '';
+		const parts = name.split(/\s+/);
+		return (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
+	});
+
+	// Removido mapeamento estático inline para cores Tailwind comuns
 	const categoryStyle = $derived.by(() => {
 		const color = appt.service_color || 'zinc';
-		if (color.startsWith('#')) return { style: `background-color: ${color}`, class: '' };
-
-		const tailwindMap: Record<string, string> = {
-			zinc: 'bg-zinc-600',
-			blue: 'bg-blue-500',
-			indigo: 'bg-indigo-500',
-			violet: 'bg-violet-500',
-			rose: 'bg-rose-500',
-			amber: 'bg-amber-500',
-			emerald: 'bg-emerald-500'
-		};
-		return { style: '', class: tailwindMap[color] || 'bg-zinc-600' };
+		return color.startsWith('#')
+			? { style: `background-color: ${color}`, class: '' }
+			: { style: '', class: `bg-${color}-500` };
 	});
 
 	const isPast = $derived.by(() => {
-		if (appt.status === 'cancelled') return true;
-		if (appt.status === 'concluído' || appt.status === 'faltou') return true;
-
+		if (['cancelled', 'concluído', 'faltou'].includes(appt.status)) return true;
 		const todayStr = dateUtils.today(timezone);
-
 		if (selectedDate < todayStr) return true;
 		if (selectedDate > todayStr) return false;
-
-		const endMs = dateUtils.parseTimeToMs(appt.end_at, selectedDate, timezone);
-		return currentTime > endMs;
+		return currentTime > dateUtils.parseTimeToMs(appt.end_at, selectedDate, timezone);
 	});
 
 	function handleToggle(e: MouseEvent) {
-		const target = e.target as HTMLElement;
-		// Impede de fechar/abrir a alça se clicar diretamente nos botões internos da gaveta
-		if (target.closest('.drawer-actions') || target.closest('a') || target.closest('button')) {
-			return;
-		}
+		if ((e.target as HTMLElement).closest('.drawer-actions, a, button')) return;
 		isExpanded = !isExpanded;
 	}
 </script>
@@ -108,8 +74,6 @@
 	</div>
 {/snippet}
 
-<!-- svelte-ignore a11y_click_events_have_key_events -->
-<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="appt-wrapper" class:is-past={isPast} class:expanded={isExpanded} onclick={handleToggle}>
 	<div class="appt-card">
 		{#if showServiceColor}
@@ -120,20 +84,30 @@
 
 		<div class="divider-line"></div>
 
-		<!-- O nome foi removido daqui para empurrar o status para a esquerda de forma limpa -->
+		<div class="main-col">
+			<div class="avatar-circle" class:cancelled={appt.status === 'cancelled'}>
+				<span>{initials}</span>
+			</div>
+		</div>
+
 		<div class="right-col">
 			{#if soon && appt.status !== 'cancelled' && !isPast}
 				<span class="soon-chip">{soon.includes('em') ? soon : `em ${soon}`}</span>
 			{/if}
 
 			{#if currentStatus}
-				<Badge variant={currentStatus.variant} class={currentStatus.class}>
+				<!-- Otimizado: Estilização injetada via atributo data-status controlado pelo CSS scoped -->
+				<Badge
+					variant={currentStatus.variant}
+					data-status={currentStatus.type}
+					class="status-badge"
+				>
 					{#if currentStatus.icon}
 						<span class="icon-wrapper">
 							<currentStatus.icon size={13} strokeWidth={2.5} />
 						</span>
 					{/if}
-					<span class="text-[12px] font-normal">{currentStatus.label}</span>
+					<span class="badge-text">{currentStatus.label}</span>
 				</Badge>
 			{/if}
 
@@ -145,10 +119,12 @@
 
 	<div class="actions-drawer">
 		<div class="drawer-content">
-			<!-- Nome do cliente posicionado no topo do conteúdo do Drawer -->
-			<p class="customer-name" class:cancelled={appt.status === 'cancelled'}>
-				{appt.customer_name}
-			</p>
+			<div class="customer-info-box">
+				<User size={14} class="text-zinc-500" />
+				<span class="drawer-customer-name" class:cancelled={appt.status === 'cancelled'}>
+					{appt.customer_name}
+				</span>
+			</div>
 
 			<div class="drawer-actions">
 				{#if appt.customer_phone && appt.status !== 'cancelled'}
@@ -157,7 +133,7 @@
 						target="_blank"
 						variant="outline"
 						size="sm"
-						class="whatsapp-btn gap-2 border-[#2d2d2d] bg-transparent text-zinc-400 hover:border-[#22c55e]/20 hover:bg-[#22c55e]/10 hover:text-[#22c55e]"
+						class="whatsapp-btn"
 						title="WhatsApp"
 					>
 						<MessageCircle size={15} />
@@ -172,9 +148,9 @@
 </div>
 
 <style>
-	/* Wrapper principal que agrupa o card e a gaveta oculta */
+	/* Estilos base reaproveitados */
 	.appt-wrapper {
-		background: #121214; /* Tema super escuro fiel ao print */
+		background: #121214;
 		border: 1px solid #2d2d2d;
 		border-radius: 12px;
 		overflow: hidden;
@@ -188,16 +164,11 @@
 		border-color: #3e3e3e;
 	}
 
-	/* Card superior - CORRIGIDO: Força alinhamento vertical central de todos os filhos */
 	.appt-card {
 		display: flex;
 		align-items: center;
-		min-height: 56px; /* Garante uma altura mínima consistente para o card */
-		padding: 8px 0; /* Padding simétrico em cima e embaixo */
-	}
-
-	.appt-wrapper.is-past {
-		opacity: 1;
+		min-height: 58px;
+		padding: 8px 0;
 	}
 
 	.service-bar {
@@ -208,12 +179,11 @@
 		flex-shrink: 0;
 	}
 
-	/* Coluna do Tempo - Centralizado verticalmente */
 	.time-col {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		justify-content: center; /* Centraliza conteúdo internamente */
+		justify-content: center;
 		gap: 2px;
 		padding: 0 12px;
 		min-width: 76px;
@@ -239,29 +209,40 @@
 		flex-shrink: 0;
 	}
 
-	/* Nome do Cliente - Agora estilizado para o topo do drawer */
-	.customer-name {
-		font-size: 14px;
-		font-weight: 500;
-		color: #e4e4e7;
-		line-height: 1.3;
-		text-transform: capitalize;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		margin-bottom: 4px; /* Pequeno espaçamento antes dos botões de ação */
-	}
-	.customer-name.cancelled {
-		text-decoration: line-through;
-		color: #52525b;
+	.main-col {
+		flex: 1;
+		min-width: 0;
+		padding: 0 16px;
+		display: flex;
+		align-items: center;
 	}
 
-	/* Ajustado para flex-1 para ocupar o espaço restante após a remoção da main-col */
+	.avatar-circle {
+		width: 34px;
+		height: 34px;
+		border-radius: 50%;
+		background: #27272a;
+		border: 1px solid #3f3f46;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+	}
+	.avatar-circle span {
+		font-size: 12px;
+		font-weight: 600;
+		color: #f4f4f5;
+		letter-spacing: 0.05em;
+	}
+	.avatar-circle.cancelled {
+		background: #1c1917;
+		border-color: #44403c;
+		opacity: 0.5;
+	}
+
 	.right-col {
 		display: flex;
 		align-items: center;
-		justify-content: flex-end;
-		flex: 1;
 		gap: 8px;
 		padding: 0 12px;
 		flex-shrink: 0;
@@ -283,7 +264,38 @@
 		justify-content: center;
 	}
 
-	/* Seta do Chevron e sua animação de rotação */
+	/* OTIMIZAÇÃO: Centralização dos estilos dinâmicos do Badge via Atributos Data */
+	:global(.status-badge) {
+		font-weight: 500 !important;
+		padding: 4px 10px !important;
+		background-color: transparent !important;
+		gap: 6px !important;
+	}
+	:global(.status-badge[data-status='pending']) {
+		background-color: rgba(30, 41, 59, 0.4) !important;
+		color: #60a5fa !important;
+		border-color: rgba(59, 130, 246, 0.2) !important;
+	}
+	:global(.status-badge[data-status='confirmed']) {
+		background-color: rgba(20, 83, 45, 0.3) !important;
+		color: #4ade80 !important;
+		border-color: rgba(34, 197, 94, 0.2) !important;
+	}
+	:global(.status-badge[data-status='cancelled']) {
+		background-color: rgba(76, 5, 25, 0.4) !important;
+		color: #f87171 !important;
+		border-color: rgba(239, 68, 132, 0.2) !important;
+	}
+	:global(.status-badge[data-status='completed']) {
+		background-color: rgba(39, 39, 42, 0.8) !important;
+		color: #a1a1aa !important;
+	}
+
+	.badge-text {
+		font-size: 12px;
+		font-weight: 400;
+	}
+
 	.chevron-indicator {
 		display: flex;
 		align-items: center;
@@ -298,18 +310,16 @@
 		color: #e4e4e7;
 	}
 
-	/* GAVETA RETRÁTIL DINÂMICA (Transição CSS Limpa) */
 	.actions-drawer {
 		display: grid;
 		grid-template-rows: 0fr;
 		transition:
 			grid-template-rows 0.2s ease-out,
 			background-color 0.2s;
-		background: transparent;
 	}
 	.appt-wrapper.expanded .actions-drawer {
 		grid-template-rows: 1fr;
-		background: #161619; /* Leve distinção de fundo quando aberto */
+		background: #161619;
 		border-top: 1px solid #2d2d2d;
 	}
 	.drawer-content {
@@ -318,17 +328,26 @@
 		transition: padding 0.2s ease-out;
 		display: flex;
 		flex-direction: column;
-		gap: 8px;
+		gap: 12px;
 	}
 	.appt-wrapper.expanded .drawer-content {
-		padding: 12px 16px; /* Só aplica padding vertical quando expandido */
+		padding: 14px 16px;
 	}
 
-	.drawer-title {
-		font-size: 11px;
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: 0.05em;
+	.customer-info-box {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding-bottom: 2px;
+	}
+	.drawer-customer-name {
+		font-size: 14px;
+		font-weight: 500;
+		color: #e4e4e7;
+		text-transform: capitalize;
+	}
+	.drawer-customer-name.cancelled {
+		text-decoration: line-through;
 		color: #52525b;
 	}
 
@@ -341,5 +360,14 @@
 	:global(.whatsapp-btn) {
 		border-radius: 8px !important;
 		height: 36px !important;
+		border-color: #2d2d2d !important;
+		background-color: transparent !important;
+		color: #a1a1aa !important;
+		gap: 8px !important;
+	}
+	:global(.whatsapp-btn:hover) {
+		border-color: rgba(34, 197, 94, 0.2) !important;
+		background-color: rgba(34, 197, 94, 0.1) !important;
+		color: #22c55e !important;
 	}
 </style>

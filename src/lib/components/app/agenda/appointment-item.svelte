@@ -8,7 +8,7 @@
 
 	interface Props {
 		appt: Appointment;
-		showServiceColor: boolean;
+		showServiceColor: boolean; // Controla apenas a exibição do texto/badge do serviço agora
 		soon?: string | null;
 		currentTime: number;
 		selectedDate: string;
@@ -70,9 +70,8 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="appt-wrapper" class:is-past={isPast} class:expanded={isExpanded} onclick={handleToggle}>
 	<div class="appt-card">
-		{#if showServiceColor}
-			<div class="service-bar {categoryStyle.class}" style={categoryStyle.style}></div>
-		{/if}
+		<!-- Removido o IF: A barra lateral de cor agora renderiza SEMPRE -->
+		<div class="service-bar {categoryStyle.class}" style={categoryStyle.style}></div>
 
 		<div class="time-col">
 			<span class="time-start">{appt.start_at}</span>
@@ -120,7 +119,7 @@
 						{/if}
 					</div>
 
-					<!-- Oculta o badge via classe "hidden" se showServiceColor for false (apenas 1 serviço ativo) -->
+					<!-- O nome do serviço é ocultado se houver apenas 1 serviço ativo -->
 					{#if appt.service_name}
 						<div class="drawer-service-badge" class:hidden={!showServiceColor}>
 							<Sparkles size={11} class="text-zinc-400" />

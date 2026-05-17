@@ -74,10 +74,11 @@
 
 <Dialog.Root bind:open>
 	<Dialog.Content
-		class="flex max-h-[90dvh] w-[95vw] flex-col gap-0 overflow-y-auto rounded-[32px] p-0 sm:max-w-[400px]"
+		class="flex max-h-[92dvh] w-[95vw] flex-col gap-0 overflow-y-auto rounded-[28px] p-0 sm:max-w-[400px]"
 	>
-		<Dialog.Header class="px-6 py-6 text-left">
-			<Dialog.Title class="text-xl font-bold">
+		<!-- Padding vertical reduzido -->
+		<Dialog.Header class="px-6 pt-5 pb-3 text-left">
+			<Dialog.Title class="text-lg font-bold">
 				{formState.id ? 'Editar Serviço' : 'Novo Serviço'}
 			</Dialog.Title>
 		</Dialog.Header>
@@ -108,53 +109,79 @@
 			<input type="hidden" name="color" value={formState.color} />
 			<input type="hidden" name="is_active" value={String(formState.is_active)} />
 
-			<div class="space-y-6 px-6 pb-8">
+			<!-- Espaçamento reduzido de space-y-6 para space-y-4 -->
+			<div class="space-y-4 px-6 pb-6">
 				<!-- Campo Nome -->
-				<div class="grid gap-2">
-					<Label class="text-[11px] font-bold tracking-widest text-zinc-400 uppercase">Nome</Label>
+				<div class="grid gap-1.5">
+					<Label class="text-[10px] font-bold tracking-widest text-zinc-400 uppercase"
+						>Nome do Serviço</Label
+					>
 					<Input
 						name="name"
 						bind:value={formState.name}
-						placeholder="Ex: Agendamento"
-						class="h-12 rounded-xl"
+						placeholder="Ex: Corte de Cabelo"
+						class="h-11 rounded-xl"
 						required
 					/>
 				</div>
 
-				<!-- Campo Duração -->
-				<div class="grid gap-2">
-					<Label class="text-[11px] font-bold tracking-widest text-zinc-400 uppercase"
-						>Duração (minutos)</Label
-					>
-					<div class="relative">
-						<Clock class="absolute top-4 left-4 size-4 text-zinc-400" />
-						<Input
-							name="duration"
-							type="text"
-							placeholder="30"
-							inputmode="numeric"
-							bind:value={formState.duration}
-							class="h-12 rounded-xl pl-11 font-bold"
-							required
-							oninput={(e) => {
-								formState.duration = Number(e.currentTarget.value.replace(/\D/g, ''));
-							}}
-						/>
+				<!-- Grid de duas colunas para Duração e Antecedência Mínima -->
+				<div class="grid grid-cols-2 gap-3">
+					<!-- Campo Duração -->
+					<div class="grid gap-1.5">
+						<Label class="text-[10px] font-bold tracking-widest text-zinc-400 uppercase"
+							>Duração (m)</Label
+						>
+						<div class="relative">
+							<Clock class="absolute top-3.5 left-3.5 size-4 text-zinc-400" />
+							<Input
+								name="duration"
+								type="text"
+								placeholder="30 min"
+								inputmode="numeric"
+								bind:value={formState.duration}
+								class="h-11 rounded-xl pl-10 font-bold"
+								required
+								oninput={(e) => {
+									formState.duration = Number(e.currentTarget.value.replace(/\D/g, ''));
+								}}
+							/>
+						</div>
+					</div>
+
+					<!-- Antecedência Mínima -->
+					<div class="grid gap-1.5">
+						<Label class="text-[10px] font-bold tracking-widest text-zinc-400 uppercase"
+							>Antecedência (h)</Label
+						>
+						<div class="relative">
+							<Input
+								name="min_notice_hours"
+								type="text"
+								placeholder="2h"
+								inputmode="numeric"
+								bind:value={formState.min_notice_hours}
+								class="h-11 rounded-xl text-center font-bold"
+								oninput={(e) => {
+									formState.min_notice_hours = Number(e.currentTarget.value.replace(/\D/g, ''));
+								}}
+							/>
+						</div>
 					</div>
 				</div>
 
-				<!-- Seletor de Cores (Enum) -->
-				<div class="grid gap-3">
+				<!-- Seletor de Cores compacto -->
+				<div class="grid gap-2 pt-1">
 					<Label
-						class="flex items-center gap-2 text-[11px] font-bold tracking-widest text-zinc-400 uppercase"
+						class="flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-zinc-400 uppercase"
 					>
-						<Palette size={14} /> Cor Identificadora
+						<Palette size={13} /> Cor de Identificação
 					</Label>
-					<div class="flex flex-wrap gap-2.5">
+					<div class="flex flex-wrap gap-2">
 						{#each Object.keys(colorsMap) as colorKey}
 							<button
 								type="button"
-								class="relative size-8 rounded-full border transition-transform active:scale-95 {colorsMap[
+								class="relative size-7 rounded-full border transition-transform active:scale-95 {colorsMap[
 									colorKey as ServiceColor
 								]}"
 								onclick={() => (formState.color = colorKey as ServiceColor)}
@@ -162,43 +189,19 @@
 							>
 								{#if formState.color === colorKey}
 									<div class="absolute inset-0 flex items-center justify-center text-white">
-										<Check size={16} strokeWidth={3} />
+										<Check size={14} strokeWidth={3} />
 									</div>
 								{/if}
 							</button>
 						{/each}
 					</div>
 				</div>
-
-				<div
-					class="flex items-center gap-2 pt-2 text-[10px] font-bold tracking-widest text-zinc-400 uppercase"
-				>
-					<CalendarClock size={14} /> Configurações de Agenda
-				</div>
-
-				<!-- Antecedência Mínima -->
-				<div class="grid gap-2">
-					<Label class="text-[11px] font-bold tracking-widest text-zinc-400 uppercase"
-						>Antecedência Mínima (horas)</Label
-					>
-					<div class="relative">
-						<Input
-							name="min_notice_hours"
-							type="text"
-							placeholder="2"
-							inputmode="numeric"
-							bind:value={formState.min_notice_hours}
-							class="h-12 rounded-xl font-bold"
-							oninput={(e) => {
-								formState.min_notice_hours = Number(e.currentTarget.value.replace(/\D/g, ''));
-							}}
-						/>
-					</div>
-				</div>
 			</div>
 
-			<!-- Rodapé com Botões Dinâmicos -->
-			<div class="flex gap-3 border-t p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+			<!-- Rodapé Otimizado com menos padding -->
+			<div
+				class="flex gap-3 border-t bg-zinc-50/50 p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))]"
+			>
 				{#if formState.id}
 					<Button
 						type={isConfirmingDelete ? 'submit' : 'button'}
@@ -210,7 +213,7 @@
 								isConfirmingDelete = true;
 							}
 						}}
-						class="h-12 flex-1 rounded-2xl"
+						class="h-11 flex-1 rounded-xl font-medium"
 					>
 						{isConfirmingDelete ? 'Confirmar?' : 'Excluir'}
 					</Button>
@@ -222,12 +225,14 @@
 					onclick={() => {
 						if (isConfirmingDelete) isConfirmingDelete = false;
 					}}
-					class="h-12 {formState.id ? 'flex-[2]' : 'w-full'} rounded-2xl bg-zinc-900 text-white"
+					class="h-11 {formState.id
+						? 'flex-[1.8]'
+						: 'w-full'} rounded-xl bg-zinc-900 font-medium text-white"
 				>
 					{#if isLoading}
 						<LoaderCircle class="mr-2 size-4 animate-spin" />
 					{:else}
-						{isConfirmingDelete ? 'Cancelar' : 'Salvar'}
+						{isConfirmingDelete ? 'Cancelar' : 'Salvar Serviço'}
 					{/if}
 				</Button>
 			</div>

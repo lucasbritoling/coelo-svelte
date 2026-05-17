@@ -229,11 +229,7 @@
 		color: #f4f4f5;
 		letter-spacing: 0.05em;
 	}
-	.avatar-circle.cancelled {
-		background: #1c1917;
-		border-color: #44403c;
-		opacity: 0.5;
-	}
+
 
 	.right-col {
 		display: flex;

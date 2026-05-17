@@ -169,11 +169,14 @@
 	}
 	function fmtDate(dateStr: string) {
 		const date = new Date(dateStr + 'T00:00:00');
-		return new Intl.DateTimeFormat('pt-BR', {
+		const formatted = new Intl.DateTimeFormat('pt-BR', {
 			weekday: 'long',
 			day: 'numeric',
 			month: 'long'
 		}).format(date);
+
+		// Remove o '-feira' se ele existir no texto formatado
+		return formatted.replace('-feira', '');
 	}
 
 	$effect(() => {
@@ -234,9 +237,9 @@
 								class="scale-90"
 							/>
 							<span class="text-sm font-bold text-zinc-800 capitalize">
-								{new Intl.DateTimeFormat('pt-BR', { weekday: 'long' }).format(
-									new Date(2025, 0, 5 + day.day_of_week)
-								)}
+								{new Intl.DateTimeFormat('pt-BR', { weekday: 'long' })
+									.format(new Date(2025, 0, 5 + day.day_of_week))
+									.replace('-feira', '')}
 							</span>
 						</div>
 						{#if day.is_active}

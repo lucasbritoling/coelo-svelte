@@ -67,11 +67,11 @@
 		padding: 6px;
 		border-radius: 9999px;
 
-		/* Glass surface */
+		/* Glass surface - neutral */
 		background: rgba(255, 255, 255, 0.75);
 		backdrop-filter: blur(24px) saturate(180%);
 		-webkit-backdrop-filter: blur(24px) saturate(180%);
-		border: 1px solid rgba(255, 255, 255, 0.55);
+		border: 1px solid rgba(228, 228, 231, 0.8); /* zinc-200 */
 
 		/* Layered shadow for depth */
 		box-shadow:
@@ -82,8 +82,8 @@
 	}
 
 	:global(.dark) .nav-bar {
-		background: rgba(24, 24, 27, 0.82);
-		border-color: rgba(255, 255, 255, 0.08);
+		background: rgba(24, 24, 27, 0.82); /* zinc-900 */
+		border-color: rgba(63, 63, 70, 0.7); /* zinc-700 */
 		box-shadow:
 			0 2px 4px rgba(0, 0, 0, 0.2),
 			0 8px 24px rgba(0, 0, 0, 0.4),
@@ -111,28 +111,31 @@
 		transform: scale(0.93);
 	}
 
-	/* Shared pill layout */
+	/* Shared pill layout - neutral */
 	.pill {
 		position: absolute;
 		inset: 0;
 		border-radius: 9999px;
 		z-index: 0;
 
-		/* Subtle gradient pill */
 		background: linear-gradient(
 			135deg,
-			rgba(226, 228, 243, 0.95) 0%,
-			rgba(210, 214, 240, 0.85) 100%
+			rgba(244, 244, 245, 0.95) 0%,
+			/* zinc-100 */ rgba(228, 228, 231, 0.9) 100% /* zinc-200 */
 		);
-		border: 1px solid rgba(180, 185, 225, 0.4);
+		border: 1px solid rgba(212, 212, 216, 0.8); /* zinc-300 */
 		box-shadow:
-			0 1px 3px rgba(130, 140, 200, 0.15),
+			0 1px 3px rgba(0, 0, 0, 0.06),
 			inset 0 1px 0 rgba(255, 255, 255, 0.7);
 	}
 
 	:global(.dark) .pill {
-		background: linear-gradient(135deg, rgba(63, 63, 70, 0.95) 0%, rgba(52, 52, 60, 0.9) 100%);
-		border-color: rgba(255, 255, 255, 0.08);
+		background: linear-gradient(
+			135deg,
+			rgba(63, 63, 70, 0.95) 0%,
+			/* zinc-700 */ rgba(39, 39, 42, 0.92) 100% /* zinc-800 */
+		);
+		border-color: rgba(82, 82, 91, 0.8); /* zinc-600 */
 		box-shadow:
 			0 1px 3px rgba(0, 0, 0, 0.3),
 			inset 0 1px 0 rgba(255, 255, 255, 0.06);
@@ -150,15 +153,15 @@
 	}
 
 	.icon-wrap.active {
-		color: #3730a3; /* indigo-800 */
+		color: #27272a; /* zinc-800 */
 	}
 
 	:global(.dark) .icon-wrap {
-		color: #52525b;
+		color: #71717a; /* zinc-500 */
 	}
 
 	:global(.dark) .icon-wrap.active {
-		color: #a5b4fc; /* indigo-300 */
+		color: #fafafa; /* zinc-50 */
 	}
 
 	/* Label */
@@ -168,20 +171,20 @@
 		font-size: 14.5px;
 		font-weight: 600;
 		letter-spacing: -0.02em;
-		color: #a1a1aa;
+		color: #a1a1aa; /* zinc-400 */
 		transition: color 250ms ease;
 		line-height: 1;
 	}
 
 	.label.active {
-		color: #1e1b4b; /* indigo-950 */
+		color: #18181b; /* zinc-900 */
 	}
 
 	:global(.dark) .label {
-		color: #52525b;
+		color: #71717a; /* zinc-500 */
 	}
 
 	:global(.dark) .label.active {
-		color: #e0e7ff; /* indigo-100 */
+		color: #fafafa; /* zinc-50 */
 	}
 </style>

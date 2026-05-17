@@ -160,8 +160,8 @@
 	.appt-card {
 		display: flex;
 		align-items: center;
-		min-height: 58px;
-		padding: 8px 0;
+		min-height: 49px;
+		padding: 0px 0;
 	}
 
 	.service-bar {

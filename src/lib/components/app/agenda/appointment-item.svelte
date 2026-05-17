@@ -155,7 +155,8 @@
 		border: 1px solid #2d2d2d; /* Bordas suaves e escuras */
 		border-radius: 12px;
 		overflow: hidden;
-		min-height: 64px;
+		min-height: 44px;
+		max-height: 50px;
 		transition:
 			background 0.15s,
 			border-color 0.15s;

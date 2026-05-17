@@ -122,7 +122,7 @@
 				</div>
 				<div class="min-w-0 flex-1 text-left">
 					<p class="truncate font-bold text-zinc-900">{customer.name}</p>
-					<p class="font-mono text-xs text-zinc-400">{formatPhone(customer.phone)}</p>
+					<p class=" text-xs text-zinc-400">{formatPhone(customer.phone)}</p>
 				</div>
 				<ChevronRight class="size-4 text-zinc-300" />
 			</button>
@@ -201,17 +201,12 @@
 				<input type="hidden" name="id" value={formState.id} />
 				<div class="grid gap-2">
 					<Label class="text-xs font-bold tracking-widest text-zinc-400 uppercase">Nome</Label>
-					<Input
-						name="name"
-						bind:value={formState.name}
-						required
-						class="h-12 rounded-2xl border-none bg-zinc-50"
-					/>
+					<Input name="name" bind:value={formState.name} required class="h-12 rounded-2xl" />
 				</div>
 				<div class="grid gap-2">
 					<Label class="text-xs font-bold tracking-widest text-zinc-400 uppercase">WhatsApp</Label>
 					<Input
-						class="h-12 rounded-2xl border-none bg-zinc-50 font-mono"
+						class="h-12 rounded-2xl "
 						value={formatPhone(formState.phone)}
 						oninput={handlePhoneInput}
 						inputmode="numeric"

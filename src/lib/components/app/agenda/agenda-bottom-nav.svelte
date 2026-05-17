@@ -26,7 +26,7 @@
 			<button
 				onclick={() => navigateTo(item.href)}
 				class={[
-					'flex items-center gap-2.5 rounded-full px-5 py-2.5 transition-all duration-300 active:scale-95',
+					'flex items-center gap-2.5 rounded-full px-5 py-2.5 transition-all transform-gpu duration-300 ease-out active:scale-95',
 					active ? 'bg-[#E2E4F3] text-zinc-900' : 'text-zinc-400 hover:text-zinc-600'
 				]}
 			>

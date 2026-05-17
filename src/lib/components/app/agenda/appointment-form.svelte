@@ -9,14 +9,14 @@
 		Search,
 		X,
 		Check,
-		Plus
+		Plus,
+		UserRoundPlus
 	} from '@lucide/svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
 	import { Label } from '$lib/components/ui/label';
 	import { Input } from '$lib/components/ui/input';
 	import { createFormatters, dateUtils } from '$lib/utils/date';
-	import { page } from '$app/state';
 	import CustomerForm from '../customer-form.svelte';
 	import { ui } from '$lib/state/ui.svelte';
 	import TimeSlotsSuggestions from '$lib/components/app/time-picker.svelte';
@@ -208,6 +208,14 @@
 								</button>
 							{/if}
 
+							<button
+								type="button"
+								onclick={() => (showCustomerModal = true)}
+								class="flex shrink-0 items-center gap-2 rounded-full border border-dashed border-emerald-200 bg-emerald-50 px-3 py-1.5 text-emerald-700 transition-all active:scale-95"
+							>
+								<UserRoundPlus size={12} />
+							</button>
+
 							<!-- 2. Lista vinda do estado local (localCustomers) -->
 							{#each localCustomers
 								.filter((c) => c.id !== formState.customerId)
@@ -226,16 +234,6 @@
 							{/each}
 
 							<!-- 3. Botão de Criar Novo se não encontrar -->
-							{#if customerQuery && !isSearching && !localCustomers.some((c) => c.name.toLowerCase() === customerQuery.toLowerCase())}
-								<button
-									type="button"
-									onclick={() => (showCustomerModal = true)}
-									class="flex shrink-0 items-center gap-2 rounded-full border border-dashed border-emerald-200 bg-emerald-50 px-3 py-1.5 text-emerald-700 transition-all active:scale-95"
-								>
-									<Plus size={12} />
-									<span class="text-xs font-bold whitespace-nowrap">Criar "{customerQuery}"</span>
-								</button>
-							{/if}
 						</div>
 					</div>
 

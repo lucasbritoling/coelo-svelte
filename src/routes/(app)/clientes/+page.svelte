@@ -113,11 +113,12 @@
 		</div>
 
 		<div class="relative">
-			<Search
-				class="absolute top-3 left-3.5 size-4 {isSearching
-					? 'animate-pulse text-blue-500'
-					: 'text-zinc-400'}"
-			/>
+			{#if isSearching}
+				<LoaderCircle class="absolute top-3 left-3.5 size-4 animate-spin text-zinc-500" />
+			{:else}
+				<Search class="absolute top-3 left-3.5 size-4 text-zinc-400" />
+			{/if}
+
 			<Input
 				type="search"
 				placeholder="Buscar por nome ou celular..."
@@ -147,15 +148,34 @@
 				<ChevronRight class="size-4 text-zinc-300" />
 			</button>
 		{:else}
-			<div class="py-20 text-center">
-				<p class="text-sm text-zinc-400 italic">Nenhum cliente encontrado.</p>
+			<div class="py-20 text-center px-4">
+				{#if isSearching}
+					<!-- Enquanto estiver buscando na API, mostramos um feedback neutro ou deixamos em branco -->
+					<p class="text-sm text-zinc-400 italic animate-pulse">Buscando...</p>
+				{:else if searchQuery.trim()}
+					<!-- ESSE SÓ APARECE AO FINAL: Busca concluída e array vazio -->
+					<p class="text-sm text-zinc-400 italic">
+						Nenhum cliente encontrado para <span class="font-semibold text-zinc-600 not-italic"
+							>"{searchQuery}"</span
+						>.
+					</p>
+				{:else}
+					<p class="text-sm text-zinc-400 italic">Nenhum cliente cadastrado.</p>
+				{/if}
 			</div>
 		{/each}
 
-		{#if data.customers.length >= 100}
-			<p class="py-4 text-center text-[10px] font-bold tracking-widest text-zinc-300 uppercase">
-				Limite de busca atingido
-			</p>
+		<!-- Indicadores de paginação/fim de lista (Só aparecem se NÃO estiver buscando) -->
+		{#if !isSearching}
+			{#if searchQuery.trim() !== '' && filteredCustomers.length >= 50}
+				<p class="py-6 text-center text-[10px] font-bold tracking-widest text-zinc-400 uppercase">
+					Mostrando os primeiros 50 resultados
+				</p>
+			{:else if filteredCustomers.length > 0}
+				<p class="py-6 text-center text-[10px] font-bold tracking-widest text-zinc-200 uppercase">
+					Fim da lista
+				</p>
+			{/if}
 		{/if}
 	</div>
 </div>

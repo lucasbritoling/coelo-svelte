@@ -21,25 +21,28 @@
 	let searchQuery = $state(data.q || '');
 	let formState = $state({ id: '', name: '', phone: '' });
 
+	// Novo estado para guardar o resultado do banco via API
+	let apiCustomers = $state<any[]>([]);
+
 	// --- Reatividade ---
 	$effect(() => {
 		if (!open) {
-			// Quando o modal fecha por qualquer motivo (clique fora, esc, sucesso)
-			// limpamos o estado de exclusão para a próxima abertura
 			isConfirmingDelete = false;
-
-			// Opcional: Limpar o formState também garante que um "Novo Cliente"
-			// nunca venha com dados de um anterior se o startCreate falhar
 			if (!ui.isModalOpen) {
 				isConfirmingDelete = false;
 			}
 		}
 	});
 
+	// Reatividade inteligente: se tem busca, usa o resultado da API. Se não, usa o load inicial.
+	let currentCustomers = $derived(searchQuery.trim() !== '' ? apiCustomers : data.customers);
+
+	// Filtro local opcional (apenas para o telefone, já que o nome foi filtrado no banco)
 	let filteredCustomers = $derived(
-		data.customers.filter(
+		currentCustomers.filter(
 			(c) =>
-				c.name.toLowerCase().includes(searchQuery.toLowerCase()) || c.phone.includes(searchQuery)
+				c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+				(c.phone && c.phone.includes(searchQuery))
 		)
 	);
 
@@ -56,16 +59,33 @@
 
 	let searchTimeout: any;
 	function handleSearch(e: Event) {
-		isSearching = true;
 		const value = (e.currentTarget as HTMLInputElement).value;
+
 		clearTimeout(searchTimeout);
-		searchTimeout = setTimeout(() => {
-			const newUrl = new URL(page.url);
-			value ? newUrl.searchParams.set('q', value) : newUrl.searchParams.delete('q');
-			goto(newUrl.search, { keepFocus: true, replaceState: true, noScroll: true }).finally(
-				() => (isSearching = false)
-			);
-		}, 300);
+
+		// Se o usuário limpar o campo, cancela o loading e limpa a lista da API imediatamente
+		if (!value.trim()) {
+			isSearching = false;
+			apiCustomers = [];
+			return;
+		}
+
+		isSearching = true;
+
+		searchTimeout = setTimeout(async () => {
+			try {
+				const response = await fetch(`/api/customers?q=${encodeURIComponent(value)}`);
+				if (response.ok) {
+					apiCustomers = await response.json();
+				} else {
+					console.error('Erro ao buscar clientes na API');
+				}
+			} catch (err) {
+				console.error('Erro de rede ao buscar clientes:', err);
+			} finally {
+				isSearching = false;
+			}
+		}, 300); // Mantém o debounce de 300ms para poupar o banco
 	}
 
 	function handlePhoneInput(e: Event) {

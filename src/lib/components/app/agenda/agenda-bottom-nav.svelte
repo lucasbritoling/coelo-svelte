@@ -33,18 +33,11 @@
 				aria-current={active ? 'page' : undefined}
 			>
 				{#if active}
-					<div
-						class="pill"
-						in:receive={{ key: 'pill' }}
-						out:send={{ key: 'pill' }}
-					></div>
+					<div class="pill" in:receive={{ key: 'pill' }} out:send={{ key: 'pill' }}></div>
 				{/if}
 
 				<span class="icon-wrap" class:active>
-					<item.icon
-						size={19}
-						strokeWidth={active ? 2.5 : 1.8}
-					/>
+					<item.icon size={19} strokeWidth={active ? 2.5 : 1.8} />
 				</span>
 
 				<span class="label" class:active>{item.title}</span>
@@ -138,11 +131,7 @@
 	}
 
 	:global(.dark) .pill {
-		background: linear-gradient(
-			135deg,
-			rgba(63, 63, 70, 0.95) 0%,
-			rgba(52, 52, 60, 0.9) 100%
-		);
+		background: linear-gradient(135deg, rgba(63, 63, 70, 0.95) 0%, rgba(52, 52, 60, 0.9) 100%);
 		border-color: rgba(255, 255, 255, 0.08);
 		box-shadow:
 			0 1px 3px rgba(0, 0, 0, 0.3),

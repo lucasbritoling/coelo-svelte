@@ -111,10 +111,12 @@
 					       {isLoading && !isThisLoading ? 'opacity-40' : ''}"
 				>
 					<!-- Icon -->
-					<span class="flex size-7 shrink-0 items-center justify-center rounded-md
-					             bg-background shadow-sm border border-border/50
-					             {isCurrent ? option.color : 'text-muted-foreground group-hover:' + option.color}
-					             transition-colors duration-150">
+					<span
+						class="flex size-7 shrink-0 items-center justify-center rounded-md
+					             border border-border/50 bg-background shadow-sm
+					             {isCurrent ? option.color : 'group-hover: text-muted-foreground' + option.color}
+					             transition-colors duration-150"
+					>
 						{#if isThisLoading}
 							<LoaderCircle class="size-3.5 animate-spin" />
 						{:else}
@@ -124,7 +126,7 @@
 
 					<!-- Label + description -->
 					<span class="flex flex-col items-start gap-0.5 text-left">
-						<span class="font-medium leading-none {isCurrent ? 'text-foreground' : ''}">
+						<span class="leading-none font-medium {isCurrent ? 'text-foreground' : ''}">
 							{option.label}
 						</span>
 						<span class="text-[11px] leading-none text-muted-foreground/70">
@@ -134,7 +136,9 @@
 
 					<!-- Current badge -->
 					{#if isCurrent}
-						<span class="ml-auto flex items-center gap-1 rounded-full bg-foreground/8 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-foreground/50 uppercase">
+						<span
+							class="ml-auto flex items-center gap-1 rounded-full bg-foreground/8 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-foreground/50 uppercase"
+						>
 							<Check class="size-2.5" />
 							atual
 						</span>
@@ -144,7 +148,7 @@
 		{/each}
 
 		<!-- Separator -->
-		<div class="my-1.5 mx-2 h-px bg-border/50"></div>
+		<div class="mx-2 my-1.5 h-px bg-border/50"></div>
 
 		<!-- Delete -->
 		<DropdownMenu.Item
@@ -154,13 +158,15 @@
 			       dark:text-rose-400/70 dark:hover:text-rose-400"
 			onSelect={() => (showConfirmDialog = true)}
 		>
-			<span class="flex size-7 shrink-0 items-center justify-center rounded-md
-			             bg-background shadow-sm border border-border/50
-			             text-rose-400 transition-colors duration-150">
+			<span
+				class="flex size-7 shrink-0 items-center justify-center rounded-md
+			             border border-border/50 bg-background text-rose-400
+			             shadow-sm transition-colors duration-150"
+			>
 				<Trash2 class="size-3.5" />
 			</span>
 			<span class="flex flex-col items-start gap-0.5">
-				<span class="font-medium leading-none">Excluir agendamento</span>
+				<span class="leading-none font-medium">Excluir agendamento</span>
 				<span class="text-[11px] leading-none text-rose-400/60">Ação permanente</span>
 			</span>
 		</DropdownMenu.Item>
@@ -174,15 +180,16 @@
 	>
 		<!-- Icon header -->
 		<div class="flex flex-col items-center gap-3 bg-rose-500/5 px-6 pt-8 pb-6 text-center">
-			<div class="flex size-12 items-center justify-center rounded-full bg-rose-500/10 ring-4 ring-rose-500/10">
+			<div
+				class="flex size-12 items-center justify-center rounded-full bg-rose-500/10 ring-4 ring-rose-500/10"
+			>
 				<Trash2 class="size-5 text-rose-500" />
 			</div>
 			<div class="space-y-1">
-				<AlertDialog.Title class="text-base font-semibold">
-					Excluir agendamento?
-				</AlertDialog.Title>
+				<AlertDialog.Title class="text-base font-semibold">Excluir agendamento?</AlertDialog.Title>
 				<AlertDialog.Description class="text-[13px] text-muted-foreground">
-					Esta ação não pode ser desfeita. O horário ficará disponível para outros clientes imediatamente.
+					Esta ação não pode ser desfeita. O horário ficará disponível para outros clientes
+					imediatamente.
 				</AlertDialog.Description>
 			</div>
 		</div>

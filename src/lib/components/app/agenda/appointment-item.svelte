@@ -90,8 +90,6 @@
 		</div>
 
 		<div class="right-col">
-			
-
 			{#if currentStatus}
 				<!-- Otimizado: Estilização injetada via atributo data-status controlado pelo CSS scoped -->
 				<Badge
@@ -229,7 +227,6 @@
 		color: #f4f4f5;
 		letter-spacing: 0.05em;
 	}
-
 
 	.right-col {
 		display: flex;

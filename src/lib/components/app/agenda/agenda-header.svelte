@@ -81,12 +81,7 @@
 		</Dialog.Root>
 
 		<div class="flex items-center gap-1">
-			<button
-				onclick={onOpenAppointment}
-				class="p-2 text-foreground transition-transform active:scale-90"
-			>
-				<Plus size={28} strokeWidth={2.1} />
-			</button>
+
 
 			<a href="/mais" class="relative mb-1 ml-1 size-9.5 transition-transform active:scale-90">
 				<div

@@ -15,31 +15,60 @@
 	let { appointmentId, appointmentStatus }: { appointmentId: string; appointmentStatus: string } =
 		$props();
 
+	let isDropdownOpen = $state(false);
 	let isDeleting = $state(false);
 	let isLoading = $state(false);
 	let loadingStatus = $state<string | null>(null);
 	let showConfirmDialog = $state(false);
 
+	// Referência para o formulário fantasma e os inputs
+	let statusForm: HTMLFormElement;
+	let statusInput: HTMLInputElement;
+
 	const statusOptions = [
-		{
-			value: 'pending',
-			label: 'Pendente',
-			icon: CircleQuestionMark
-		},
-		{
-			value: 'confirmed',
-			label: 'Confirmado',
-			icon: CircleCheckBig
-		},
-		{
-			value: 'cancelled',
-			label: 'Cancelado',
-			icon: CircleSlash
-		}
+		{ value: 'pending', label: 'Pendente', icon: CircleQuestionMark },
+		{ value: 'confirmed', label: 'Confirmado', icon: CircleCheckBig },
+		{ value: 'cancelled', label: 'Cancelado', icon: CircleSlash }
 	] as const;
+
+	// Função cirúrgica que executa tudo sem travar a requisição
+	function handleStatusChange(targetStatus: string) {
+		loadingStatus = targetStatus;
+		isLoading = true;
+
+		// 1. Fecha a interface visual imediatamente (Instantâneo)
+		isDropdownOpen = false;
+
+		// 2. Altera o valor no formulário fantasma fora do dropdown
+		statusInput.value = targetStatus;
+
+		// 3. Dispara o envio nativo que o use:enhance intercepta com segurança
+		statusForm.requestSubmit();
+	}
 </script>
 
-<DropdownMenu.Root>
+<!-- FORMULÁRIO FANTASMA (Fora do Dropdown, imune a desmontagens de DOM) -->
+<form
+	bind:this={statusForm}
+	method="POST"
+	action="?/setStatus"
+	class="hidden"
+	use:enhance={() => {
+		return async ({ result, update }) => {
+			isLoading = false;
+			loadingStatus = null;
+
+			if (result.type === 'success') {
+				await update();
+			}
+		};
+	}}
+>
+	<input type="hidden" name="id" value={appointmentId} />
+	<input type="hidden" name="status" bind:this={statusInput} value="" />
+</form>
+
+<DropdownMenu.Root bind:open={isDropdownOpen}>
 	<DropdownMenu.Trigger>
 		{#snippet child({ props })}
 			<Button {...props} variant="ghost" size="icon" class="h-8 w-8">
@@ -53,51 +82,35 @@
 			{@const isCurrent = appointmentStatus === option.value}
 			{@const isThisLoading = loadingStatus === option.value}
 
-			<form
-				method="POST"
-				action="?/setStatus"
-				use:enhance={() => {
-					isLoading = true;
-					loadingStatus = option.value;
-
-					return async ({ result, update }) => {
-						isLoading = false;
-						loadingStatus = null;
-
-						if (result.type === 'success') {
-							await update();
-						}
-					};
-				}}
+			<!-- Botão limpo, sem formulários em volta para serem destruídos pelo Bits UI -->
+			<button
+				type="button"
+				disabled={isLoading || isCurrent}
+				onclick={() => handleStatusChange(option.value)}
+				class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted disabled:opacity-50"
 			>
-				<input type="hidden" name="id" value={appointmentId} />
-				<input type="hidden" name="status" value={option.value} />
+				{#if isThisLoading}
+					<LoaderCircle class="h-4 w-4 animate-spin" />
+				{:else}
+					<option.icon class="h-4 w-4" />
+				{/if}
 
-				<button
-					type="submit"
-					disabled={isLoading || isCurrent}
-					class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted disabled:opacity-50"
-				>
-					{#if isThisLoading}
-						<LoaderCircle class="h-4 w-4 animate-spin" />
-					{:else}
-						<option.icon class="h-4 w-4" />
-					{/if}
+				<span class="flex-1 text-left">{option.label}</span>
 
-					<span class="flex-1 text-left">{option.label}</span>
-
-					{#if isCurrent}
-						<span class="text-xs text-muted-foreground">Atual</span>
-					{/if}
-				</button>
-			</form>
+				{#if isCurrent}
+					<span class="text-xs text-muted-foreground">Atual</span>
+				{/if}
+			</button>
 		{/each}
 
 		<DropdownMenu.Separator />
 
 		<DropdownMenu.Item
 			class="text-destructive focus:text-destructive"
-			onSelect={() => (showConfirmDialog = true)}
+			onSelect={() => {
+				showConfirmDialog = true;
+				isDropdownOpen = false;
+			}}
 		>
 			<Trash2 class="mr-2 h-4 w-4" />
 			Excluir
@@ -105,6 +118,7 @@
 	</DropdownMenu.Content>
 </DropdownMenu.Root>
 
+<!-- O restante do código do AlertDialog permanece intocado -->
 <AlertDialog.Root bind:open={showConfirmDialog}>
 	<AlertDialog.Content class="max-w-sm text-center">
 		<AlertDialog.Header class="items-center text-center">

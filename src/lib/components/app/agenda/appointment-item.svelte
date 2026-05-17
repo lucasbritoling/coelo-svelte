@@ -120,12 +120,7 @@
 
 		<div class="divider-line"></div>
 
-		<div class="main-col">
-			<p class="customer-name" class:cancelled={appt.status === 'cancelled'}>
-				{appt.customer_name}
-			</p>
-		</div>
-
+		<!-- O nome foi removido daqui para empurrar o status para a esquerda de forma limpa -->
 		<div class="right-col">
 			{#if soon && appt.status !== 'cancelled' && !isPast}
 				<span class="soon-chip">{soon.includes('em') ? soon : `em ${soon}`}</span>
@@ -150,6 +145,11 @@
 
 	<div class="actions-drawer">
 		<div class="drawer-content">
+			<!-- Nome do cliente posicionado no topo do conteúdo do Drawer -->
+			<p class="customer-name" class:cancelled={appt.status === 'cancelled'}>
+				{appt.customer_name}
+			</p>
+
 			<div class="drawer-actions">
 				{#if appt.customer_phone && appt.status !== 'cancelled'}
 					<Button
@@ -208,7 +208,7 @@
 		flex-shrink: 0;
 	}
 
-	/* Coluna do Tempo - CORRIGIDO: Centralizado verticalmente */
+	/* Coluna do Tempo - Centralizado verticalmente */
 	.time-col {
 		display: flex;
 		flex-direction: column;
@@ -239,16 +239,7 @@
 		flex-shrink: 0;
 	}
 
-	/* Coluna Principal (Nome) - CORRIGIDO: Centralizado verticalmente */
-	.main-col {
-		flex: 1;
-		min-width: 0;
-		padding: 0 12px;
-		display: flex;
-		flex-direction: column;
-		justify-content: center; /* Garante centralização vertical */
-	}
-
+	/* Nome do Cliente - Agora estilizado para o topo do drawer */
 	.customer-name {
 		font-size: 14px;
 		font-weight: 500;
@@ -258,16 +249,19 @@
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
+		margin-bottom: 4px; /* Pequeno espaçamento antes dos botões de ação */
 	}
 	.customer-name.cancelled {
 		text-decoration: line-through;
 		color: #52525b;
 	}
 
-	/* Coluna da Direita (Status e Chevron) - CORRIGIDO: Centralizado verticalmente */
+	/* Ajustado para flex-1 para ocupar o espaço restante após a remoção da main-col */
 	.right-col {
 		display: flex;
 		align-items: center;
+		justify-content: flex-end;
+		flex: 1;
 		gap: 8px;
 		padding: 0 12px;
 		flex-shrink: 0;

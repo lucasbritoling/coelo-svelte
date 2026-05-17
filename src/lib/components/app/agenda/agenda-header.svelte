@@ -81,8 +81,6 @@
 		</Dialog.Root>
 
 		<div class="flex items-center gap-1">
-
-
 			<a href="/mais" class="relative mb-1 ml-1 size-9.5 transition-transform active:scale-90">
 				<div
 					class="flex size-full items-center justify-center overflow-hidden rounded-full border border-zinc-200 bg-zinc-100 shadow-sm"

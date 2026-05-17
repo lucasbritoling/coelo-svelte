@@ -40,8 +40,26 @@ export const dateUtils = {
 	},
 
 	getHeaderLabel: (isoDate: string, tz: string = DEFAULT_TZ) => {
-		if (isoDate === dateUtils.today(tz)) return 'Hoje';
-		return createFormatters(tz).header.format(dateUtils.parseISO(isoDate));
+		const todayStr = dateUtils.today(tz);
+		if (isoDate === todayStr) return 'Hoje';
+
+		const formatters = createFormatters(tz);
+
+		// 1. Convertemos o "Hoje" do fuso para um objeto Date (travado às 12h)
+		const todayDate = dateUtils.parseISO(todayStr);
+
+		// 2. Calculamos Ontem (-24h) e pegamos a string ISO limpa correspondente
+		const yesterdayDate = new Date(todayDate.getTime() - 24 * 60 * 60 * 1000);
+		const yesterdayStr = formatters.iso.format(yesterdayDate);
+		if (isoDate === yesterdayStr) return 'Ontem';
+
+		// 3. Calculamos Amanhã (+24h) e pegamos a string ISO limpa correspondente
+		const tomorrowDate = new Date(todayDate.getTime() + 24 * 60 * 60 * 1000);
+		const tomorrowStr = formatters.iso.format(tomorrowDate);
+		if (isoDate === tomorrowStr) return 'Amanhã';
+
+		// Fallback para os demais dias (ex: "qui., 23 de mai.")
+		return formatters.header.format(dateUtils.parseISO(isoDate));
 	},
 
 	parseAbsoluteToMs: (dateInput: string | Date | number) => {

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Appointment } from '$lib/types/appointment';
-	import { MessageCircle, CheckCircle2, XCircle, Clock } from '@lucide/svelte';
+	import { MessageCircle, CheckCircle2, XCircle, Clock, ChevronDown } from '@lucide/svelte';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
 	import AppointmentItemAction from '$lib/components/app/agenda/appointment-item-action.svelte';
@@ -24,7 +24,9 @@
 		timezone
 	}: Props = $props();
 
-	// Cores fiéis ao tema escuro (Dark Mode) do print enviado
+	// Controle de expansão nativo do Svelte 5
+	let isExpanded = $state(false);
+
 	const STATUS: Record<string, { label: string; variant: any; class: string; icon?: any }> = {
 		pending: {
 			label: 'Pendente',
@@ -88,6 +90,15 @@
 		const endMs = dateUtils.parseTimeToMs(appt.end_at, selectedDate, timezone);
 		return currentTime > endMs;
 	});
+
+	function handleToggle(e: MouseEvent) {
+		const target = e.target as HTMLElement;
+		// Impede de fechar/abrir a alça se clicar diretamente nos botões internos da gaveta
+		if (target.closest('.drawer-actions') || target.closest('a') || target.closest('button')) {
+			return;
+		}
+		isExpanded = !isExpanded;
+	}
 </script>
 
 {#snippet timeBlock(start: string, end: string)}
@@ -97,155 +108,177 @@
 	</div>
 {/snippet}
 
-<div class="appt-card" class:is-past={isPast}>
-	{#if showServiceColor}
-		<div class="service-bar {categoryStyle.class}" style={categoryStyle.style}></div>
-	{/if}
-
-	{@render timeBlock(appt.start_at, appt.end_at)}
-
-	<div class="divider-line"></div>
-
-	<div class="main-col">
-		<p class="customer-name" class:cancelled={appt.status === 'cancelled'}>
-			{appt.customer_name}
-		</p>
-	</div>
-
-	<div class="right-col">
-		{#if soon && appt.status !== 'cancelled' && !isPast}
-			<span class="soon-chip">{soon.includes('em') ? soon : `em ${soon}`}</span>
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="appt-wrapper" class:is-past={isPast} class:expanded={isExpanded} onclick={handleToggle}>
+	<div class="appt-card">
+		{#if showServiceColor}
+			<div class="service-bar {categoryStyle.class}" style={categoryStyle.style}></div>
 		{/if}
 
-		{#if currentStatus}
-			<Badge variant={currentStatus.variant} class={currentStatus.class}>
-				{#if currentStatus.icon}
-					<span class="icon-wrapper">
-						<currentStatus.icon size={13} strokeWidth={2.5} />
-					</span>
-				{/if}
-				<span class="text-[12px] font-normal">{currentStatus.label}</span>
-			</Badge>
-		{/if}
+		{@render timeBlock(appt.start_at, appt.end_at)}
 
-		<div class="actions">
-			{#if appt.customer_phone && appt.status !== 'cancelled'}
-				<Button
-					href="https://wa.me/{appt.customer_phone.replace(/\D/g, '')}"
-					target="_blank"
-					variant="outline"
-					size="icon"
-					class="whatsapp-btn h-8 w-8 border-[#2d2d2d] bg-transparent text-zinc-400 hover:border-[#22c55e]/20 hover:bg-[#22c55e]/10 hover:text-[#22c55e]"
-					title="WhatsApp"
-				>
-					<MessageCircle size={15} />
-				</Button>
+		<div class="divider-line"></div>
+
+		<div class="main-col">
+			<p class="customer-name" class:cancelled={appt.status === 'cancelled'}>
+				{appt.customer_name}
+			</p>
+		</div>
+
+		<div class="right-col">
+			{#if soon && appt.status !== 'cancelled' && !isPast}
+				<span class="soon-chip">{soon.includes('em') ? soon : `em ${soon}`}</span>
 			{/if}
 
-			<AppointmentItemAction appointmentId={appt.id} appointmentStatus={appt.status} />
+			{#if currentStatus}
+				<Badge variant={currentStatus.variant} class={currentStatus.class}>
+					{#if currentStatus.icon}
+						<span class="icon-wrapper">
+							<currentStatus.icon size={13} strokeWidth={2.5} />
+						</span>
+					{/if}
+					<span class="text-[12px] font-normal">{currentStatus.label}</span>
+				</Badge>
+			{/if}
+
+			<div class="chevron-indicator">
+				<ChevronDown size={16} class="chevron-icon" />
+			</div>
+		</div>
+	</div>
+
+	<div class="actions-drawer">
+		<div class="drawer-content">
+			<div class="drawer-actions">
+				{#if appt.customer_phone && appt.status !== 'cancelled'}
+					<Button
+						href="https://wa.me/{appt.customer_phone.replace(/\D/g, '')}"
+						target="_blank"
+						variant="outline"
+						size="sm"
+						class="whatsapp-btn gap-2 border-[#2d2d2d] bg-transparent text-zinc-400 hover:border-[#22c55e]/20 hover:bg-[#22c55e]/10 hover:text-[#22c55e]"
+						title="WhatsApp"
+					>
+						<MessageCircle size={15} />
+						<span>Enviar Mensagem</span>
+					</Button>
+				{/if}
+
+				<AppointmentItemAction appointmentId={appt.id} appointmentStatus={appt.status} />
+			</div>
 		</div>
 	</div>
 </div>
 
 <style>
+	/* Wrapper principal que agrupa o card e a gaveta oculta */
+	.appt-wrapper {
+		background: #121214; /* Tema super escuro fiel ao print */
+		border: 1px solid #2d2d2d;
+		border-radius: 12px;
+		overflow: hidden;
+		transition:
+			border-color 0.15s,
+			background-color 0.15s;
+		user-select: none;
+		margin-bottom: 8px;
+	}
+	.appt-wrapper:hover {
+		border-color: #3e3e3e;
+	}
+
+	/* Card superior - CORRIGIDO: Força alinhamento vertical central de todos os filhos */
 	.appt-card {
 		display: flex;
 		align-items: center;
-		background: #1e1e1e; /* Fundo escuro idêntico ao do print */
-		border: 1px solid #2d2d2d; /* Bordas suaves e escuras */
-		border-radius: 12px;
-		overflow: hidden;
-		min-height: 44px;
-		max-height: 50px;
-		transition:
-			background 0.15s,
-			border-color 0.15s;
-	}
-	.appt-card:hover {
-		border-color: #3e3e3e;
-		background: #232323;
+		min-height: 56px; /* Garante uma altura mínima consistente para o card */
+		padding: 8px 0; /* Padding simétrico em cima e embaixo */
 	}
 
-	/* Opacidade reduzida para itens no passado ou cancelados */
-	.appt-card.is-past {
-		opacity: 0.35;
+	.appt-wrapper.is-past {
+		opacity: 1;
 	}
 
-	/* Barra de cor lateral flutuante e arredondada */
 	.service-bar {
 		width: 4px;
 		align-self: stretch;
-		margin: 6px 0 6px 6px;
+		margin: 2px 0 2px 6px;
 		border-radius: 4px;
 		flex-shrink: 0;
 	}
 
-	/* Coluna de Horários */
+	/* Coluna do Tempo - CORRIGIDO: Centralizado verticalmente */
 	.time-col {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		justify-content: center;
+		justify-content: center; /* Centraliza conteúdo internamente */
 		gap: 2px;
-		padding: 0 16px;
-		min-width: 80px;
+		padding: 0 12px;
+		min-width: 76px;
 		flex-shrink: 0;
 	}
 	.time-start {
 		font-size: 14px;
 		font-weight: 600;
-		color: #e4e4e7; /* Texto claro */
+		color: #e4e4e7;
 		letter-spacing: -0.01em;
+		line-height: 1.2;
 	}
 	.time-end {
 		font-size: 11px;
-		color: #71717a; /* Texto secundário discreto */
+		color: #71717a;
+		line-height: 1.2;
 	}
 
-	/* Linha divisória interna */
 	.divider-line {
 		width: 1px;
 		align-self: stretch;
 		background: #2d2d2d;
 		flex-shrink: 0;
-		margin: 14px 0;
 	}
 
-	/* Nome do cliente */
+	/* Coluna Principal (Nome) - CORRIGIDO: Centralizado verticalmente */
 	.main-col {
 		flex: 1;
 		min-width: 0;
-		padding: 0 16px;
+		padding: 0 12px;
+		display: flex;
+		flex-direction: column;
+		justify-content: center; /* Garante centralização vertical */
 	}
-	/* Nome do cliente modificado para permitir quebra de linha */
+
 	.customer-name {
 		font-size: 14px;
 		font-weight: 500;
 		color: #e4e4e7;
-		/* Propriedades antigas de truncate removidas */
-		word-break: break-word; /* Garante que strings gigantes sem espaço não quebrem o layout */
+		line-height: 1.3;
+		text-transform: capitalize;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
 	}
 	.customer-name.cancelled {
 		text-decoration: line-through;
 		color: #52525b;
 	}
 
-	/* Container do lado direito */
+	/* Coluna da Direita (Status e Chevron) - CORRIGIDO: Centralizado verticalmente */
 	.right-col {
 		display: flex;
 		align-items: center;
-		gap: 10px;
-		padding: 0 14px;
+		gap: 8px;
+		padding: 0 12px;
 		flex-shrink: 0;
 	}
 
-	/* Chip do "em 5 min" no tom âmbar/ouro para fundo escuro */
 	.soon-chip {
 		font-size: 11px;
 		font-weight: 600;
 		padding: 3px 8px;
 		border-radius: 999px;
-		background: #854d0e2b; /* Fundo dourado translúcido */
+		background: #854d0e2b;
 		color: #f59e0b;
 		border: 1px solid #b4530933;
 	}
@@ -256,14 +289,63 @@
 		justify-content: center;
 	}
 
-	.actions {
+	/* Seta do Chevron e sua animação de rotação */
+	.chevron-indicator {
 		display: flex;
 		align-items: center;
-		gap: 6px;
+		color: #71717a;
+		padding-left: 4px;
+	}
+	:global(.chevron-icon) {
+		transition: transform 0.2s ease;
+	}
+	.appt-wrapper.expanded :global(.chevron-icon) {
+		transform: rotate(180deg);
+		color: #e4e4e7;
 	}
 
-	/* Força os botões de ação a manterem o visual arredondado do print */
+	/* GAVETA RETRÁTIL DINÂMICA (Transição CSS Limpa) */
+	.actions-drawer {
+		display: grid;
+		grid-template-rows: 0fr;
+		transition:
+			grid-template-rows 0.2s ease-out,
+			background-color 0.2s;
+		background: transparent;
+	}
+	.appt-wrapper.expanded .actions-drawer {
+		grid-template-rows: 1fr;
+		background: #161619; /* Leve distinção de fundo quando aberto */
+		border-top: 1px solid #2d2d2d;
+	}
+	.drawer-content {
+		overflow: hidden;
+		padding: 0 16px;
+		transition: padding 0.2s ease-out;
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+	}
+	.appt-wrapper.expanded .drawer-content {
+		padding: 12px 16px; /* Só aplica padding vertical quando expandido */
+	}
+
+	.drawer-title {
+		font-size: 11px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: #52525b;
+	}
+
+	.drawer-actions {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	}
+
 	:global(.whatsapp-btn) {
 		border-radius: 8px !important;
+		height: 36px !important;
 	}
 </style>

@@ -277,7 +277,7 @@
 					{@const isNow = ticker >= startMs && ticker <= endMs}
 					{@const isToday = data.selectedDate === dateUtils.today(data.timezone)}
 
-					<div class="transition-opacity duration-300" class:opacity-40={item.isPast}>
+					<div>
 						<AppointmentItem
 							appt={item.data}
 							{showServiceColor}

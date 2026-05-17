@@ -70,7 +70,6 @@
 {#snippet timeBlock(start: string, end: string)}
 	<div class="time-col">
 		<span class="time-start">{start}</span>
-		<span class="time-end">{end}</span>
 	</div>
 {/snippet}
 
@@ -91,9 +90,7 @@
 		</div>
 
 		<div class="right-col">
-			{#if soon && appt.status !== 'cancelled' && !isPast}
-				<span class="soon-chip">{soon.includes('em') ? soon : `em ${soon}`}</span>
-			{/if}
+			
 
 			{#if currentStatus}
 				<!-- Otimizado: Estilização injetada via atributo data-status controlado pelo CSS scoped -->
@@ -343,10 +340,6 @@
 		font-weight: 500;
 		color: #e4e4e7;
 		text-transform: capitalize;
-	}
-	.drawer-customer-name.cancelled {
-		text-decoration: line-through;
-		color: #52525b;
 	}
 
 	.drawer-actions {

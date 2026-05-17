@@ -56,7 +56,16 @@
 		}
 	});
 
-	// 2. Lógica de "Auto-preenchimento" ao abrir o modal
+	// Limpa o formulário sempre que o modal for fechado
+	$effect(() => {
+		if (!open) {
+			$form.name = '';
+			$form.phone = '';
+			$form.id = undefined; // ou '' se preferir
+		}
+	});
+
+	// Auto-preenchimento ao abrir o modal
 	$effect(() => {
 		if (open && initialName && !$form.name && !$form.id) {
 			$form.name = initialName;

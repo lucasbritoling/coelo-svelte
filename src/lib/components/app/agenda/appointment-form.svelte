@@ -269,24 +269,27 @@
 							<Briefcase size={14} />
 							<Label class="text-[10px] font-bold tracking-widest uppercase">Serviço</Label>
 						</div>
-						<div class="grid grid-cols-1 gap-2">
+
+						<div
+							class="grid gap-2
+			{data.services.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}"
+						>
 							{#each data.services as service}
 								<button
 									type="button"
 									onclick={() => (formState.serviceId = service.id)}
-									class="flex items-center justify-between rounded-2xl border px-4 py-3 transition-all
-									{formState.serviceId === service.id
+									class="flex min-w-0 items-center gap-2 rounded-2xl border px-3 py-3 transition-all
+					{formState.serviceId === service.id
 										? 'border-zinc-900 bg-zinc-900 text-white shadow-md'
 										: 'border-zinc-100 bg-white text-zinc-600 hover:border-zinc-200'}"
+									title={service.name}
 								>
-									<div class="flex items-center gap-3">
-										<div
-											class="size-2 rounded-full"
-											style="background: {service.color || '#e4e4e7'}"
-										></div>
-										<span class="text-sm font-bold">{service.name}</span>
-									</div>
-									<span class="text-xs opacity-60">{service.duration} min</span>
+									<div
+										class="size-2 shrink-0 rounded-full"
+										style="background: {service.color || '#e4e4e7'}"
+									></div>
+
+									<span class="w-full truncate text-left text-xs font-bold">{service.name}</span>
 								</button>
 							{/each}
 						</div>

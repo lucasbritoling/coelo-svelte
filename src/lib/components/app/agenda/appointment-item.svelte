@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Appointment } from '$lib/types/appointment';
-	import { MessageCircle, Settings2, User, ChevronDown } from '@lucide/svelte';
+	import { MessageCircle, Settings2, User, ChevronDown, Sparkles } from '@lucide/svelte';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
 	import AppointmentItemAction from '$lib/components/app/agenda/appointment-item-action.svelte';
@@ -87,9 +87,6 @@
 			</div>
 			<div class="customer-block">
 				<span class="customer-name" class:cancelled={isCancelled}>{appt.customer_name}</span>
-				{#if appt.service_name}
-					<span class="service-label">{appt.service_name}</span>
-				{/if}
 			</div>
 		</div>
 
@@ -122,6 +119,14 @@
 							<span class="drawer-phone">{appt.customer_phone}</span>
 						{/if}
 					</div>
+
+					<!-- Oculta o badge via classe "hidden" se showServiceColor for false (apenas 1 serviço ativo) -->
+					{#if appt.service_name}
+						<div class="drawer-service-badge" class:hidden={!showServiceColor}>
+							<Sparkles size={11} class="text-zinc-400" />
+							<span>{appt.service_name}</span>
+						</div>
+					{/if}
 				</div>
 				<div class="drawer-actions">
 					<Button
@@ -277,14 +282,6 @@
 	.customer-name.cancelled {
 		text-decoration: line-through;
 		color: #a1a1aa;
-	}
-
-	.service-label {
-		font-size: 11px;
-		color: #71717a;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
 	}
 
 	/* ── Right col ── */
@@ -487,6 +484,24 @@
 		font-size: 11px;
 		color: #71717a;
 		font-variant-numeric: tabular-nums;
+	}
+
+	.drawer-service-badge {
+		margin-left: auto;
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		padding: 4px 10px;
+		border-radius: 8px;
+		background: #f4f4f5;
+		border: 1px solid #e4e4e7;
+		font-size: 11px;
+		font-weight: 500;
+		color: #3f3f46;
+	}
+
+	.drawer-service-badge.hidden {
+		display: none;
 	}
 
 	/* ── Drawer actions ── */

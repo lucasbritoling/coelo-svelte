@@ -18,5 +18,6 @@ export const serviceSchema = z.object({
 
 	min_notice_hours: z.number().min(0).default(2),
 	buffer_after_min: z.number().min(0).default(0),
-	is_active: z.boolean().default(true)
+	is_active: z.boolean().default(true),
+	color: z.enum(['zinc', 'blue', 'indigo', 'violet', 'rose', 'amber', 'emerald']).default('blue')
 });

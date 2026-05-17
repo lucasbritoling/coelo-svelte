@@ -127,19 +127,17 @@
 			</div>
 
 			<div class="drawer-actions">
-				{#if appt.customer_phone && appt.status !== 'cancelled'}
-					<Button
-						href="https://wa.me/{appt.customer_phone.replace(/\D/g, '')}"
-						target="_blank"
-						variant="outline"
-						size="sm"
-						class="whatsapp-btn"
-						title="WhatsApp"
-					>
-						<MessageCircle size={15} />
-						<span>Enviar Mensagem</span>
-					</Button>
-				{/if}
+				<Button
+					href="https://wa.me/{appt.customer_phone.replace(/\D/g, '')}"
+					target="_blank"
+					variant="outline"
+					size="sm"
+					class="whatsapp-btn"
+					title="WhatsApp"
+				>
+					<MessageCircle size={15} />
+					<span>Enviar Mensagem</span>
+				</Button>
 
 				<AppointmentItemAction appointmentId={appt.id} appointmentStatus={appt.status} />
 			</div>

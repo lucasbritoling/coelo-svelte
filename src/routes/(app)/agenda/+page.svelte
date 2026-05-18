@@ -314,7 +314,7 @@
 				{/if}
 			{/each}
 		</div>
-		{#if isFreeDay}
+		{#if agendaItems.length === 0}
 			<div
 				class="flex h-[50vh] flex-col items-center justify-center gap-2.5 text-zinc-400"
 				transition:scale={{ duration: 150 }}
@@ -324,7 +324,9 @@
 				>
 					<Coffee size={20} strokeWidth={2} />
 				</div>
-				<p class="text-xs font-bold tracking-wider text-zinc-500 uppercase">Dia livre</p>
+				<p class="text-xs font-bold tracking-wider text-zinc-500 uppercase">
+					{isPastDate ? 'Nada neste dia' : 'Dia livre'}
+				</p>
 			</div>
 		{/if}
 

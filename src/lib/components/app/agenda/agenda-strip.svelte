@@ -30,15 +30,23 @@
 	});
 </script>
 
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-	class="no-scrollbar flex gap-3 overflow-x-auto px-5 pt-2 pb-0"
+	class="no-scrollbar flex gap-3 overflow-x-auto scroll-smooth px-5 pt-2 pb-0"
 	ontouchstart={(e) => e.stopPropagation()}
 	ontouchend={(e) => e.stopPropagation()}
+	onwheel={(e) => {
+		// Se o usuário estiver rolando verticalmente, transforma em rolagem horizontal
+		if (e.deltaY !== 0) {
+			e.preventDefault();
+			e.currentTarget.scrollLeft += e.deltaY;
+		}
+	}}
 >
 	{#each strip as day}
 		<button
 			onclick={() => onSelect(day.str)}
-			class="flex aspect-square h-17 w-16.5 shrink-0 flex-col items-center justify-center rounded-2xl border transition-all active:scale-95
+			class="flex aspect-square h-17 w-16.5 shrink-0 cursor-pointer flex-col items-center justify-center rounded-2xl border transition-all active:scale-95
             {day.str === selectedDate
 				? 'border-foreground opacity-100'
 				: 'border-foreground/10 opacity-60'}"
@@ -58,7 +66,7 @@
 		</button>
 	{/each}
 	<button
-		class="flex aspect-square h-17 w-16.5 shrink-0 flex-col items-center justify-center rounded-full border border-foreground/10 bg-muted opacity-80 transition-all active:scale-95"
+		class="flex aspect-square h-17 w-16.5 shrink-0 cursor-pointer flex-col items-center justify-center rounded-full border border-foreground/10 bg-muted opacity-80 transition-all active:scale-95"
 		onclick={() => (ui.isDatePickerOpen = true)}
 	>
 		<span

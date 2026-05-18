@@ -55,14 +55,14 @@
 	<div class="relative flex items-center justify-between px-5 pt-6 pb-0">
 		<button
 			onclick={onOpenSearch}
-			class="-ml-2 p-2 text-zinc-900 transition-transform active:scale-90"
+			class="-ml-2 cursor-pointer p-2 text-zinc-900 transition-transform active:scale-90"
 		>
 			<Search size={22} strokeWidth={2.5} />
 		</button>
 
 		<Dialog.Root bind:open={ui.isDatePickerOpen}>
 			<Dialog.Trigger
-				class="group absolute left-1/2 flex -translate-x-1/2 items-center gap-1.5 outline-none"
+				class="group absolute left-1/2 flex -translate-x-1/2 cursor-pointer items-center gap-1.5 outline-none"
 				onclick={() => {
 					// Sincroniza a data atual no estado global antes de abrir
 					ui.selectedDate = selectedDate;

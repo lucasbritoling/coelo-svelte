@@ -75,33 +75,23 @@
 
 		<div class="time-col">
 			<span class="time-start">{appt.start_at}</span>
-			<span class="time-end">{appt.end_at}</span>
 		</div>
 
 		<div class="sep"></div>
 
 		<div class="main-col">
-			<div class="avatar-circle" class:cancelled={isCancelled}>
-				<span>{initials}</span>
-			</div>
 			<div class="customer-block">
 				<span class="customer-name" class:cancelled={isCancelled}>{appt.customer_name}</span>
 			</div>
 		</div>
 
 		<div class="right-col">
-			{#if soon}
-				<span class="soon-chip">{soon}</span>
-			{/if}
-			{#if currentStatus}
+			{#if currentStatus === 'pending'}
 				<span class="status-badge" data-status={currentStatus.type}>
 					<span class="badge-dot"></span>
 					<span class="badge-text">{currentStatus.label}</span>
 				</span>
 			{/if}
-			<div class="chevron-btn">
-				<ChevronDown size={14} strokeWidth={2.5} class="chevron-icon" />
-			</div>
 		</div>
 	</div>
 

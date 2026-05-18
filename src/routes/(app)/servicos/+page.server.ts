@@ -111,7 +111,8 @@ export const actions: Actions = {
 			// Tratamento de Foreign Key (ex: serviço já possui agendamentos marcados)
 			if (err.code === '23503') {
 				return fail(400, {
-					message: 'Este serviço possui agendamentos vinculados e não pode ser excluído.'
+					message:
+						'Este serviço possui agendamentos vinculados e não pode ser excluído. Que tal ocultar?'
 				});
 			}
 			return fail(500, { message: 'Erro interno ao excluir serviço' });

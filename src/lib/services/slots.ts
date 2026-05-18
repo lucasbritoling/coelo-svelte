@@ -51,7 +51,7 @@ export function generateSmartSlots(
 
 	// 3. Loop de Geração
 
-	for (let current = startMin; current + duration <= endMin; current += interval) {
+	for (let current = startMin; current + duration <= endMin; current += duration) {
 		const currentEnd = current + duration;
 		const slotLabel = fromMin(current);
 
@@ -62,9 +62,7 @@ export function generateSmartSlots(
 			return current < b.e && currentEnd > b.s;
 		});
 
-		if (collision) {
-			// Log opcional para slots descartados (comentado para não poluir muito)
-		} else {
+		if (!collision) {
 			slots.push(slotLabel);
 		}
 	}

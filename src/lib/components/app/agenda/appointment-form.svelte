@@ -251,7 +251,7 @@
 					<!-- Input de Busca -->
 					<div class="relative">
 						<Input
-							placeholder="Buscar ou criar cliente..."
+							placeholder="Nome, telefone ou criar"
 							bind:value={customerQuery}
 							oninput={handleSearch}
 							class="h-12 rounded-2xl border-zinc-100 bg-zinc-50/50 pl-10 focus:bg-white"

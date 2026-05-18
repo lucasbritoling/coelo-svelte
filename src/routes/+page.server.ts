@@ -7,5 +7,5 @@ export const load: PageServerLoad = async ({ locals: { session } }) => {
 		throw redirect(303, '/agenda');
 	}
 
-	throw redirect(303, '/login');
+	throw redirect(303, '/signup');
 };

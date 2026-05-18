@@ -2,7 +2,7 @@
 	import { dateUtils, createFormatters } from '$lib/utils/date';
 	import { ui as globalUI } from '$lib/state/ui.svelte';
 	import type { Appointment } from '$lib/types/appointment';
-	import { Check, CalendarDays, Link, CalendarPlus, Coffee } from '@lucide/svelte';
+	import { Check, CalendarDays, Link, CalendarPlus, Coffee, Crown } from '@lucide/svelte';
 
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
@@ -404,6 +404,16 @@
 		<div class="pointer-events-none fixed inset-x-0 bottom-24 z-40 flex justify-center">
 			<div class="relative flex w-full max-w-md justify-end px-4">
 				<div class="pointer-events-auto flex flex-col items-end gap-2">
+					<button
+						onclick={() => {
+							// Sua ação para o plano premium / conquistas aqui
+							console.log('Premium clicado');
+						}}
+						class="flex h-12 w-12 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-lg transition-all hover:bg-zinc-50 active:scale-90"
+						aria-label="Ver benefícios Premium"
+					>
+						<Crown size={20} strokeWidth={2} />
+					</button>
 					<!-- Botão: Copiar Link -->
 					<div class="flex flex-col items-end gap-2">
 						{#if ui.copied}

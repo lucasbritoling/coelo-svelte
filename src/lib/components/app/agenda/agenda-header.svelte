@@ -5,26 +5,33 @@
 	import { navigating } from '$app/state';
 	import { dateUtils } from '$lib/utils/date';
 
-	let {
-		headerLabel,
-		selectedDate,
-		user,
-		timezone,
-		ticker,
-		onDateSelect,
-		onOpenAppointment,
-		onOpenSearch
-	} = $props<{
-		headerLabel: string;
-		selectedDate: string;
-		user: any;
-		timezone: string;
-		ticker: number;
-		onDateSelect: (d: any) => void;
-		onOpenAppointment: () => void;
-		onOpenSearch: () => void;
-	}>();
+	let { headerLabel, selectedDate, user, timezone, onDateSelect, onOpenAppointment, onOpenSearch } =
+		$props<{
+			headerLabel: string;
+			selectedDate: string;
+			user: any;
+			timezone: string;
+			onDateSelect: (d: any) => void;
+			onOpenAppointment: () => void;
+			onOpenSearch: () => void;
+		}>();
 
+	import { onDestroy } from 'svelte';
+
+	// 1. Criamos um estado reativo para o ticker, inicializado com a data atual
+	let ticker = $state(new Date());
+
+	// 2. Atualizamos o ticker a cada segundo
+	const interval = setInterval(() => {
+		ticker = new Date();
+	}, 1000); // 1000ms = 1s. Se quiser apenas de minuto em minuto, mude para 60000
+
+	// 3. Importante: limpamos o intervalo quando o componente for destruído
+	onDestroy(() => {
+		clearInterval(interval);
+	});
+
+	// 4. Suas runes derivadas agora vão reagir automaticamente a cada mudança do ticker
 	const isToday = $derived(headerLabel.toLowerCase() === 'hoje');
 	const currentTimeStr = $derived(dateUtils.toTime(ticker, timezone));
 
@@ -38,6 +45,7 @@
 	}
 </script>
 
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <header
 	class="sticky top-0 z-20 border-b border-transparent bg-background/80 backdrop-blur-xl transition-all"
 	class:border-border={!ui.isDatePickerOpen}

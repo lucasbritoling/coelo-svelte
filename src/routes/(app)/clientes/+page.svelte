@@ -1,15 +1,12 @@
 <script lang="ts">
 	import { ui } from '$lib/state/ui.svelte';
-	import { Plus, Search, Trash2, LoaderCircle, ChevronRight, Phone, User } from '@lucide/svelte';
+	import { Plus, Search, ChevronRight, LoaderCircle } from '@lucide/svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { enhance } from '$app/forms';
-	import { goto } from '$app/navigation';
-	import { page } from '$app/state';
 	import { toast } from 'svelte-sonner';
-	import { invalidateAll } from '$app/navigation';
 
 	let { data } = $props();
 
@@ -20,8 +17,6 @@
 	let isSearching = $state(false);
 	let searchQuery = $state(data.q || '');
 	let formState = $state({ id: '', name: '', phone: '' });
-
-	// Novo estado para guardar o resultado do banco via API
 	let apiCustomers = $state<any[]>([]);
 
 	// --- Reatividade ---
@@ -34,10 +29,8 @@
 		}
 	});
 
-	// Reatividade inteligente: se tem busca, usa o resultado da API. Se não, usa o load inicial.
 	let currentCustomers = $derived(searchQuery.trim() !== '' ? apiCustomers : data.customers);
 
-	// Filtro local opcional (apenas para o telefone, já que o nome foi filtrado no banco)
 	let filteredCustomers = $derived(
 		currentCustomers.filter(
 			(c) =>
@@ -60,10 +53,8 @@
 	let searchTimeout: any;
 	function handleSearch(e: Event) {
 		const value = (e.currentTarget as HTMLInputElement).value;
-
 		clearTimeout(searchTimeout);
 
-		// Se o usuário limpar o campo, cancela o loading e limpa a lista da API imediatamente
 		if (!value.trim()) {
 			isSearching = false;
 			apiCustomers = [];
@@ -85,7 +76,7 @@
 			} finally {
 				isSearching = false;
 			}
-		}, 300); // Mantém o debounce de 300ms para poupar o banco
+		}, 300);
 	}
 
 	function handlePhoneInput(e: Event) {
@@ -102,6 +93,7 @@
 		if (val.length > 2) return `(${val.slice(0, 2)}) ${val.slice(2)}`;
 		return val;
 	}
+
 	function getInitials(nameStr: string) {
 		const name = nameStr?.trim();
 		if (!name) return '?';
@@ -110,103 +102,116 @@
 		const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
 		return (first + last).toUpperCase();
 	}
+
+	// --- Geração Dinâmica de Cores Premium ---
+	function getAvatarColors(nameStr: string) {
+		if (!nameStr) return { bg: 'hsl(0, 0%, 96%)', text: 'hsl(0, 0%, 45%)' }; // Fallback neutro
+
+		let hash = 0;
+		for (let i = 0; i < nameStr.length; i++) {
+			hash = nameStr.charCodeAt(i) + ((hash << 5) - hash);
+		}
+
+		const h = Math.abs(hash) % 360; // Espectro completo (0 a 360 graus)
+
+		// Saturação controlada (45-55%) e Luminosidade balanceada garantem o tom suave/SaaS
+		return {
+			bg: `hsl(${h}, 45%, 92%)`,
+			text: `hsl(${h}, 55%, 35%)`
+		};
+	}
 </script>
 
 <div class="flex h-full flex-col">
-	<!-- Header Local Simples (Estilo Agenda) -->
 	<header class="flex flex-col gap-4 px-6 pt-8 pb-4">
 		<div>
-			<h1 class="text-3xl font-semibold text-zinc-700">Clientes</h1>
+			<h1 class="text-3xl font-semibold tracking-tight text-zinc-900">Clientes</h1>
 			<p class="text-sm text-zinc-500">Sua base de contatos</p>
 		</div>
 
-		<div class="relative">
+		<div class="relative mt-2">
 			{#if isSearching}
-				<LoaderCircle class="absolute top-3 left-3.5 size-4 animate-spin text-zinc-500" />
+				<LoaderCircle class="absolute top-3.5 left-4 size-4 animate-spin text-zinc-400" />
 			{:else}
-				<Search class="absolute top-3 left-3.5 size-4 text-zinc-400" />
+				<Search class="absolute top-3.5 left-4 size-4 text-zinc-400" />
 			{/if}
 
 			<Input
 				type="search"
 				placeholder="Buscar por nome ou celular..."
-				class="h-11 rounded-2xl border-none bg-zinc-100 pl-10 focus-visible:ring-zinc-200"
+				class="h-11 rounded-[16px] border-none bg-zinc-100/80 pl-11 text-[15px] transition-colors placeholder:text-zinc-400 focus-visible:bg-zinc-100 focus-visible:ring-1 focus-visible:ring-zinc-200"
 				bind:value={searchQuery}
 				oninput={handleSearch}
 			/>
 		</div>
 	</header>
 
-	<!-- Lista de Clientes -->
 	<div class="flex-1 space-y-2 overflow-y-auto px-4 pb-32">
 		{#each filteredCustomers as customer (customer.id)}
+			{@const colors = getAvatarColors(customer.name)}
 			<button
 				onclick={() => startEdit(customer)}
-				class="flex w-full items-center gap-4 rounded-[24px] border border-zinc-100 bg-white p-4 transition-all active:scale-[0.97] active:bg-zinc-50"
+				class="group flex w-full items-center gap-4 rounded-[20px] border border-zinc-100/60 bg-white p-3.5 transition-all duration-200 hover:border-zinc-200 active:scale-[0.98] active:bg-zinc-50/50"
 			>
 				<div
-					class="flex size-11 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-sm font-bold text-zinc-500"
+					class="flex size-11 shrink-0 items-center justify-center rounded-full text-[13px] font-bold tracking-wide transition-transform group-hover:scale-105"
+					style="background-color: {colors.bg}; color: {colors.text};"
 				>
 					{getInitials(customer.name)}
 				</div>
 				<div class="min-w-0 flex-1 text-left">
-					<p class="truncate font-bold text-zinc-900">{customer.name}</p>
-					<p class=" text-xs text-zinc-400">{formatPhone(customer.phone)}</p>
+					<p class="truncate text-[15px] font-semibold tracking-tight text-zinc-900">
+						{customer.name}
+					</p>
+					<p class="text-[13px] font-medium text-zinc-400">{formatPhone(customer.phone)}</p>
 				</div>
-				<ChevronRight class="size-4 text-zinc-300" />
+				<ChevronRight
+					class="size-4 text-zinc-300 transition-transform group-hover:translate-x-0.5 group-hover:text-zinc-400"
+				/>
 			</button>
 		{:else}
 			<div class="py-20 text-center px-4">
 				{#if isSearching}
-					<!-- Enquanto estiver buscando na API, mostramos um feedback neutro ou deixamos em branco -->
-					<p class="text-sm text-zinc-400 italic animate-pulse">Buscando...</p>
+					<p class="text-sm font-medium text-zinc-400 animate-pulse">Buscando clientes...</p>
 				{:else if searchQuery.trim()}
-					<!-- ESSE SÓ APARECE AO FINAL: Busca concluída e array vazio -->
-					<p class="text-sm text-zinc-400 italic">
-						Nenhum cliente encontrado para <span class="font-semibold text-zinc-600 not-italic"
+					<p class="text-sm text-zinc-500">
+						Nenhum cliente encontrado para <span class="font-semibold text-zinc-800"
 							>"{searchQuery}"</span
 						>.
 					</p>
 				{:else}
-					<p class="text-sm text-zinc-400 italic">Nenhum cliente cadastrado.</p>
+					<p class="text-sm text-zinc-500">Nenhum cliente cadastrado.</p>
 				{/if}
 			</div>
 		{/each}
 
-		<!-- Indicadores de paginação/fim de lista (Só aparecem se NÃO estiver buscando) -->
-		{#if !isSearching}
-			{#if searchQuery.trim() !== '' && filteredCustomers.length >= 50}
-				<p class="py-6 text-center text-[10px] font-medium tracking-widest text-zinc-400 uppercase">
-					Mostrando os primeiros 100 resultados.
-				</p>
-			{/if}
+		{#if !isSearching && searchQuery.trim() !== '' && filteredCustomers.length >= 50}
+			<p class="py-6 text-center text-[10px] font-semibold tracking-widest text-zinc-400 uppercase">
+				Mostrando os primeiros 100 resultados.
+			</p>
 		{/if}
 	</div>
 </div>
 
-<!-- FAB Discreto (Igual ao da Agenda) -->
-<!-- Wrapper para centralizar a FAB de Clientes -->
 <div class="pointer-events-none fixed inset-x-0 z-40 flex justify-center" style="bottom: 100px">
-	<!-- O max-w-md deve ser o mesmo do seu container principal -->
 	<div class="relative flex w-full max-w-md justify-end px-6">
 		<button
 			onclick={startCreate}
-			class="pointer-events-auto flex size-14 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-900 shadow-xl transition-all active:scale-90"
+			class="pointer-events-auto flex size-[52px] items-center justify-center rounded-full border border-zinc-200/50 bg-white text-zinc-900 shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.12)] active:translate-y-0 active:scale-90"
 			aria-label="Novo cliente"
 		>
-			<Plus size={28} />
+			<Plus class="size-6" />
 		</button>
 	</div>
 </div>
 
-<!-- Dialog de Upsert -->
 <Dialog.Root bind:open>
 	<Dialog.Content
-		class="flex max-h-[90dvh] w-[95vw] flex-col gap-0 overflow-hidden rounded-[32px] p-0 sm:max-w-[400px]"
+		class="flex max-h-[90dvh] w-[95vw] flex-col gap-0 overflow-hidden rounded-[28px] border-zinc-100 bg-white p-0 shadow-2xl sm:max-w-[400px]"
 	>
 		<Dialog.Header class="px-6 py-6 text-left">
-			<Dialog.Title class="text-xl font-bold"
-				>{formState.id ? 'Editar' : 'Novo Cliente'}</Dialog.Title
+			<Dialog.Title class="text-xl font-bold tracking-tight text-zinc-900"
+				>{formState.id ? 'Editar Cliente' : 'Novo Cliente'}</Dialog.Title
 			>
 		</Dialog.Header>
 
@@ -217,7 +222,6 @@
 			use:enhance={() => {
 				isLoading = true;
 				return async ({ result, update }) => {
-					// O update() aplica o resultado da action (limpa campos se necessário, etc)
 					await update();
 					isLoading = false;
 
@@ -227,11 +231,8 @@
 					}
 
 					if (result.type === 'failure') {
-						// Aqui capturamos a mensagem enviada pelo fail(400, { message: '...' })
 						const message = result.data?.message || 'Ocorreu um erro inesperado';
 						toast.error(message);
-
-						// Resetamos o estado de confirmação para o botão voltar ao normal após o erro
 						isConfirmingDelete = false;
 					}
 
@@ -241,16 +242,27 @@
 				};
 			}}
 		>
-			<div class="space-y-6 px-6 pb-8">
+			<div class="space-y-5 px-6 pb-8">
 				<input type="hidden" name="id" value={formState.id} />
-				<div class="grid gap-2">
-					<Label class="text-xs font-bold tracking-widest text-zinc-400 uppercase">Nome</Label>
-					<Input name="name" bind:value={formState.name} required class="h-12 rounded-2xl" />
-				</div>
-				<div class="grid gap-2">
-					<Label class="text-xs font-bold tracking-widest text-zinc-400 uppercase">WhatsApp</Label>
+
+				<div class="space-y-1.5">
+					<Label class="text-[11px] font-bold tracking-wider text-zinc-500 uppercase"
+						>Nome Completo</Label
+					>
 					<Input
-						class="h-12 rounded-2xl "
+						name="name"
+						bind:value={formState.name}
+						required
+						class="h-12 rounded-[16px] border-zinc-200/80 bg-zinc-50/50 focus-visible:bg-white focus-visible:ring-zinc-300"
+					/>
+				</div>
+
+				<div class="space-y-1.5">
+					<Label class="text-[11px] font-bold tracking-wider text-zinc-500 uppercase"
+						>WhatsApp</Label
+					>
+					<Input
+						class="h-12 rounded-[16px] border-zinc-200/80 bg-zinc-50/50 focus-visible:bg-white focus-visible:ring-zinc-300"
 						value={formatPhone(formState.phone)}
 						oninput={handlePhoneInput}
 						inputmode="numeric"
@@ -260,7 +272,9 @@
 				</div>
 			</div>
 
-			<div class="flex gap-3 border-t p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
+			<div
+				class="flex gap-3 border-t border-zinc-100 bg-zinc-50/30 p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))]"
+			>
 				{#if formState.id}
 					<Button
 						type={isConfirmingDelete ? 'submit' : 'button'}
@@ -272,18 +286,23 @@
 								isConfirmingDelete = true;
 							}
 						}}
-						class="h-12 flex-1 rounded-2xl"
+						class="h-12 flex-1 rounded-[16px] font-semibold transition-all"
 					>
-						{isConfirmingDelete ? 'Confirma?' : 'Excluir'}
+						{isConfirmingDelete ? 'Confirmar' : 'Excluir'}
 					</Button>
 				{/if}
 
 				<Button
 					type="submit"
 					disabled={isLoading}
-					class="h-12 flex-[2] rounded-2xl bg-zinc-900 text-white"
+					class="h-12 flex-[2] rounded-[16px] bg-zinc-900 font-semibold text-white transition-all hover:bg-zinc-800"
 				>
-					{isLoading ? '...' : 'Salvar'}
+					{#if isLoading}
+						<LoaderCircle class="mr-2 size-4 animate-spin" />
+						Salvando
+					{:else}
+						Salvar Cliente
+					{/if}
 				</Button>
 			</div>
 		</form>
@@ -292,6 +311,6 @@
 
 <style>
 	:global(body) {
-		background-color: white;
+		background-color: #fafafa; /* Fundo levemente off-white ajuda os cards brancos a se destacarem */
 	}
 </style>

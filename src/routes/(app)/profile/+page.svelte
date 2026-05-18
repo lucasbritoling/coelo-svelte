@@ -18,7 +18,10 @@
 	let fullName = $state(data.user?.full_name ?? '');
 	let username = $state(data.user?.username ?? '');
 	let address = $state(data.user?.address ?? '');
-	let phone = $state(data.user?.phone ?? '');
+
+	// Estado modificado: guarda apenas os números limpos do telefone
+	let rawPhone = $state(sanitizePhone(data.user?.phone ?? ''));
+
 	let email = $state(data.user?.email ?? '');
 	let password = $state('');
 
@@ -27,10 +30,13 @@
 	let isSaving = $state(false);
 	let saved = $state(false);
 
+	// Runa derivada para computar a máscara visual dinamicamente
+	const maskedPhone = $derived(formatarMascarar(rawPhone));
+
 	$effect(() => {
 		if (form?.success) {
 			saved = true;
-			toast.success('Perfil atualizado com sucesso!');
+			toast.success('Perfil updated com sucesso!');
 			password = '';
 			setTimeout(() => (saved = false), 2500);
 		} else if (form?.message) {
@@ -49,6 +55,24 @@
 
 	function triggerFileInput() {
 		document.getElementById('avatar-input')?.click();
+	}
+
+	// Funções auxiliares da máscara trazidas do seu primeiro código
+	function sanitizePhone(v: string) {
+		return v.replace(/\D/g, '').slice(0, 11);
+	}
+
+	function formatarMascarar(v: string) {
+		if (!v) return '';
+		if (v.length <= 2) return `(${v}`;
+		if (v.length <= 6) return `(${v.slice(0, 2)}) ${v.slice(2)}`;
+		return `(${v.slice(0, 2)}) ${v.slice(2, 7)}-${v.slice(7, 11)}`;
+	}
+
+	function tratarInput(e: Event) {
+		const target = e.target as HTMLInputElement;
+		rawPhone = sanitizePhone(target.value);
+		target.value = formatarMascarar(rawPhone);
 	}
 </script>
 
@@ -76,7 +100,6 @@
 					if (result.type === 'failure')
 						toast.error(`Erro: ${result.data?.message || 'Verifique o arquivo'}`);
 					if (result.type === 'success') {
-						// Aqui não passamos reset: false propositalmente para que o input de arquivo seja limpo
 						await update();
 					}
 					uploading = false;
@@ -135,16 +158,13 @@
 		use:enhance={() => {
 			isSaving = true;
 			return async ({ result, update }) => {
-				// reset: false impede que os inputs voltem ao valor inicial (vazio)
 				await update({ reset: false });
 
 				if (result.type === 'success') {
-					// Sincroniza os estados locais com a resposta nova do +page.server.ts
-					// Isso garante que formatações do servidor (ex: toLowerCase do username) reflitam na tela
 					fullName = data.user?.full_name ?? '';
 					username = data.user?.username ?? '';
 					address = data.user?.address ?? '';
-					phone = data.user?.phone ?? '';
+					rawPhone = sanitizePhone(data.user?.phone ?? '');
 					email = data.user?.email ?? '';
 				}
 
@@ -153,6 +173,8 @@
 		}}
 		class="mx-auto w-full max-w-md"
 	>
+		<input type="hidden" name="phone" value={rawPhone} />
+
 		<div class="space-y-5">
 			<div class="grid gap-2">
 				<div class="flex items-center justify-between">
@@ -215,12 +237,13 @@
 			</div>
 
 			<div class="grid gap-2">
-				<Label for="phone">Telefone / WhatsApp</Label>
+				<Label for="phone-visual">Telefone / WhatsApp</Label>
 				<Input
-					id="phone"
-					name="phone"
+					id="phone-visual"
 					type="tel"
-					bind:value={phone}
+					inputmode="numeric"
+					value={maskedPhone}
+					oninput={tratarInput}
 					placeholder="(11) 99999-9999"
 				/>
 			</div>

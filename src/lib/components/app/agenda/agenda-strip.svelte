@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { ui } from '$lib/state/ui.svelte';
-	import { Calendar, CalendarDays } from '@lucide/svelte';
+	import { CalendarDays } from '@lucide/svelte';
+
 	interface Props {
 		selectedDate: string;
 		onSelect: (date: string) => void;
@@ -17,7 +18,6 @@
 	const strip = $derived.by(() => {
 		const [y, m, d] = selectedDate.split('-').map(Number);
 		const center = new Date(y, m - 1, d);
-		// Renderizamos 6 dias, pois o 7º será o 'ver calendar'
 		return Array.from({ length: 6 }, (_, i) => {
 			const date = new Date(center);
 			date.setDate(center.getDate() - 1 + i);
@@ -30,13 +30,11 @@
 	});
 </script>
 
-<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-	class="no-scrollbar flex gap-3 overflow-x-auto scroll-smooth px-5 pt-2 pb-0"
+	class="no-scrollbar flex snap-x snap-mandatory gap-2.5 overflow-x-auto scroll-smooth px-5 py-3.5"
 	ontouchstart={(e) => e.stopPropagation()}
 	ontouchend={(e) => e.stopPropagation()}
 	onwheel={(e) => {
-		// Se o usuário estiver rolando verticalmente, transforma em rolagem horizontal
 		if (e.deltaY !== 0) {
 			e.preventDefault();
 			e.currentTarget.scrollLeft += e.deltaY;
@@ -44,37 +42,48 @@
 	}}
 >
 	{#each strip as day}
+		{@const isSelected = day.str === selectedDate}
 		<button
 			onclick={() => onSelect(day.str)}
-			class="flex aspect-square h-17 w-16.5 shrink-0 cursor-pointer flex-col items-center justify-center rounded-2xl border transition-all active:scale-95
-            {day.str === selectedDate
-				? 'border-foreground opacity-100'
-				: 'border-foreground/10 opacity-60'}"
+			class="group flex h-[72px] w-[66px] shrink-0 cursor-pointer snap-center flex-col items-center justify-center rounded-[20px] border transition-all duration-300 ease-out select-none active:scale-95
+			{isSelected
+				? 'border-neutral-950 bg-white font-bold text-neutral-950 shadow-[0_4px_12px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)]'
+				: 'border-neutral-200/50 bg-white/40 text-neutral-400 backdrop-blur-md hover:border-neutral-300 hover:bg-white/60 hover:text-neutral-600'}"
 		>
 			<span
-				class="text-[10.5px] leading-none font-medium tracking-wide uppercase
-                {day.str === selectedDate ? 'text-foreground' : 'text-muted-foreground'}"
+				class="text-[10px] leading-none tracking-wider uppercase transition-colors duration-200
+				{isSelected
+					? 'font-bold text-neutral-950'
+					: 'font-medium text-neutral-400 group-hover:text-neutral-500'}"
 			>
 				{day.wd}
 			</span>
 			<span
-				class="mt-1 text-[18px] leading-none font-semibold
-                {day.str === selectedDate ? 'text-foreground' : 'text-muted-foreground'}"
+				class="mt-1 text-xl leading-none tracking-tight transition-colors duration-200
+				{isSelected
+					? 'font-bold text-neutral-950'
+					: 'font-semibold text-neutral-500 group-hover:text-neutral-700'}"
 			>
 				{day.day}
 			</span>
 		</button>
 	{/each}
+
 	<button
-		class="flex aspect-square h-17 w-16.5 shrink-0 cursor-pointer flex-col items-center justify-center rounded-full border border-foreground/10 bg-muted opacity-80 transition-all active:scale-95"
-		onclick={() => (ui.isDatePickerOpen = true)}
+		class="group flex h-[72px] w-[66px] shrink-0 cursor-pointer snap-center flex-col items-center justify-center rounded-[20px] border border-dashed border-neutral-200 bg-white/30 backdrop-blur-sm transition-all duration-300 hover:border-neutral-300 hover:bg-white/60 active:scale-95"
+		onclick={() => {
+			ui.isDatePickerOpen = true;
+			onOpenPicker();
+		}}
 	>
 		<span
-			class="text-[10.5px] leading-none font-semibold tracking-widest text-muted-foreground uppercase"
+			class="text-[10px] leading-none font-semibold tracking-widest text-neutral-400 uppercase transition-colors group-hover:text-neutral-600"
 		>
 			Ver
 		</span>
-		<CalendarDays class="mt-1 h-5 w-5 text-muted-foreground" />
+		<CalendarDays
+			class="mt-1 h-4.5 w-4.5 text-neutral-400 transition-colors group-hover:text-neutral-600"
+		/>
 	</button>
 </div>
 

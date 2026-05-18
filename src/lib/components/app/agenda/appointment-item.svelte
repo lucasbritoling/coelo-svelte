@@ -120,7 +120,7 @@
 						<MessageCircle size={14} />
 						<span>Enviar Mensagem</span>
 					</Button>
-					<AppointmentItemAction appointmentId={appt.id} appointmentStatus={appt.status} />
+					<AppointmentItemAction {appt} appointmentStatus={appt.status} />
 				</div>
 			</div>
 		</div>

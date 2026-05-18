@@ -12,6 +12,7 @@
 	import AgendaStrip from '$lib/components/app/agenda/agenda-strip.svelte';
 	import AppointmentForm from '$lib/components/app/agenda/appointment-form.svelte';
 	import AppointmentItem from '$lib/components/app/agenda/appointment-item.svelte';
+	import RescheduleDialog from '$lib/components/app/agenda/reschedule-dialog.svelte';
 	import GhostSlot from '$lib/components/app/agenda/ghost-slot.svelte';
 	import { scale } from 'svelte/transition';
 
@@ -29,6 +30,15 @@
 			favoriteGhostSlotInterval: number;
 		};
 	}>();
+
+	// ── ESTADO ELEVADO PARA O REAGENDAMENTO ────────────────────────
+	let rescheduleTarget = $state<Appointment | null>(null);
+	let showRescheduleDialog = $state(false);
+
+	function openReschedule(appt: Appointment) {
+		rescheduleTarget = appt;
+		showRescheduleDialog = true;
+	}
 
 	// ── Lógica de Tempo & Ticker ──────────────────────────────────
 	let ticker = $state(Date.now());

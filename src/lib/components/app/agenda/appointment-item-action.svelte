@@ -6,24 +6,26 @@
 		CircleSlash,
 		Trash2,
 		LoaderCircle,
-		CalendarClock // <-- Importado aqui
+		CalendarClock
 	} from '@lucide/svelte';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import { Button } from '$lib/components/ui/button';
 	import { enhance } from '$app/forms';
+	import type { Appointment } from '$lib/types/appointment';
 
-	let { appointmentId, appointmentStatus }: { appointmentId: string; appointmentStatus: string } =
-		$props();
+	// ADICIONADO: Recebe o callback para acionar o dialog que está no pai
+	let { appt, onReschedule }: { appt: Appointment; onReschedule: () => void } = $props();
+
+	const appointmentId = appt.id;
+	const appointmentStatus = appt.status;
 
 	let isDropdownOpen = $state(false);
 	let isDeleting = $state(false);
 	let isLoading = $state(false);
 	let loadingStatus = $state<string | null>(null);
 	let showConfirmDialog = $state(false);
-	let showRescheduleDialog = $state(false); // <-- Estado caso queira abrir um modal de reagendamento futuramente
 
-	// Referência para o formulário fantasma e os inputs
 	let statusForm: HTMLFormElement;
 	let statusInput: HTMLInputElement;
 
@@ -33,23 +35,15 @@
 		{ value: 'cancelled', label: 'Cancelado', icon: CircleSlash }
 	] as const;
 
-	// Função cirúrgica que executa tudo sem travar a requisição
 	function handleStatusChange(targetStatus: string) {
 		loadingStatus = targetStatus;
 		isLoading = true;
-
-		// 1. Fecha a interface visual imediatamente (Instantâneo)
 		isDropdownOpen = false;
-
-		// 2. Altera o valor no formulário fantasma fora do dropdown
 		statusInput.value = targetStatus;
-
-		// 3. Dispara o envio nativo que o use:enhance intercepta com segurança
 		statusForm.requestSubmit();
 	}
 </script>
 
-<!-- FORMULÁRIO FANTASMA (Fora do Dropdown, imune a desmontagens de DOM) -->
 <form
 	bind:this={statusForm}
 	method="POST"
@@ -59,10 +53,7 @@
 		return async ({ result, update }) => {
 			isLoading = false;
 			loadingStatus = null;
-
-			if (result.type === 'success') {
-				await update();
-			}
+			if (result.type === 'success') await update();
 		};
 	}}
 >
@@ -84,7 +75,6 @@
 			{@const isCurrent = appointmentStatus === option.value}
 			{@const isThisLoading = loadingStatus === option.value}
 
-			<!-- Botão limpo, sem formulários em volta para serem destruídos pelo Bits UI -->
 			<button
 				type="button"
 				disabled={isLoading || isCurrent}
@@ -96,20 +86,20 @@
 				{:else}
 					<option.icon class="h-4 w-4" />
 				{/if}
-
 				<span class="flex-1 text-left">{option.label}</span>
-
 				{#if isCurrent}
 					<span class="text-xs text-muted-foreground">Atual</span>
 				{/if}
 			</button>
 		{/each}
-		<!-- Nova Action: Reagendar -->
+
+		<DropdownMenu.Separator />
+
+		<!-- MODIFICADO: Agora chama a função que eleva o estado -->
 		<DropdownMenu.Item
 			onSelect={() => {
-				showRescheduleDialog = true;
+				onReschedule();
 				isDropdownOpen = false;
-				// Adicione sua lógica de reagendamento aqui (ex: abrir um modal)
 			}}
 		>
 			<CalendarClock class="mr-2 ml-0.5 h-4 w-4" />
@@ -131,7 +121,6 @@
 	</DropdownMenu.Content>
 </DropdownMenu.Root>
 
-<!-- O restante do código do AlertDialog permanece intocado -->
 <AlertDialog.Root bind:open={showConfirmDialog}>
 	<AlertDialog.Content class="max-w-sm text-center">
 		<AlertDialog.Header class="items-center text-center">
@@ -140,7 +129,6 @@
 				Essa ação não pode ser desfeita.
 			</AlertDialog.Description>
 		</AlertDialog.Header>
-
 		<AlertDialog.Footer class="items-center justify-center gap-2 text-center">
 			<AlertDialog.Cancel class="w-28 justify-center text-center" disabled={isDeleting}>
 				Cancelar
@@ -152,10 +140,8 @@
 				class="m-0"
 				use:enhance={() => {
 					isDeleting = true;
-
 					return async ({ result, update }) => {
 						isDeleting = false;
-
 						if (result.type === 'success') {
 							showConfirmDialog = false;
 							await update({ reset: true });
@@ -164,16 +150,13 @@
 				}}
 			>
 				<input type="hidden" name="id" value={appointmentId} />
-
 				<Button
 					type="submit"
 					variant="destructive"
 					class="w-28 justify-center text-center"
 					disabled={isDeleting}
 				>
-					{#if isDeleting}
-						<LoaderCircle class="mr-2 h-4 w-4 animate-spin" />
-					{/if}
+					{#if isDeleting}<LoaderCircle class="mr-2 h-4 w-4 animate-spin" />{/if}
 					Excluir
 				</Button>
 			</form>

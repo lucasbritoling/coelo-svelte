@@ -36,7 +36,14 @@
 	$effect(() => {
 		if (form?.success) {
 			saved = true;
-			toast.success('Perfil updated com sucesso!');
+
+			// Se o servidor avisar que o email foi alterado e precisa de confirmação
+			if (form?.emailChanged) {
+				toast.success('Confirme a troca no seu email');
+			} else {
+				toast.success('Perfil atualizado com sucesso!');
+			}
+
 			password = '';
 			setTimeout(() => (saved = false), 2500);
 		} else if (form?.message) {

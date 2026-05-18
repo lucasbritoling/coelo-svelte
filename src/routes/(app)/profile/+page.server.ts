@@ -120,6 +120,8 @@ export const actions: Actions = {
 			return fail(400, { message: 'Nome e Link da agenda são obrigatórios.' });
 		}
 
+		let emailChanged = false;
+
 		if (!/^[a-z0-9-_]+$/.test(username)) {
 			return fail(400, {
 				message: 'O link da agenda deve conter apenas letras, números, hífens ou underlines.'
@@ -128,21 +130,21 @@ export const actions: Actions = {
 
 		try {
 			const existingUser = await locals.sql`
-				SELECT id FROM public.profiles 
-				WHERE username = ${username} AND id != ${session.user.id}
-			`;
+			SELECT id FROM public.profiles 
+			WHERE username = ${username} AND id != ${session.user.id}
+		`;
 			if (existingUser.length > 0) {
 				return fail(400, { message: 'Este link de agenda já está sendo utilizado.' });
 			}
 
 			await locals.sql`
-				UPDATE public.profiles
-				SET 
-					full_name = ${fullName},
-					username = ${username},
-					address = ${address || null}
-				WHERE id = ${session.user.id}
-			`;
+			UPDATE public.profiles
+			SET 
+				full_name = ${fullName},
+				username = ${username},
+				address = ${address || null}
+			WHERE id = ${session.user.id}
+		`;
 
 			const authAttributes: any = {
 				data: { full_name: fullName, username: username }
@@ -150,6 +152,7 @@ export const actions: Actions = {
 
 			if (email && email !== session.user.email) {
 				authAttributes.email = email;
+				emailChanged = true;
 			}
 
 			if (phone && phone !== session.user.phone) {
@@ -169,7 +172,7 @@ export const actions: Actions = {
 				return fail(400, { message: authError.message });
 			}
 
-			return { success: true };
+			return { success: true, emailChanged };
 		} catch (err) {
 			console.error('Erro ao atualizar perfil:', err);
 			return fail(500, { message: 'Erro interno ao salvar os dados.' });

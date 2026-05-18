@@ -180,7 +180,7 @@
 		justify-content: center;
 		gap: 2px;
 		padding: 0 14px;
-		min-width: 80px;
+		min-width: 70px;
 		flex-shrink: 0;
 	}
 

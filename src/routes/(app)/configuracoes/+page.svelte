@@ -17,7 +17,7 @@
 </script>
 
 <div class="mx-auto max-w-xl p-5">
-	<div class="flex items-center gap-2 pt-3 pb-5">
+	<div class="flex items-center gap-2 pt-3">
 		<button
 			onclick={() => goto('/mais')}
 			class="-ml-2 flex items-center p-2 text-zinc-500 transition-transform active:scale-90"
@@ -29,7 +29,7 @@
 		</h1>
 	</div>
 
-	<div class="overflow-hidden rounded-2xl border border-border/40 bg-card p-5">
+	<div class="mt-5 overflow-hidden rounded-2xl border border-border/40 bg-card p-5">
 		<form
 			method="POST"
 			action="?/updateInterval"

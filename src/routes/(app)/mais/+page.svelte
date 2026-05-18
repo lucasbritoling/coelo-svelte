@@ -85,7 +85,7 @@
 			<div class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted">
 				<CalendarCog class="size-4 text-muted-foreground" />
 			</div>
-			<p class="flex-1 text-[14px] font-medium">Agenda</p>
+			<p class="flex-1 text-[14px] font-medium">Ajustes da Agenda</p>
 			<ChevronRight class="size-4 shrink-0 text-muted-foreground/40" />
 		</a>
 		<a

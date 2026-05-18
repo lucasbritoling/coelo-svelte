@@ -2,9 +2,8 @@
 	import { fly } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import { enhance } from '$app/forms';
-	import { Camera, ArrowLeft, Loader2, Check } from '@lucide/svelte';
+	import { Camera, Loader2, Check, ChevronLeft } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
-	import { invalidateAll } from '$app/navigation';
 
 	// Componentes importados do seu diretório UI
 	import * as Avatar from '$lib/components/ui/avatar';
@@ -54,19 +53,17 @@
 </script>
 
 <div
-	class="mx-auto max-w-2xl space-y-8 px-4 py-10"
+	class="mx-auto max-w-2xl space-y-8 px-4 py-10 pt-8"
 	in:fly={{ y: 20, duration: 260, easing: cubicOut }}
 >
-	<!-- Topbar -->
 	<div class="flex items-center justify-between pb-0">
 		<Button variant="ghost" size="icon" onclick={() => history.back()} aria-label="Voltar">
-			<ArrowLeft size={18} strokeWidth={2} />
+			<ChevronLeft size={18} strokeWidth={2} />
 		</Button>
 		<h1 class="text-lg font-semibold tracking-tight text-foreground">Editar Perfil</h1>
 		<div class="w-9"></div>
 	</div>
 
-	<!-- Avatar Hero -->
 	<div class="flex flex-col items-center gap-4 py-0 sm:flex-row sm:gap-6">
 		<form
 			method="POST"
@@ -79,7 +76,7 @@
 					if (result.type === 'failure')
 						toast.error(`Erro: ${result.data?.message || 'Verifique o arquivo'}`);
 					if (result.type === 'success') {
-						await invalidateAll();
+						// Aqui não passamos reset: false propositalmente para que o input de arquivo seja limpo
 						await update();
 					}
 					uploading = false;
@@ -132,22 +129,31 @@
 		</div>
 	</div>
 
-	<!-- Form Body -->
 	<form
 		method="POST"
 		action="?/updateProfile"
 		use:enhance={() => {
 			isSaving = true;
-			return async ({ update }) => {
-				await invalidateAll();
-				await update();
+			return async ({ result, update }) => {
+				// reset: false impede que os inputs voltem ao valor inicial (vazio)
+				await update({ reset: false });
+
+				if (result.type === 'success') {
+					// Sincroniza os estados locais com a resposta nova do +page.server.ts
+					// Isso garante que formatações do servidor (ex: toLowerCase do username) reflitam na tela
+					fullName = data.user?.full_name ?? '';
+					username = data.user?.username ?? '';
+					address = data.user?.address ?? '';
+					phone = data.user?.phone ?? '';
+					email = data.user?.email ?? '';
+				}
+
 				isSaving = false;
 			};
 		}}
 		class="mx-auto w-full max-w-md"
 	>
 		<div class="space-y-5">
-			<!-- Campo: Nome -->
 			<div class="grid gap-2">
 				<div class="flex items-center justify-between">
 					<Label for="fullName">Nome</Label>
@@ -181,7 +187,6 @@
 				/>
 			</div>
 
-			<!-- Campo: Username (Link da agenda) -->
 			<div class="grid gap-2">
 				<Label for="username">Link da agenda</Label>
 				<InputGroup.Root>
@@ -197,7 +202,6 @@
 				</InputGroup.Root>
 			</div>
 
-			<!-- Campo: Endereço -->
 			<div class="grid gap-2">
 				<Label for="address">Endereço de Atendimento</Label>
 				<Input
@@ -209,7 +213,6 @@
 				/>
 			</div>
 
-			<!-- Campo: Telefone -->
 			<div class="grid gap-2">
 				<Label for="phone">Telefone / WhatsApp</Label>
 				<Input
@@ -221,7 +224,6 @@
 				/>
 			</div>
 
-			<!-- Campo: Email -->
 			<div class="grid gap-2">
 				<Label for="email">E-mail de Login</Label>
 				<Input
@@ -234,7 +236,6 @@
 				/>
 			</div>
 
-			<!-- Campo: Senha -->
 			<div class="grid gap-2 pb-20">
 				<Label for="password">Nova Senha</Label>
 				<Input

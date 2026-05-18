@@ -462,10 +462,8 @@
 				};
 			}}
 		>
+			<input type="hidden" name="id" value={overrideForm.id ?? ''} />
 			<input type="hidden" name="date" value={overrideForm.date} />
-			{#if overrideForm.id}
-				<input type="hidden" name="id" value={overrideForm.id} />
-			{/if}
 
 			<div class="space-y-1.5">
 				<Label class="text-[11px] font-bold tracking-widest text-zinc-400 uppercase">Data</Label>

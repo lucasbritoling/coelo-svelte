@@ -111,49 +111,67 @@ export const actions: Actions = {
 		if (!user) return fail(401);
 
 		const formData = await request.formData();
+		const id = formData.get('id')?.toString(); // Captura o ID do formulário
 		const date = formData.get('date')?.toString();
 		const is_available = formData.has('is_available');
 
 		if (!date) return fail(400, { message: 'Data obrigatória.' });
 
 		try {
-			const payload = {
-				profile_id: user.id,
-				date,
-				is_available,
-				start_time: formData.get('start_time')?.toString() || null,
-				end_time: formData.get('end_time')?.toString() || null,
-				note: formData.get('note')?.toString() || null
-			};
+			const start_time = formData.get('start_time')?.toString() || null;
+			const end_time = formData.get('end_time')?.toString() || null;
+			const note = formData.get('note')?.toString() || null;
 
-			// Usamos transação aqui para garantir o fluxo completo do override + refresh
 			await sql.begin(async (sql) => {
-				await sql`
-                    INSERT INTO availability_overrides ${sql(payload)}
-                    ON CONFLICT (profile_id, date) 
-                    DO UPDATE SET
-                        is_available = EXCLUDED.is_available,
-                        start_time = EXCLUDED.start_time,
-                        end_time = EXCLUDED.end_time,
-                        note = EXCLUDED.note
-                `;
+				if (id) {
+					// Se tem ID, atualiza o registro permitindo a troca de data,
+					// mas garante que pertence ao usuário logado
+					await sql`
+						UPDATE availability_overrides 
+						SET 
+							date = ${date},
+							is_available = ${is_available},
+							start_time = ${start_time},
+							end_time = ${end_time},
+							note = ${note}
+						WHERE id = ${id} AND profile_id = ${user.id}
+					`;
+				} else {
+					// Se não tem ID, faz o fluxo padrão de segurança usando o ON CONFLICT
+					const payload = { profile_id: user.id, date, is_available, start_time, end_time, note };
+					await sql`
+						INSERT INTO availability_overrides ${sql(payload)}
+						ON CONFLICT (profile_id, date) 
+						DO UPDATE SET
+							is_available = EXCLUDED.is_available,
+							start_time = EXCLUDED.start_time,
+							end_time = EXCLUDED.end_time,
+							note = EXCLUDED.note
+					`;
+				}
 
 				// 🔄 Limpa slots livres futuros
 				await sql`
-                    DELETE FROM public.generated_slots 
-                    WHERE profile_id = ${user.id} 
-                      AND slot_date >= CURRENT_DATE 
-                      AND is_booked = false
-                `;
-				// ⚡ Força o recálculo considerando o novo override criado/editado
+					DELETE FROM public.generated_slots 
+					WHERE profile_id = ${user.id} 
+					  AND slot_date >= CURRENT_DATE 
+					  AND is_booked = false
+				`;
+
+				// ⚡ Força o recálculo
 				await sql`SELECT public.refresh_profile_slots(${user.id}, 90)`;
 			});
 
 			return { success: true };
 		} catch (err: any) {
+			// Código 23505 é Unique Violation (caso mude a data para um dia que já possui outra exceção)
+			if (err.code === '23505') {
+				return fail(400, { message: 'Já existe uma exceção configurada para esta nova data.' });
+			}
 			if (err.code === '23514') {
 				return fail(400, { message: 'Horário inválido: término deve ser após o início.' });
 			}
+			console.error(err);
 			return fail(500, { message: 'Erro interno ao salvar exceção.' });
 		}
 	},

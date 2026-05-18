@@ -92,7 +92,7 @@
 <DropdownMenu.Root bind:open={isDropdownOpen}>
 	<DropdownMenu.Trigger>
 		{#snippet child({ props })}
-			<Button {...props} variant="ghost" size="icon" class="h-8 w-8">
+			<Button {...props} variant="ghost" size="icon" class="h-8 w-8 cursor-pointer">
 				<Pencil class="h-4 w-4" />
 			</Button>
 		{/snippet}

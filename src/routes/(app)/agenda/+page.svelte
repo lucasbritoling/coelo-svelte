@@ -257,6 +257,47 @@
 				<span>{pendingCount} {pendingCount === 1 ? 'pendente' : 'pendentes'}</span>
 			</div>
 		{/if}
+
+		<div class="flex flex-col gap-1.5">
+			{#each agendaItems as item (item.type === 'appointment' ? item.data.id : `ghost-group-${item.sortTime}`)}
+				{#if item.type === 'appointment'}
+					{@const startMs = dateUtils.parseTimeToMs(
+						item.data.start_at,
+						data.selectedDate,
+						data.timezone
+					)}
+					{@const endMs = dateUtils.parseTimeToMs(
+						item.data.end_at,
+						data.selectedDate,
+						data.timezone
+					)}
+					{@const isNext = item.data.id === nextAppointmentId}
+					{@const isNow = ticker >= startMs && ticker <= endMs}
+					{@const isToday = data.selectedDate === dateUtils.today(data.timezone)}
+
+					<div>
+						<AppointmentItem
+							appt={item.data}
+							{showServiceColor}
+							currentTime={ticker}
+							selectedDate={data.selectedDate}
+							timezone={data.timezone}
+							soon={isToday && (isNext || isNow)
+								? dateUtils.getSoonLabel(startMs, endMs, ticker)
+								: null}
+						/>
+					</div>
+				{:else if item.type === 'ghost-group'}
+					<GhostSlot
+						slots={item.slots}
+						onSlotClick={(time) => {
+							selectedTime = time;
+							ui.modal = true;
+						}}
+					/>
+				{/if}
+			{/each}
+		</div>
 		{#if isFreeDay}
 			<div
 				class="flex h-[50vh] flex-col items-center justify-center gap-2.5 text-zinc-400"
@@ -268,47 +309,6 @@
 					<Coffee size={20} strokeWidth={2} />
 				</div>
 				<p class="text-xs font-bold tracking-wider text-zinc-500 uppercase">Dia livre</p>
-			</div>
-		{:else}
-			<div class="flex flex-col gap-1.5">
-				{#each agendaItems as item (item.type === 'appointment' ? item.data.id : `ghost-group-${item.sortTime}`)}
-					{#if item.type === 'appointment'}
-						{@const startMs = dateUtils.parseTimeToMs(
-							item.data.start_at,
-							data.selectedDate,
-							data.timezone
-						)}
-						{@const endMs = dateUtils.parseTimeToMs(
-							item.data.end_at,
-							data.selectedDate,
-							data.timezone
-						)}
-						{@const isNext = item.data.id === nextAppointmentId}
-						{@const isNow = ticker >= startMs && ticker <= endMs}
-						{@const isToday = data.selectedDate === dateUtils.today(data.timezone)}
-
-						<div>
-							<AppointmentItem
-								appt={item.data}
-								{showServiceColor}
-								currentTime={ticker}
-								selectedDate={data.selectedDate}
-								timezone={data.timezone}
-								soon={isToday && (isNext || isNow)
-									? dateUtils.getSoonLabel(startMs, endMs, ticker)
-									: null}
-							/>
-						</div>
-					{:else if item.type === 'ghost-group'}
-						<GhostSlot
-							slots={item.slots}
-							onSlotClick={(time) => {
-								selectedTime = time;
-								ui.modal = true;
-							}}
-						/>
-					{/if}
-				{/each}
 			</div>
 		{/if}
 

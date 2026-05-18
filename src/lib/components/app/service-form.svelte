@@ -7,14 +7,15 @@
 	import { enhance } from '$app/forms';
 	import { toast } from 'svelte-sonner';
 
+	// Cores atualizadas para paletas Premium Pastel com anel interno sutil
 	const colorsMap = {
-		zinc: 'bg-zinc-500 border-zinc-600',
-		blue: 'bg-blue-500 border-blue-600',
-		indigo: 'bg-indigo-500 border-indigo-600',
-		violet: 'bg-violet-500 border-violet-600',
-		rose: 'bg-rose-500 border-rose-600',
-		amber: 'bg-amber-500 border-amber-600',
-		emerald: 'bg-emerald-500 border-emerald-600'
+		zinc: 'bg-zinc-500 border-zinc-600/30 text-white',
+		blue: 'bg-sky-500 border-sky-600/30 text-white',
+		indigo: 'bg-indigo-500 border-indigo-600/30 text-white',
+		violet: 'bg-violet-500 border-violet-600/30 text-white',
+		rose: 'bg-rose-500 border-rose-600/30 text-white',
+		amber: 'bg-amber-500 border-amber-600/30 text-white',
+		emerald: 'bg-emerald-500 border-emerald-600/30 text-white'
 	} as const;
 
 	type ServiceColor = keyof typeof colorsMap;
@@ -52,7 +53,6 @@
 		color: 'blue'
 	});
 
-	// Sincronização de estado centralizada
 	$effect(() => {
 		if (open) {
 			formState = {
@@ -72,11 +72,11 @@
 
 <Dialog.Root bind:open>
 	<Dialog.Content
-		class="flex max-h-[92dvh] w-[95vw] flex-col gap-0 overflow-hidden rounded-[24px] p-0 sm:max-w-[380px]"
+		class="flex max-h-[92dvh] w-[95vw] flex-col gap-0 overflow-hidden rounded-[28px] border border-zinc-200/50 bg-white/85 p-0 shadow-[0_24px_50px_-12px_rgba(0,0,0,0.08)] backdrop-blur-xl sm:max-w-[380px]"
 	>
-		<Dialog.Header class="px-5 pt-4 pb-2 text-left">
-			<Dialog.Title class="text-base font-bold text-zinc-900">
-				{formState.id ? 'Editar Serviço' : 'Novo Serviço'}
+		<Dialog.Header class="px-5 pt-5 pb-3 text-left">
+			<Dialog.Title class="text-[17px] font-semibold tracking-tight text-zinc-900">
+				{formState.id ? 'Editar serviço' : 'Novo serviço'}
 			</Dialog.Title>
 		</Dialog.Header>
 
@@ -92,10 +92,10 @@
 					isLoading = false;
 
 					if (result.type === 'success') {
-						toast.success(isDelete ? 'Serviço excluído' : 'Serviço salvo');
+						toast.success(isDelete ? 'Serviço excluído com sucesso' : 'Alterações salvas!');
 						open = false;
 					} else if (result.type === 'failure') {
-						toast.error(result.data?.message ?? 'Erro na operação');
+						toast.error(result.data?.message ?? 'Erro ao processar requisição');
 						isConfirmingDelete = false;
 					}
 				};
@@ -106,47 +106,47 @@
 			<input type="hidden" name="color" value={formState.color} />
 			<input type="hidden" name="is_active" value={String(formState.is_active)} />
 
-			<!-- Área rolável apenas se a tela for muito pequena -->
-			<div class="max-h-[55dvh] space-y-3 overflow-y-auto px-5 pb-4">
-				<!-- Campo Nome -->
-				<div class="grid gap-1">
-					<Label class="text-[10px] font-bold tracking-wider text-zinc-400 uppercase"
-						>Nome do Serviço</Label
+			<div class="max-h-[55dvh] space-y-4 overflow-y-auto px-5 pb-6">
+				<div class="grid gap-1.5">
+					<Label class="text-[10.5px] font-bold tracking-wider text-zinc-400 uppercase"
+						>Nome do serviço</Label
 					>
 					<Input
 						name="name"
 						bind:value={formState.name}
-						placeholder="Ex: Corte de Cabelo"
-						class="h-10 rounded-xl bg-zinc-50/50"
+						placeholder="Ex: Alinhamento de Barba"
+						class="h-11 rounded-[14px] border-zinc-200/80 bg-zinc-50/40 text-[14.5px] transition-colors placeholder:text-zinc-400 focus-visible:bg-white focus-visible:ring-zinc-300"
 						required
 					/>
 				</div>
 
-				<!-- Grid de Duração e Antecedência combinados na horizontal -->
-				<div class="grid grid-cols-2 gap-3">
-					<div class="grid gap-1">
-						<Label class="text-[10px] font-bold tracking-wider text-zinc-400 uppercase"
+				<div class="grid grid-cols-2 gap-3.5">
+					<div class="grid gap-1.5">
+						<Label class="text-[10.5px] font-bold tracking-wider text-zinc-400 uppercase"
 							>Duração</Label
 						>
 						<div class="relative">
-							<Clock class="absolute top-3 left-3 size-4 text-zinc-400" />
+							<Clock class="pointer-events-none absolute top-3.5 left-3.5 size-4 text-zinc-400" />
 							<Input
 								name="duration"
 								type="text"
 								inputmode="numeric"
 								bind:value={formState.duration}
-								class="h-10 rounded-xl bg-zinc-50/50 pl-9 font-semibold"
+								class="h-11 rounded-[14px] border-zinc-200/80 bg-zinc-50/40 pr-11 pl-9.5 text-[14.5px] font-bold text-zinc-900 transition-colors focus-visible:bg-white focus-visible:ring-zinc-300"
 								required
 								oninput={(e) => {
 									formState.duration = Number(e.currentTarget.value.replace(/\D/g, ''));
 								}}
 							/>
-							<span class="absolute top-2.5 right-3 text-xs font-medium text-zinc-400">min</span>
+							<span
+								class="pointer-events-none absolute top-3.5 right-3.5 text-[12px] font-semibold text-zinc-400"
+								>min</span
+							>
 						</div>
 					</div>
 
-					<div class="grid gap-1">
-						<Label class="text-[10px] font-bold tracking-wider text-zinc-400 uppercase"
+					<div class="grid gap-1.5">
+						<Label class="text-[10.5px] font-bold tracking-wider text-zinc-400 uppercase"
 							>Antecedência</Label
 						>
 						<div class="relative">
@@ -155,34 +155,38 @@
 								type="text"
 								inputmode="numeric"
 								bind:value={formState.min_notice_hours}
-								class="h-10 rounded-xl bg-zinc-50/50 pr-8 text-center font-semibold"
+								class="h-11 rounded-[14px] border-zinc-200/80 bg-zinc-50/40 pr-11 text-center text-[14.5px] font-bold text-zinc-900 transition-colors focus-visible:bg-white focus-visible:ring-zinc-300"
 								oninput={(e) => {
 									formState.min_notice_hours = Number(e.currentTarget.value.replace(/\D/g, ''));
 								}}
 							/>
-							<span class="absolute top-2.5 right-3 text-xs font-medium text-zinc-400">hrs</span>
+							<span
+								class="pointer-events-none absolute top-3.5 right-3.5 text-[12px] font-semibold text-zinc-400"
+								>hrs</span
+							>
 						</div>
 					</div>
 				</div>
 
-				<!-- Seletor de Cores Compacto -->
-				<div class="grid gap-1.5 pt-1">
-					<Label class="text-[10px] font-bold tracking-wider text-zinc-400 uppercase"
-						>Cor de Identificação</Label
+				<div class="grid gap-2 pt-1">
+					<Label class="text-[10.5px] font-bold tracking-wider text-zinc-400 uppercase"
+						>Cor de identificação</Label
 					>
-					<div class="flex flex-wrap gap-1.5">
+					<div class="flex flex-wrap gap-2">
 						{#each Object.keys(colorsMap) as colorKey}
 							<button
 								type="button"
-								class="relative size-6 rounded-full border transition-transform active:scale-90 {colorsMap[
+								class="relative size-6.5 cursor-pointer rounded-full border transition-all hover:scale-105 active:scale-95 {colorsMap[
 									colorKey as ServiceColor
-								]}"
+								]} {formState.color === colorKey
+									? 'ring-2 ring-zinc-900 ring-offset-2'
+									: 'hover:border-zinc-400/50'}"
 								onclick={() => (formState.color = colorKey as ServiceColor)}
 								title={colorKey}
 							>
 								{#if formState.color === colorKey}
-									<div class="absolute inset-0 flex items-center justify-center text-white">
-										<Check size={12} strokeWidth={3} />
+									<div class="absolute inset-0 flex items-center justify-center">
+										<Check size={11} strokeWidth={3.5} />
 									</div>
 								{/if}
 							</button>
@@ -191,9 +195,8 @@
 				</div>
 			</div>
 
-			<!-- Rodapé Fixo e Compacto -->
 			<div
-				class="flex gap-2 border-t bg-zinc-50/80 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]"
+				class="flex gap-2.5 border-t border-zinc-100 bg-zinc-50/50 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] backdrop-blur-md"
 			>
 				{#if formState.id}
 					<Button
@@ -206,7 +209,7 @@
 								isConfirmingDelete = true;
 							}
 						}}
-						class="h-10 flex-1 rounded-xl text-xs font-semibold"
+						class="h-11 flex-1 rounded-[14px] text-[13px] font-semibold shadow-sm shadow-red-900/[0.04] transition-all"
 					>
 						{isConfirmingDelete ? 'Confirmar?' : 'Excluir'}
 					</Button>
@@ -218,14 +221,14 @@
 					onclick={() => {
 						if (isConfirmingDelete) isConfirmingDelete = false;
 					}}
-					class="h-10 {formState.id
-						? 'flex-[1.5]'
-						: 'w-full'} rounded-xl bg-zinc-900 text-xs font-semibold text-white hover:bg-zinc-800"
+					class="h-11 {formState.id
+						? 'flex-[1.6]'
+						: 'w-full'} rounded-[14px] bg-zinc-900 text-[13px] font-semibold text-white transition-all hover:bg-zinc-800 active:scale-[0.98] disabled:bg-zinc-300"
 				>
 					{#if isLoading}
-						<LoaderCircle class="mr-1.5 size-3.5 animate-spin" />
+						<LoaderCircle class="mr-1.5 size-4 animate-spin" />
 					{:else}
-						{isConfirmingDelete ? 'Cancelar' : 'Salvar Serviço'}
+						{isConfirmingDelete ? 'Cancelar' : 'Salvar serviço'}
 					{/if}
 				</Button>
 			</div>
@@ -238,5 +241,8 @@
 	input::-webkit-inner-spin-button {
 		-webkit-appearance: none;
 		margin: 0;
+	}
+	button {
+		-webkit-tap-highlight-color: transparent;
 	}
 </style>

@@ -102,6 +102,14 @@
 		if (val.length > 2) return `(${val.slice(0, 2)}) ${val.slice(2)}`;
 		return val;
 	}
+	function getInitials(nameStr: string) {
+		const name = nameStr?.trim();
+		if (!name) return '?';
+		const parts = name.split(/\s+/);
+		const first = parts[0][0];
+		const last = parts.length > 1 ? parts[parts.length - 1][0] : '';
+		return (first + last).toUpperCase();
+	}
 </script>
 
 <div class="flex h-full flex-col">
@@ -139,7 +147,7 @@
 				<div
 					class="flex size-11 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-sm font-bold text-zinc-500"
 				>
-					{customer.name.charAt(0).toUpperCase()}
+					{getInitials(customer.name)}
 				</div>
 				<div class="min-w-0 flex-1 text-left">
 					<p class="truncate font-bold text-zinc-900">{customer.name}</p>

@@ -36,13 +36,6 @@
 
 	const currentStatus = $derived(STATUS_MAP[appt.status]);
 
-	const initials = $derived.by(() => {
-		const name = appt.customer_name?.trim();
-		if (!name) return '';
-		const parts = name.split(/\s+/);
-		return (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
-	});
-
 	const categoryStyle = $derived.by(() => {
 		const color = appt.service_color || 'zinc';
 		return color.startsWith('#')

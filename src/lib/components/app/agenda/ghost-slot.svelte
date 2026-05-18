@@ -45,7 +45,7 @@
 		align-items: center;
 		gap: 0.5rem;
 		border-radius: 0.75rem;
-		outline: 1.5px dashed #d4d4d8;
+		outline: 1.5px dashed #a1a1aa;
 		outline-offset: -1px;
 		background: #fafafa;
 		padding: 0.45rem 0.75rem 0.45rem 0.9rem;
@@ -74,7 +74,7 @@
 	.free-label {
 		font-size: 0.75rem;
 		font-weight: 400;
-		color: #a1a1aa;
+		color: #52525b;
 		letter-spacing: 0.01em;
 		flex: 1;
 	}

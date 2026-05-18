@@ -79,5 +79,81 @@ export const actions: Actions = {
 		} catch (err) {
 			return fail(500);
 		}
+	},
+	updateProfile: async ({ request, locals }) => {
+		const session = await locals.session;
+		if (!session) return fail(401);
+
+		const formData = await request.formData();
+		const fullName = formData.get('fullName')?.toString().trim();
+		const username = formData.get('username')?.toString().trim().toLowerCase();
+		const address = formData.get('address')?.toString().trim();
+		const phone = formData.get('phone')?.toString().trim();
+		const email = formData.get('email')?.toString().trim();
+		const password = formData.get('password')?.toString();
+
+		// Validações Básicas Obrigatórias
+		if (!fullName || !username) {
+			return fail(400, { message: 'Nome e Link da agenda são obrigatórios.' });
+		}
+
+		// Regex simples para evitar caracteres estranhos no link da agenda
+		if (!/^[a-z0-9-_]+$/.test(username)) {
+			return fail(400, {
+				message: 'O link da agenda deve conter apenas letras, números, hífens ou underlines.'
+			});
+		}
+
+		try {
+			// 1. Verificar se o username já está em uso por outro usuário
+			const existingUser = await locals.sql`
+				SELECT id FROM public.profiles 
+				WHERE username = ${username} AND id != ${session.user.id}
+			`;
+			if (existingUser.length > 0) {
+				return fail(400, { message: 'Este link de agenda já está sendo utilizado.' });
+			}
+
+			// 2. Atualizar dados na tabela pública public.profiles
+			// Se o campo de telefone não existir na tabela, remova a linha correspondente
+			await locals.sql`
+				UPDATE public.profiles
+				SET 
+					full_name = ${fullName},
+					username = ${username},
+					address = ${address || null}
+				WHERE id = ${session.user.id}
+			`;
+
+			// 3. Atualizar metadados de exibição no Auth do Supabase
+			const authAttributes: any = {
+				data: { full_name: fullName, username: username }
+			};
+
+			// Se o usuário preencheu um novo e-mail e ele é diferente do atual
+			if (email && email !== session.user.email) {
+				authAttributes.email = email;
+			}
+
+			// Se o usuário digitou uma nova senha
+			if (password && password.length > 0) {
+				if (password.length < 6) {
+					return fail(400, { message: 'A nova senha deve ter no mínimo 6 caracteres.' });
+				}
+				authAttributes.password = password;
+			}
+
+			// 4. Executa a atualização no Supabase Auth se houver e-mail, senha ou metadados novos
+			const { error: authError } = await locals.supabase.auth.updateUser(authAttributes);
+
+			if (authError) {
+				return fail(400, { message: authError.message });
+			}
+
+			return { success: true };
+		} catch (err) {
+			console.error('Erro ao atualizar perfil:', err);
+			return fail(500, { message: 'Erro interno ao salvar os dados.' });
+		}
 	}
 };

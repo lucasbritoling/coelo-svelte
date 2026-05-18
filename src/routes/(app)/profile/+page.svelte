@@ -56,7 +56,7 @@
 	class="mx-auto max-w-2xl space-y-8 px-4 py-10 pt-8"
 	in:fly={{ y: 20, duration: 260, easing: cubicOut }}
 >
-	<div class="flex items-center justify-between pb-0">
+	<div class="mb-4 flex items-center justify-between pb-0">
 		<Button variant="ghost" size="icon" onclick={() => history.back()} aria-label="Voltar">
 			<ChevronLeft size={18} strokeWidth={2} />
 		</Button>

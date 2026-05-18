@@ -7,7 +7,7 @@
 		Clock,
 		BriefcaseBusiness,
 		LoaderCircle,
-		Settings2
+		CalendarCog
 	} from '@lucide/svelte';
 	import { goto } from '$app/navigation';
 
@@ -83,7 +83,7 @@
 			class="flex w-full items-center gap-3 border-b border-border/40 px-4 py-3 text-left transition-colors active:bg-muted/50"
 		>
 			<div class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted">
-				<Settings2 class="size-4 text-muted-foreground" />
+				<CalendarCog class="size-4 text-muted-foreground" />
 			</div>
 			<p class="flex-1 text-[14px] font-medium">Agenda</p>
 			<ChevronRight class="size-4 shrink-0 text-muted-foreground/40" />

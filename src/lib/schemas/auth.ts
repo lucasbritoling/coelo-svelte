@@ -79,6 +79,7 @@ const RESERVED_USERNAMES = new Set([
 	'callback',
 	'confirm-reset',
 	'horarios',
+	'rotina',
 	'mais',
 	'servicos'
 ]);

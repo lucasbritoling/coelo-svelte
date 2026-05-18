@@ -5,7 +5,7 @@ import { PUBLIC_SUPABASE_URL, PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY } from '$e
 import postgres from 'postgres';
 
 const PUBLIC_ROUTES = new Set(['/login', '/signup']);
-const PRIVATE_ROUTES = new Set(['/agenda', '/clientes', '/servicos', '/horarios']);
+const PRIVATE_ROUTES = new Set(['/agenda', '/clientes', '/servicos', '/rotina']);
 
 /**
  * 1. HOOK DE CONECTIVIDADE (BANCO DE DADOS)

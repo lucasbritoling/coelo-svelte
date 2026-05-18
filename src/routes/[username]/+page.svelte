@@ -18,7 +18,7 @@
 		Clock
 	} from '@lucide/svelte';
 	import { sanitizePhone, formatPhoneMask, isValidPhone } from '$lib/utils/phone';
-	import { toast } from 'svelte-sonner'; // Adicione este import
+	import { toast } from 'svelte-sonner';
 
 	let { data } = $props();
 
@@ -27,7 +27,6 @@
 	const slots = $derived(data.slots);
 	const multiService = $derived(services.length > 1);
 
-	// Otimização O(1) usando Set reativo para desabilitar dias vazios instantaneamente
 	const availableDaysSet = $derived(new Set(data.availableDays || []));
 
 	// ── Steps ────────────────────────────────────────────────────────
@@ -43,13 +42,34 @@
 	let calendarValue = $state(data.selectedDate ? parseDate(data.selectedDate) : null);
 	let selectedSlot = $state<any>(null);
 	let customerName = $state('');
-	// 1. Runa de estado: guarda sempre os 11 dígitos limpos (ex: 11999999999)
+
+	// Estado do primeiro telefone
 	let rawPhone = $state('');
 	let phoneTouched = $state(false);
+	let customerPhone = $derived(formatPhoneMask(rawPhone));
+
+	// Estado do telefone de confirmação
+	let rawConfirmPhone = $state('');
+	let confirmPhoneTouched = $state(false);
+	let customerConfirmPhone = $derived(formatPhoneMask(rawConfirmPhone));
+
 	let isLoading = $state(false);
 
-	// 2. Runa derivada: calcula a máscara em tempo real para o bind:value
-	let customerPhone = $derived(formatPhoneMask(rawPhone));
+	// ── Validação em background para o canAdvance ───────────────────
+	const phonesMatch = $derived(rawPhone === rawConfirmPhone);
+	const isPhoneValid = $derived(isValidPhone(rawPhone));
+
+	const canAdvance = $derived(
+		currentStep === 'service'
+			? !!selectedServiceId
+			: currentStep === 'date'
+				? !!data.selectedDate
+				: currentStep === 'time'
+					? !!selectedSlot
+					: currentStep === 'confirm'
+						? customerName.length > 2 && isPhoneValid && phonesMatch
+						: false
+	);
 
 	const selectedService = $derived(services.find((s: any) => s.id === selectedServiceId));
 
@@ -75,19 +95,6 @@
 		const d = new Date(data.selectedDate + 'T12:00:00');
 		return `${DAYS_PT[d.getDay()]}, ${d.getDate()} de ${MONTHS_PT[d.getMonth()]}`;
 	});
-
-	// ── Advance guard ────────────────────────────────────────────────
-	const canAdvance = $derived(
-		currentStep === 'service'
-			? !!selectedServiceId
-			: currentStep === 'date'
-				? !!data.selectedDate
-				: currentStep === 'time'
-					? !!selectedSlot
-					: currentStep === 'confirm'
-						? customerName.length > 2 && customerPhone.length > 7
-						: false
-	);
 
 	async function goNext() {
 		if (!canAdvance) return;
@@ -119,36 +126,33 @@
 		return t?.slice(0, 5) ?? '';
 	}
 
-	// Função que avalia cada quadrado do calendário do shadcn (bits-ui)
 	function isDateDisabled(date: any) {
-		// Converte o objeto CalendarDate para string no padrão 'YYYY-MM-DD'
 		const dateString = `${date.year}-${String(date.month).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`;
-
-		// Se o dia NÃO estiver na lista de dias disponíveis retornada da RPC, desativa-o
 		return !availableDaysSet.has(dateString);
 	}
 
-	// 3. Regras de validação estritas (mínimo 11, máximo 11)
-	const isPhoneValid = $derived(isValidPhone(rawPhone));
+	// ── Regras de Exibição de Erro (Apenas se touched) ────────────────
 	const showPhoneError = $derived(phoneTouched && !isPhoneValid && rawPhone.length > 0);
+	const showConfirmPhoneError = $derived(
+		confirmPhoneTouched &&
+			rawConfirmPhone.length > 0 &&
+			(!isValidPhone(rawConfirmPhone) || !phonesMatch)
+	);
 
-	// Função que limpa letras/símbolos e trava em 11 caracteresmax
+	// Trata input principal e reseta o erro visual enquanto digita
 	function tratarInput(e: Event) {
 		const target = e.target as HTMLInputElement;
-
-		// Limpa e atualiza o estado reativo
+		phoneTouched = false; // Esconde o erro enquanto o usuário digita
 		rawPhone = sanitizePhone(target.value);
-
-		// Força a atualização imediata do valor visual no elemento do DOM
 		target.value = formatPhoneMask(rawPhone);
 	}
 
-	// Função que monta a máscara (11) 99999-9999 dinamicamente
-	function formatarMascarar(v: string) {
-		if (!v) return '';
-		if (v.length <= 2) return `(${v}`;
-		if (v.length <= 6) return `(${v.slice(0, 2)}) ${v.slice(2)}`;
-		return `(${v.slice(0, 2)}) ${v.slice(2, 7)}-${v.slice(7, 11)}`;
+	// Trata confirmação e reseta o erro visual enquanto digita
+	function tratarConfirmInput(e: Event) {
+		const target = e.target as HTMLInputElement;
+		confirmPhoneTouched = false; // Esconde o erro enquanto o usuário digita
+		rawConfirmPhone = sanitizePhone(target.value);
+		target.value = formatPhoneMask(rawConfirmPhone);
 	}
 </script>
 
@@ -301,7 +305,6 @@
 						}
 
 						if (result.type === 'failure') {
-							// Pega a mensagem exata que veio do fail() da Action do SvelteKit
 							const errorMessage = result.data?.message || 'Erro ao processar agendamento.';
 							toast.error(errorMessage);
 						}
@@ -316,7 +319,6 @@
 				<input type="hidden" name="slot_start" value={selectedSlot?.slot_start} />
 				<input type="hidden" name="service_id" value={selectedServiceId} />
 				<input type="hidden" name="profile_id" value={professional.id} />
-				<!-- NOVO: Envia o telefone limpo (ex: 11999999999) -->
 				<input type="hidden" name="customer_phone" value={rawPhone} />
 
 				<div class="space-y-2">
@@ -325,8 +327,56 @@
 				</div>
 
 				<div class="space-y-2">
-					<Label for="phone">WhatsApp</Label>
-					<!-- AJUSTADO: Removido o atributo name daqui para não sobrescrever o hidden -->
+					<Label for="phone" class="flex items-center gap-1.5">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							viewBox="0 0 175.216 175.552"
+							class="size-4.5 shrink-0"
+						>
+							<defs>
+								<linearGradient
+									id="b"
+									x1="85.915"
+									x2="86.535"
+									y1="32.567"
+									y2="137.092"
+									gradientUnits="userSpaceOnUse"
+								>
+									<stop offset="0" stop-color="#57d163" />
+									<stop offset="1" stop-color="#23b33a" />
+								</linearGradient>
+								<filter
+									id="a"
+									width="1.115"
+									height="1.114"
+									x="-.057"
+									y="-.057"
+									color-interpolation-filters="sRGB"
+								>
+									<feGaussianBlur stdDeviation="3.531" />
+								</filter>
+							</defs>
+							<path
+								fill="#b3b3b3"
+								d="m54.532 138.45 2.235 1.324c9.387 5.571 20.15 8.518 31.126 8.523h.023c33.707 0 61.139-27.426 61.153-61.135.006-16.335-6.349-31.696-17.895-43.251A60.75 60.75 0 0 0 87.94 25.983c-33.733 0-61.166 27.423-61.178 61.13a60.98 60.98 0 0 0 9.349 32.535l1.455 2.312-6.179 22.558zm-40.811 23.544L24.16 123.88c-6.438-11.154-9.825-23.808-9.821-36.772.017-40.556 33.021-73.55 73.578-73.55 19.681.01 38.154 7.669 52.047 21.572s21.537 32.383 21.53 52.037c-.018 40.553-33.027 73.553-73.578 73.553h-.032c-12.313-.005-24.412-3.094-35.159-8.954zm0 0"
+								filter="url(#a)"
+							/>
+							<path
+								fill="#fff"
+								d="m12.966 161.238 10.439-38.114a73.42 73.42 0 0 1-9.821-36.772c.017-40.556 33.021-73.55 73.578-73.55 19.681.01 38.154 7.669 52.047 21.572s21.537 32.383 21.53 52.037c-.018 40.553-33.027 73.553-73.578 73.553h-.032c-12.313-.005-24.412-3.094-35.159-8.954z"
+							/>
+							<path
+								fill="url(#b)"
+								d="M87.184 25.227c-33.733 0-61.166 27.423-61.178 61.13a60.98 60.98 0 0 0 9.349 32.535l1.455 2.313-6.179 22.558 23.146-6.069 2.235 1.324c9.387 5.571 20.15 8.517 31.126 8.523h.023c33.707 0 61.14-27.426 61.153-61.135a60.75 60.75 0 0 0-17.895-43.251 60.75 60.75 0 0 0-43.235-17.928"
+							/>
+							<path
+								fill="#fff"
+								fill-rule="evenodd"
+								d="M68.772 55.603c-1.378-3.061-2.828-3.123-4.137-3.176l-3.524-.043c-1.226 0-3.218.46-4.902 2.3s-6.435 6.287-6.435 15.332 6.588 17.785 7.506 19.013 12.718 20.381 31.405 27.75c15.529 6.124 18.689 4.906 22.061 4.6s10.877-4.447 12.408-8.74 1.532-7.971 1.073-8.74-1.685-1.226-3.525-2.146-10.877-5.367-12.562-5.981-2.91-.919-4.137.921-4.746 5.979-5.819 7.206-2.144 1.381-3.984.462-7.76-2.861-14.784-9.124c-5.465-4.873-9.154-10.891-10.228-12.73s-.114-2.835.808-3.751c.825-.824 1.838-2.147 2.759-3.22s1.224-1.84 1.836-3.065.307-2.301-.153-3.22-4.032-10.011-5.666-13.647"
+							/>
+						</svg>
+						WhatsApp
+					</Label>
 					<Input
 						id="phone"
 						type="tel"
@@ -345,6 +395,82 @@
 						</p>
 					{/if}
 				</div>
+
+				{#if rawPhone.length > 0}
+					<div class="animate-in space-y-2 duration-200 fade-in slide-in-from-top-2">
+						<Label for="confirmPhone" class="flex items-center gap-1.5">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								viewBox="0 0 175.216 175.552"
+								class="size-4.5 shrink-0"
+							>
+								<defs>
+									<linearGradient
+										id="b-confirm"
+										x1="85.915"
+										x2="86.535"
+										y1="32.567"
+										y2="137.092"
+										gradientUnits="userSpaceOnUse"
+									>
+										<stop offset="0" stop-color="#57d163" />
+										<stop offset="1" stop-color="#23b33a" />
+									</linearGradient>
+									<filter
+										id="a-confirm"
+										width="1.115"
+										height="1.114"
+										x="-.057"
+										y="-.057"
+										color-interpolation-filters="sRGB"
+									>
+										<feGaussianBlur stdDeviation="3.531" />
+									</filter>
+								</defs>
+								<path
+									fill="#b3b3b3"
+									d="m54.532 138.45 2.235 1.324c9.387 5.571 20.15 8.518 31.126 8.523h.023c33.707 0 61.139-27.426 61.153-61.135.006-16.335-6.349-31.696-17.895-43.251A60.75 60.75 0 0 0 87.94 25.983c-33.733 0-61.166 27.423-61.178 61.13a60.98 60.98 0 0 0 9.349 32.535l1.455 2.312-6.179 22.558zm-40.811 23.544L24.16 123.88c-6.438-11.154-9.825-23.808-9.821-36.772.017-40.556 33.021-73.55 73.578-73.55 19.681.01 38.154 7.669 52.047 21.572s21.537 32.383 21.53 52.037c-.018 40.553-33.027 73.553-73.578 73.553h-.032c-12.313-.005-24.412-3.094-35.159-8.954zm0 0"
+									filter="url(#a-confirm)"
+								/>
+								<path
+									fill="#fff"
+									d="m12.966 161.238 10.439-38.114a73.42 73.42 0 0 1-9.821-36.772c.017-40.556 33.021-73.55 73.578-73.55 19.681.01 38.154 7.669 52.047 21.572s21.537 32.383 21.53 52.037c-.018 40.553-33.027 73.553-73.578 73.553h-.032c-12.313-.005-24.412-3.094-35.159-8.954z"
+								/>
+								<path
+									fill="url(#b-confirm)"
+									d="M87.184 25.227c-33.733 0-61.166 27.423-61.178 61.13a60.98 60.98 0 0 0 9.349 32.535l1.455 2.313-6.179 22.558 23.146-6.069 2.235 1.324c9.387 5.571 20.15 8.517 31.126 8.523h.023c33.707 0 61.14-27.426 61.153-61.135a60.75 60.75 0 0 0-17.895-43.251 60.75 60.75 0 0 0-43.235-17.928"
+								/>
+								<path
+									fill="#fff"
+									fill-rule="evenodd"
+									d="M68.772 55.603c-1.378-3.061-2.828-3.123-4.137-3.176l-3.524-.043c-1.226 0-3.218.46-4.902 2.3s-6.435 6.287-6.435 15.332 6.588 17.785 7.506 19.013 12.718 20.381 31.405 27.75c15.529 6.124 18.689 4.906 22.061 4.6s10.877-4.447 12.408-8.74 1.532-7.971 1.073-8.74-1.685-1.226-3.525-2.146-10.877-5.367-12.562-5.981-2.91-.919-4.137.921-4.746 5.979-5.819 7.206-2.144 1.381-3.984.462-7.76-2.861-14.784-9.124c-5.465-4.873-9.154-10.891-10.228-12.73s-.114-2.835.808-3.751c.825-.824 1.838-2.147 2.759-3.22s1.224-1.84 1.836-3.065.307-2.301-.153-3.22-4.032-10.011-5.666-13.647"
+								/>
+							</svg>
+							Confirme seu WhatsApp
+						</Label>
+						<Input
+							id="confirmPhone"
+							type="tel"
+							inputmode="numeric"
+							value={customerConfirmPhone}
+							oninput={tratarConfirmInput}
+							onblur={() => (confirmPhoneTouched = true)}
+							placeholder="(11) 99999-9999"
+							required
+							class={showConfirmPhoneError ? 'border-red-500 focus-visible:ring-red-500' : ''}
+						/>
+
+						{#if showConfirmPhoneError}
+							<p class="animate-in text-xs font-medium text-red-500 duration-150 fade-in">
+								{#if !isValidPhone(rawConfirmPhone)}
+									O telefone deve ter exatamente 11 dígitos.
+								{:else if !phonesMatch}
+									Os números de telefone não são idênticos.
+								{/if}
+							</p>
+						{/if}
+					</div>
+				{/if}
 
 				<Button type="submit" class="mt-2 w-full" disabled={isLoading || !canAdvance}>
 					{#if isLoading}<LoaderCircle class="mr-2 size-4 animate-spin" />{/if}

@@ -87,9 +87,24 @@
 	}
 
 	let touchStartX = 0;
+	let touchStartY = 0;
+
+	function handleTouchStart(e: TouchEvent) {
+		touchStartX = e.changedTouches[0].screenX;
+		touchStartY = e.changedTouches[0].screenY;
+	}
+
 	function handleTouchEnd(e: TouchEvent) {
 		const dx = touchStartX - e.changedTouches[0].screenX;
-		if (Math.abs(dx) > 80) navigateDay(dx > 0 ? 1 : -1);
+		const dy = touchStartY - e.changedTouches[0].screenY;
+
+		const absDx = Math.abs(dx);
+		const absDy = Math.abs(dy);
+
+		// Só navega se o movimento horizontal for maior que o vertical E atingir o threshold de 80px
+		if (absDx > absDy && absDx > 80) {
+			navigateDay(dx > 0 ? 1 : -1);
+		}
 	}
 
 	const defaultDuration = $derived.by(() => {
@@ -287,7 +302,7 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
 	class="flex h-full touch-pan-y flex-col"
-	ontouchstart={(e) => (touchStartX = e.changedTouches[0].screenX)}
+	ontouchstart={handleTouchStart}
 	ontouchend={handleTouchEnd}
 >
 	<AgendaHeader

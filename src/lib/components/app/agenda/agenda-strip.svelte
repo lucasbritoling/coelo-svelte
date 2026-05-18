@@ -30,8 +30,11 @@
 	});
 </script>
 
-<div class="no-scrollbar flex gap-3 overflow-x-auto px-5 pt-2 pb-0" ontouchstart={(e) => e.stopPropagation()}
-	ontouchend={(e) => e.stopPropagation()}>
+<div
+	class="no-scrollbar flex gap-3 overflow-x-auto px-5 pt-2 pb-0"
+	ontouchstart={(e) => e.stopPropagation()}
+	ontouchend={(e) => e.stopPropagation()}
+>
 	{#each strip as day}
 		<button
 			onclick={() => onSelect(day.str)}

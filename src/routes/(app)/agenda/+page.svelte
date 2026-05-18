@@ -1,224 +1,224 @@
 <script lang="ts">
-        import { dateUtils, createFormatters } from '$lib/utils/date';
-        import { ui as globalUI } from '$lib/state/ui.svelte';
-        import type { Appointment } from '$lib/types/appointment';
-        import { Check, CalendarDays, Link, CalendarPlus } from '@lucide/svelte';
+	import { dateUtils, createFormatters } from '$lib/utils/date';
+	import { ui as globalUI } from '$lib/state/ui.svelte';
+	import type { Appointment } from '$lib/types/appointment';
+	import { Check, CalendarDays, Link, CalendarPlus } from '@lucide/svelte';
 
-        import { page } from '$app/state';
-        import { goto } from '$app/navigation';
-        import { toast } from 'svelte-sonner';
+	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
+	import { toast } from 'svelte-sonner';
 
-        import AgendaHeader from '$lib/components/app/agenda/agenda-header.svelte';
-        import AgendaStrip from '$lib/components/app/agenda/agenda-strip.svelte';
-        import AppointmentForm from '$lib/components/app/agenda/appointment-form.svelte';
-        import AppointmentItem from '$lib/components/app/agenda/appointment-item.svelte';
-        import GhostSlot from '$lib/components/app/agenda/ghost-slot.svelte';
-        import { scale } from 'svelte/transition';
+	import AgendaHeader from '$lib/components/app/agenda/agenda-header.svelte';
+	import AgendaStrip from '$lib/components/app/agenda/agenda-strip.svelte';
+	import AppointmentForm from '$lib/components/app/agenda/appointment-form.svelte';
+	import AppointmentItem from '$lib/components/app/agenda/appointment-item.svelte';
+	import GhostSlot from '$lib/components/app/agenda/ghost-slot.svelte';
+	import { scale } from 'svelte/transition';
 
-        // ── Props com Svelte 5 Runes ──────────────────────────────────
-        let { data } = $props<{
-                data: {
-                        appointments: Appointment[];
-                        username: string;
-                        selectedDate: string;
-                        customers: any[];
-                        services: any[];
-                        workingHours: any[];
-                        user: any;
-                        timezone: string;
-                };
-        }>();
+	// ── Props com Svelte 5 Runes ──────────────────────────────────
+	let { data } = $props<{
+		data: {
+			appointments: Appointment[];
+			username: string;
+			selectedDate: string;
+			customers: any[];
+			services: any[];
+			workingHours: any[];
+			user: any;
+			timezone: string;
+		};
+	}>();
 
-        // ── Lógica de Tempo & Ticker ──────────────────────────────────
-        let ticker = $state(Date.now());
-        $effect(() => {
-                const timeout = setTimeout(
-                        () => {
-                                ticker = Date.now();
-                                const interval = setInterval(() => {
-                                        ticker = Date.now();
-                                }, 60000);
-                                return () => clearInterval(interval);
-                        },
-                        60000 - (Date.now() % 60000)
-                );
-                return () => clearTimeout(timeout);
-        });
+	// ── Lógica de Tempo & Ticker ──────────────────────────────────
+	let ticker = $state(Date.now());
+	$effect(() => {
+		const timeout = setTimeout(
+			() => {
+				ticker = Date.now();
+				const interval = setInterval(() => {
+					ticker = Date.now();
+				}, 60000);
+				return () => clearInterval(interval);
+			},
+			60000 - (Date.now() % 60000)
+		);
+		return () => clearTimeout(timeout);
+	});
 
-        // ── Estado de UI Local ────────────────────────────────────────
-        let ui = $state({ modal: false, copied: false });
-        let selectedTime = $state('');
+	// ── Estado de UI Local ────────────────────────────────────────
+	let ui = $state({ modal: false, copied: false });
+	let selectedTime = $state('');
 
-        $effect(() => {
-                globalUI.isModalOpen = ui.modal;
-        });
+	$effect(() => {
+		globalUI.isModalOpen = ui.modal;
+	});
 
-        // ── Dados Derivados (Reatividade Limpa) ───────────────────────
-        const schedulingLink = $derived(`coelo.dev/${data.username}`);
-        const headerLabel = $derived(dateUtils.getHeaderLabel(data.selectedDate, data.timezone));
+	// ── Dados Derivados (Reatividade Limpa) ───────────────────────
+	const schedulingLink = $derived(`coelo.dev/${data.username}`);
+	const headerLabel = $derived(dateUtils.getHeaderLabel(data.selectedDate, data.timezone));
 
-        // Define se exibe a barra lateral de cor (Se o profissional possuir 2 ou mais serviços cadastrados no total)
-        const showServiceColor = $derived((data.services?.length ?? 0) >= 2);
+	// Define se exibe a barra lateral de cor (Se o profissional possuir 2 ou mais serviços cadastrados no total)
+	const showServiceColor = $derived((data.services?.length ?? 0) >= 2);
 
-        // ── Navegação de Datas ────────────────────────────────────────
-        function updateDate(newDate: string) {
-                if (!newDate || newDate === data.selectedDate) return;
-                const newUrl = new URL(page.url);
-                newUrl.searchParams.set('date', newDate);
-                goto(newUrl.search, { replaceState: true, noScroll: true });
-        }
+	// ── Navegação de Datas ────────────────────────────────────────
+	function updateDate(newDate: string) {
+		if (!newDate || newDate === data.selectedDate) return;
+		const newUrl = new URL(page.url);
+		newUrl.searchParams.set('date', newDate);
+		goto(newUrl.search, { replaceState: true, noScroll: true });
+	}
 
-        function navigateDay(offset: number) {
-                const date = dateUtils.parseISO(data.selectedDate);
-                date.setDate(date.getDate() + offset);
+	function navigateDay(offset: number) {
+		const date = dateUtils.parseISO(data.selectedDate);
+		date.setDate(date.getDate() + offset);
 
-                const formatters = createFormatters(data.timezone);
-                updateDate(formatters.iso.format(date));
-        }
+		const formatters = createFormatters(data.timezone);
+		updateDate(formatters.iso.format(date));
+	}
 
-        // Gestos de Swipe
-        let touchStartX = 0;
-        function handleTouchEnd(e: TouchEvent) {
-                const dx = touchStartX - e.changedTouches[0].screenX;
-                if (Math.abs(dx) > 80) navigateDay(dx > 0 ? 1 : -1);
-        }
+	// Gestos de Swipe
+	let touchStartX = 0;
+	function handleTouchEnd(e: TouchEvent) {
+		const dx = touchStartX - e.changedTouches[0].screenX;
+		if (Math.abs(dx) > 80) navigateDay(dx > 0 ? 1 : -1);
+	}
 
-        // ── Engenharia de Horários e Lacunas Livres ───────────────────
-        const defaultDuration = $derived.by(() => {
-                if (data.services?.length === 1) {
-                        return data.services[0].duration;
-                }
-                return data.user?.profile?.slot_interval ?? data.user?.slot_interval ?? 30;
-        });
+	// ── Engenharia de Horários e Lacunas Livres ───────────────────
+	const defaultDuration = $derived.by(() => {
+		if (data.services?.length === 1) {
+			return data.services[0].duration;
+		}
+		return data.user?.profile?.slot_interval ?? data.user?.slot_interval ?? 30;
+	});
 
-        const timeToMins = (t: string) => {
-                const [h, m] = t.split(':').map(Number);
-                return h * 60 + m;
-        };
+	const timeToMins = (t: string) => {
+		const [h, m] = t.split(':').map(Number);
+		return h * 60 + m;
+	};
 
-        const minsToTime = (m: number) => {
-                return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
-        };
+	const minsToTime = (m: number) => {
+		return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+	};
 
-        const nextAppointmentId = $derived.by(() => {
-                const isToday = data.selectedDate === dateUtils.today(data.timezone);
-                if (!isToday) return null;
+	const nextAppointmentId = $derived.by(() => {
+		const isToday = data.selectedDate === dateUtils.today(data.timezone);
+		if (!isToday) return null;
 
-                const nowStr = dateUtils.toTime(ticker, data.timezone);
+		const nowStr = dateUtils.toTime(ticker, data.timezone);
 
-                const next = data.appointments
-                        .filter((a) => a.status !== 'cancelled' && a.start_at > nowStr)
-                        .sort((a, b) => a.start_at.localeCompare(b.start_at))[0];
-                return next?.id;
-        });
+		const next = data.appointments
+			.filter((a) => a.status !== 'cancelled' && a.start_at > nowStr)
+			.sort((a, b) => a.start_at.localeCompare(b.start_at))[0];
+		return next?.id;
+	});
 
-        const agendaItems = $derived.by(() => {
-                const appointments = data.appointments || [];
+	const agendaItems = $derived.by(() => {
+		const appointments = data.appointments || [];
 
-                const rawItems: Array<
-                        | { type: 'appointment'; data: any; sortTime: string; isPast: boolean }
-                        | { type: 'ghost'; startAt: string; duration: number; sortTime: string }
-                > = [];
+		const rawItems: Array<
+			| { type: 'appointment'; data: any; sortTime: string; isPast: boolean }
+			| { type: 'ghost'; startAt: string; duration: number; sortTime: string }
+		> = [];
 
-                const todayStr = dateUtils.today(data.timezone);
-                const isSelectedToday = data.selectedDate === todayStr;
+		const todayStr = dateUtils.today(data.timezone);
+		const isSelectedToday = data.selectedDate === todayStr;
 
-                appointments.forEach((appt) => {
-                        let apptIsPast = false;
+		appointments.forEach((appt) => {
+			let apptIsPast = false;
 
-                        if (appt.status === 'cancelled' || appt.status === 'concluído' || appt.status === 'faltou') {
-                                apptIsPast = true;
-                        } else if (data.selectedDate < todayStr) {
-                                apptIsPast = true;
-                        } else if (isSelectedToday) {
-                                const endMs = dateUtils.parseTimeToMs(appt.end_at, data.selectedDate, data.timezone);
-                                apptIsPast = ticker > endMs;
-                        }
+			if (appt.status === 'cancelled' || appt.status === 'concluído' || appt.status === 'faltou') {
+				apptIsPast = true;
+			} else if (data.selectedDate < todayStr) {
+				apptIsPast = true;
+			} else if (isSelectedToday) {
+				const endMs = dateUtils.parseTimeToMs(appt.end_at, data.selectedDate, data.timezone);
+				apptIsPast = ticker > endMs;
+			}
 
-                        rawItems.push({
-                                type: 'appointment',
-                                data: appt,
-                                sortTime: appt.start_at,
-                                isPast: apptIsPast
-                        });
-                });
+			rawItems.push({
+				type: 'appointment',
+				data: appt,
+				sortTime: appt.start_at,
+				isPast: apptIsPast
+			});
+		});
 
-                const dayOfWeek = dateUtils.parseISO(data.selectedDate).getDay();
-                const currentDayConfig = data.workingHours?.find((wh) => wh.day_of_week === dayOfWeek);
+		const dayOfWeek = dateUtils.parseISO(data.selectedDate).getDay();
+		const currentDayConfig = data.workingHours?.find((wh) => wh.day_of_week === dayOfWeek);
 
-                if (currentDayConfig && currentDayConfig.is_active) {
-                        const dayStart = timeToMins(currentDayConfig.start_time);
-                        const dayEnd = timeToMins(currentDayConfig.end_time);
-                        const slotLen = defaultDuration;
+		if (currentDayConfig && currentDayConfig.is_active) {
+			const dayStart = timeToMins(currentDayConfig.start_time);
+			const dayEnd = timeToMins(currentDayConfig.end_time);
+			const slotLen = defaultDuration;
 
-                        const fillGap = (startMin: number, endMin: number) => {
-                                let current = startMin;
-                                while (current + slotLen <= endMin) {
-                                        const timeStr = minsToTime(current);
-                                        rawItems.push({
-                                                type: 'ghost',
-                                                startAt: timeStr,
-                                                duration: slotLen,
-                                                sortTime: timeStr
-                                        });
-                                        current += slotLen;
-                                }
-                        };
+			const fillGap = (startMin: number, endMin: number) => {
+				let current = startMin;
+				while (current + slotLen <= endMin) {
+					const timeStr = minsToTime(current);
+					rawItems.push({
+						type: 'ghost',
+						startAt: timeStr,
+						duration: slotLen,
+						sortTime: timeStr
+					});
+					current += slotLen;
+				}
+			};
 
-                        const activeAppts = [...appointments]
-                                .filter((a) => a.status !== 'cancelled')
-                                .sort((a, b) => a.start_at.localeCompare(b.start_at));
+			const activeAppts = [...appointments]
+				.filter((a) => a.status !== 'cancelled')
+				.sort((a, b) => a.start_at.localeCompare(b.start_at));
 
-                        if (activeAppts.length > 0) {
-                                const firstStart = timeToMins(activeAppts[0].start_at);
-                                if (firstStart > dayStart) fillGap(dayStart, firstStart);
+			if (activeAppts.length > 0) {
+				const firstStart = timeToMins(activeAppts[0].start_at);
+				if (firstStart > dayStart) fillGap(dayStart, firstStart);
 
-                                for (let i = 0; i < activeAppts.length - 1; i++) {
-                                        const currentEnd = timeToMins(activeAppts[i].end_at);
-                                        const nextStart = timeToMins(activeAppts[i + 1].start_at);
-                                        if (nextStart > currentEnd) fillGap(currentEnd, nextStart);
-                                }
+				for (let i = 0; i < activeAppts.length - 1; i++) {
+					const currentEnd = timeToMins(activeAppts[i].end_at);
+					const nextStart = timeToMins(activeAppts[i + 1].start_at);
+					if (nextStart > currentEnd) fillGap(currentEnd, nextStart);
+				}
 
-                                const lastEnd = timeToMins(activeAppts[activeAppts.length - 1].end_at);
-                                if (dayEnd > lastEnd) fillGap(lastEnd, dayEnd);
-                        } else {
-                                fillGap(dayStart, dayEnd);
-                        }
-                }
+				const lastEnd = timeToMins(activeAppts[activeAppts.length - 1].end_at);
+				if (dayEnd > lastEnd) fillGap(lastEnd, dayEnd);
+			} else {
+				fillGap(dayStart, dayEnd);
+			}
+		}
 
-                const nowTimeStr = dateUtils.toTime(ticker, data.timezone);
+		const nowTimeStr = dateUtils.toTime(ticker, data.timezone);
 
-                // Filtragem de slots antigos
-                const filteredItems = rawItems.filter((item) => {
-                        if (item.type === 'appointment') return true;
-                        if (isSelectedToday) return item.startAt >= nowTimeStr;
-                        return data.selectedDate > todayStr;
-                });
+		// Filtragem de slots antigos
+		const filteredItems = rawItems.filter((item) => {
+			if (item.type === 'appointment') return true;
+			if (isSelectedToday) return item.startAt >= nowTimeStr;
+			return data.selectedDate > todayStr;
+		});
 
-                // Separação explícita para agrupar fantasmas no final
-                const appointmentsOnly = filteredItems
-                        .filter(item => item.type === 'appointment')
-                        .sort((a, b) => a.sortTime.localeCompare(b.sortTime));
+		// Separação explícita para agrupar fantasmas no final
+		const appointmentsOnly = filteredItems
+			.filter((item) => item.type === 'appointment')
+			.sort((a, b) => a.sortTime.localeCompare(b.sortTime));
 
-                const ghostsOnly = filteredItems
-                        .filter(item => item.type === 'ghost')
-                        .sort((a, b) => a.sortTime.localeCompare(b.sortTime));
+		const ghostsOnly = filteredItems
+			.filter((item) => item.type === 'ghost')
+			.sort((a, b) => a.sortTime.localeCompare(b.sortTime));
 
-                const groupedItems = [...appointmentsOnly];
+		const groupedItems = [...appointmentsOnly];
 
-                if (ghostsOnly.length > 0) {
-                        groupedItems.push({
-                                type: 'ghost-group',
-                                sortTime: ghostsOnly[0].sortTime,
-                                slots: ghostsOnly.map(g => ({
-                                        startAt: g.startAt,
-                                        duration: g.duration
-                                }))
-                        });
-                }
+		if (ghostsOnly.length > 0) {
+			groupedItems.push({
+				type: 'ghost-group',
+				sortTime: ghostsOnly[0].sortTime,
+				slots: ghostsOnly.map((g) => ({
+					startAt: g.startAt,
+					duration: g.duration
+				}))
+			});
+		}
 
-                return groupedItems;
-        });
+		return groupedItems;
+	});
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->

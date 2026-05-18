@@ -29,7 +29,7 @@
 <header
 	class="sticky top-0 z-20 border-b border-transparent bg-background/80 backdrop-blur-xl transition-all"
 	class:border-border={!ui.isDatePickerOpen}
-ontouchstart={(e) => e.stopPropagation()}
+	ontouchstart={(e) => e.stopPropagation()}
 	ontouchend={(e) => e.stopPropagation()}
 >
 	<div class="relative flex items-center justify-between px-5 pt-6 pb-0">

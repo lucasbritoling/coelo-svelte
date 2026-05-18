@@ -86,7 +86,7 @@
 		</div>
 
 		<div class="right-col">
-			{#if currentStatus === 'pending'}
+			{#if currentStatus.type === 'pending'}
 				<span class="status-badge" data-status={currentStatus.type}>
 					<span class="badge-dot"></span>
 					<span class="badge-text">{currentStatus.label}</span>
@@ -315,13 +315,13 @@
 	}
 
 	.status-badge[data-status='pending'] {
-		background: #eff6ff;
-		color: #2563eb;
-		border-color: #bfdbfe;
+		background: #fffbeb; /* Amarelo bem claro (amber-50) */
+		color: #d97706; /* Texto amber escuro (amber-600) */
+		border-color: #fde68a; /* Borda amber leve (amber-200) */
 	}
 
 	.status-badge[data-status='pending'] .badge-dot {
-		background: #3b82f6;
+		background: #f59e0b; /* Bolinha amber sólida (amber-500) */
 	}
 
 	.status-badge[data-status='confirmed'] {

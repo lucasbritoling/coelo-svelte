@@ -339,9 +339,9 @@
 						{#if ui.copied}
 							<span
 								transition:scale={{ duration: 150 }}
-								class="rounded-lg bg-zinc-900 px-3 py-1.5 text-[10px] font-bold text-white shadow-xl"
+								class="rounded-lg bg-zinc-900 px-3 py-1.5 text-[10px] font-bold text-emerald-400 shadow-xl"
 							>
-								LINK COPIADO!
+								{schedulingLink}
 							</span>
 						{/if}
 

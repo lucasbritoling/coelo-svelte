@@ -176,8 +176,8 @@
 		<!-- Indicadores de paginação/fim de lista (Só aparecem se NÃO estiver buscando) -->
 		{#if !isSearching}
 			{#if searchQuery.trim() !== '' && filteredCustomers.length >= 50}
-				<p class="py-6 text-center text-[10px] font-bold tracking-widest text-zinc-400 uppercase">
-					Mostrando os primeiros 100 resultados. Busque para mais.
+				<p class="py-6 text-center text-[10px] font-medium tracking-widest text-zinc-400 uppercase">
+					Mostrando os primeiros 100 resultados.
 				</p>
 			{/if}
 		{/if}

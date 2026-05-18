@@ -2,7 +2,7 @@
 	import { dateUtils, createFormatters } from '$lib/utils/date';
 	import { ui as globalUI } from '$lib/state/ui.svelte';
 	import type { Appointment } from '$lib/types/appointment';
-	import { Check, CalendarDays, Link, CalendarPlus } from '@lucide/svelte';
+	import { Check, CalendarDays, Link, CalendarPlus, Coffee } from '@lucide/svelte';
 
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
@@ -221,6 +221,8 @@
 
 		return groupedItems;
 	});
+	const isPastDate = $derived(data.selectedDate < dateUtils.today(data.timezone));
+	const isFreeDay = $derived(!isPastDate && agendaItems.length === 0);
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -244,46 +246,60 @@
 	<AgendaStrip selectedDate={data.selectedDate} onSelect={updateDate} />
 
 	<div class="flex-1 space-y-2 overflow-y-auto px-4 pt-4 pb-20">
-		<div class="flex flex-col gap-1.5">
-			{#each agendaItems as item (item.type === 'appointment' ? item.data.id : `ghost-group-${item.sortTime}`)}
-				{#if item.type === 'appointment'}
-					{@const startMs = dateUtils.parseTimeToMs(
-						item.data.start_at,
-						data.selectedDate,
-						data.timezone
-					)}
-					{@const endMs = dateUtils.parseTimeToMs(
-						item.data.end_at,
-						data.selectedDate,
-						data.timezone
-					)}
-					{@const isNext = item.data.id === nextAppointmentId}
-					{@const isNow = ticker >= startMs && ticker <= endMs}
-					{@const isToday = data.selectedDate === dateUtils.today(data.timezone)}
+		{#if isFreeDay}
+			<div
+				class="flex h-[50vh] flex-col items-center justify-center gap-2.5 text-zinc-400"
+				transition:scale={{ duration: 150 }}
+			>
+				<div
+					class="flex h-12 w-12 items-center justify-center rounded-full border border-zinc-100 bg-zinc-50 text-zinc-500 shadow-sm"
+				>
+					<Coffee size={20} strokeWidth={2} />
+				</div>
+				<p class="text-xs font-bold tracking-wider text-zinc-500 uppercase">Dia livre</p>
+			</div>
+		{:else}
+			<div class="flex flex-col gap-1.5">
+				{#each agendaItems as item (item.type === 'appointment' ? item.data.id : `ghost-group-${item.sortTime}`)}
+					{#if item.type === 'appointment'}
+						{@const startMs = dateUtils.parseTimeToMs(
+							item.data.start_at,
+							data.selectedDate,
+							data.timezone
+						)}
+						{@const endMs = dateUtils.parseTimeToMs(
+							item.data.end_at,
+							data.selectedDate,
+							data.timezone
+						)}
+						{@const isNext = item.data.id === nextAppointmentId}
+						{@const isNow = ticker >= startMs && ticker <= endMs}
+						{@const isToday = data.selectedDate === dateUtils.today(data.timezone)}
 
-					<div>
-						<AppointmentItem
-							appt={item.data}
-							{showServiceColor}
-							currentTime={ticker}
-							selectedDate={data.selectedDate}
-							timezone={data.timezone}
-							soon={isToday && (isNext || isNow)
-								? dateUtils.getSoonLabel(startMs, endMs, ticker)
-								: null}
+						<div>
+							<AppointmentItem
+								appt={item.data}
+								{showServiceColor}
+								currentTime={ticker}
+								selectedDate={data.selectedDate}
+								timezone={data.timezone}
+								soon={isToday && (isNext || isNow)
+									? dateUtils.getSoonLabel(startMs, endMs, ticker)
+									: null}
+							/>
+						</div>
+					{:else if item.type === 'ghost-group'}
+						<GhostSlot
+							slots={item.slots}
+							onSlotClick={(time) => {
+								selectedTime = time;
+								ui.modal = true;
+							}}
 						/>
-					</div>
-				{:else if item.type === 'ghost-group'}
-					<GhostSlot
-						slots={item.slots}
-						onSlotClick={(time) => {
-							selectedTime = time;
-							ui.modal = true;
-						}}
-					/>
-				{/if}
-			{/each}
-		</div>
+					{/if}
+				{/each}
+			</div>
+		{/if}
 
 		<!-- ── FABs Flutuantes (Bottom Actions) ─────────────────────── -->
 		<div class="pointer-events-none fixed inset-x-0 bottom-24 z-40 flex justify-center">

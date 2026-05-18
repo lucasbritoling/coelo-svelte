@@ -89,12 +89,12 @@
 		</div>
 
 		<div class="right-col">
-			<!-- NOVO: Adicionado chip do soonLabel -->
 			{#if soon && !isPast}
 				<span class="soon-chip">{soon}</span>
 			{/if}
 
-			{#if currentStatus.type === 'pending' || currentStatus.type === 'confirmed' || currentStatus.type === 'cancelled'}
+			<!-- CONDIÇÃO AJUSTADA: Removido renderização de 'confirmed' e 'cancelled' -->
+			{#if currentStatus.type === 'pending' || currentStatus.type === 'completed' || currentStatus.type === 'no-show'}
 				<span class="status-badge" data-status={currentStatus.type}>
 					<span class="badge-dot"></span>
 					<span class="badge-text">{currentStatus.label}</span>
@@ -142,7 +142,6 @@
 </div>
 
 <style>
-	/* Seus estilos CSS permanecem exatamente idênticos */
 	.appt-wrapper {
 		background: #ffffff;
 		border: 1px solid #e4e4e7;

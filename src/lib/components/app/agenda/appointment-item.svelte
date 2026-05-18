@@ -165,7 +165,7 @@
 	.appt-card {
 		display: flex;
 		align-items: center;
-		min-height: 56px;
+		min-height: 50px;
 	}
 
 	/* ── Service bar ── */

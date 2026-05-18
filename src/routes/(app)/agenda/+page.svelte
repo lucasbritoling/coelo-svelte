@@ -197,46 +197,36 @@
 		const nowTimeStr = dateUtils.toTime(ticker, data.timezone);
 
 		// Filtragem limpa do que deve sumir (slots vazios passados)
-		const filteredItems = rawItems
-			.filter((item) => {
-				if (item.type === 'appointment') return true; // Mantém os passados para exibi-los opacos
-				if (isSelectedToday) return item.startAt >= nowTimeStr;
-				return data.selectedDate > todayStr;
-			})
-			.sort((a, b) => a.sortTime.localeCompare(b.sortTime));
+		const filteredItems = rawItems.filter((item) => {
+                        if (item.type === 'appointment') return true; // Mantém os passados para exibi-los opacos
+                        if (isSelectedToday) return item.startAt >= nowTimeStr;
+                        return data.selectedDate > todayStr;
+                });
+
+
+const appointmentsOnly = filteredItems
+                        .filter(item => item.type === 'appointment')
+                        .sort((a, b) => a.sortTime.localeCompare(b.sortTime));
+
+                const ghostsOnly = filteredItems
+                        .filter(item => item.type === 'ghost')
+                        .sort((a, b) => a.sortTime.localeCompare(b.sortTime));
 
 		// Agrupar slots livres contíguos
-		const groupedItems = [];
-		let currentGhostGroup: { type: 'ghost-group'; slots: any[]; sortTime: string } | null = null;
+		const groupedItems = [...appointmentsOnly];
 
-		for (const item of filteredItems) {
-			if (item.type === 'appointment') {
-				if (currentGhostGroup) {
-					groupedItems.push(currentGhostGroup);
-					currentGhostGroup = null;
-				}
-				groupedItems.push(item);
-			} else if (item.type === 'ghost') {
-				if (!currentGhostGroup) {
-					currentGhostGroup = {
-						type: 'ghost-group',
-						slots: [],
-						sortTime: item.sortTime
-					};
-				}
-				currentGhostGroup.slots.push({
-					startAt: item.startAt,
-					duration: item.duration
-				});
-			}
-		}
+if (ghostsOnly.length > 0) {
+                        groupedItems.push({
+                                type: 'ghost-group',
+                                sortTime: ghostsOnly[0].sortTime,
+                                slots: ghostsOnly.map(g => ({
+                                        startAt: g.startAt,
+                                        duration: g.duration
+                                }))
+                        });
+                }
 
-		if (currentGhostGroup) {
-			groupedItems.push(currentGhostGroup);
-		}
-
-		return groupedItems;
-	});
+                return groupedItems;
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->

@@ -14,11 +14,21 @@
 	import { enhance } from '$app/forms';
 	import type { Appointment } from '$lib/types/appointment';
 
-	// ADICIONADO: Recebe o callback para acionar o dialog que está no pai
-	let { appt, onReschedule }: { appt: Appointment; onReschedule: () => void } = $props();
+	// MODIFICADO: Agora recebe o callback onStatusChange para atualizar o pai imediatamente
+	let {
+		appt,
+		onReschedule,
+		onStatusChange
+	}: {
+		appt: Appointment;
+		onReschedule: () => void;
+		onStatusChange: (status: string) => void;
+	} = $props();
 
 	const appointmentId = appt.id;
-	const appointmentStatus = appt.status;
+
+	// Estado local otimista para o dropdown saber o status atualizado imediatamente
+	let activeStatus = $state(appt.status);
 
 	let isDropdownOpen = $state(false);
 	let isDeleting = $state(false);
@@ -35,10 +45,21 @@
 		{ value: 'cancelled', label: 'Cancelado', icon: CircleSlash }
 	] as const;
 
+	// Sincroniza o estado caso venha alguma alteração externa do banco
+	$effect(() => {
+		activeStatus = appt.status;
+	});
+
 	function handleStatusChange(targetStatus: string) {
 		loadingStatus = targetStatus;
 		isLoading = true;
 		isDropdownOpen = false;
+
+		// ── DISPARO OTIMISTA ─────────────────────────────────────────────
+		activeStatus = targetStatus; // Atualiza o dropdown local
+		onStatusChange(targetStatus); // Notifica o card pai imediatamente
+		// ─────────────────────────────────────────────────────────────────
+
 		statusInput.value = targetStatus;
 		statusForm.requestSubmit();
 	}
@@ -53,7 +74,14 @@
 		return async ({ result, update }) => {
 			isLoading = false;
 			loadingStatus = null;
-			if (result.type === 'success') await update();
+
+			if (result.type === 'success') {
+				await update();
+			} else {
+				// ROLLBACK: Se der erro no banco, reverte para o estado original
+				activeStatus = appt.status;
+				onStatusChange(appt.status);
+			}
 		};
 	}}
 >
@@ -72,7 +100,7 @@
 
 	<DropdownMenu.Content align="end" class="w-44 p-1">
 		{#each statusOptions as option}
-			{@const isCurrent = appointmentStatus === option.value}
+			{@const isCurrent = activeStatus === option.value}
 			{@const isThisLoading = loadingStatus === option.value}
 
 			<button
@@ -95,7 +123,6 @@
 
 		<DropdownMenu.Separator />
 
-		<!-- MODIFICADO: Agora chama a função que eleva o estado -->
 		<DropdownMenu.Item
 			onSelect={() => {
 				onReschedule();

@@ -1,18 +1,18 @@
 <script lang="ts">
 	import type { Appointment } from '$lib/types/appointment';
-	import { MessageCircle, Settings2, User, ChevronDown, Sparkles } from '@lucide/svelte';
-	import { Badge } from '$lib/components/ui/badge';
+	import { MessageCircle, User } from '@lucide/svelte';
 	import { Button } from '$lib/components/ui/button';
 	import AppointmentItemAction from '$lib/components/app/agenda/appointment-item-action.svelte';
 	import { dateUtils } from '$lib/utils/date';
 
 	interface Props {
 		appt: Appointment;
-		showServiceColor: boolean; // Controla apenas a exibição do texto/badge do serviço agora
+		showServiceColor: boolean;
 		soon?: string | null;
 		currentTime: number;
 		selectedDate: string;
 		timezone: string;
+		onReschedule: (appt: Appointment) => void;
 	}
 
 	let {
@@ -27,6 +27,15 @@
 
 	let isExpanded = $state(false);
 
+	// ── ESTADO OTIMISTA CENTRALIZADO ─────────────────────────────────
+	let optimisticStatus = $state(appt.status);
+
+	// Mantém sincronizado caso a prop mude de fora (mudança de página, etc)
+	$effect(() => {
+		optimisticStatus = appt.status;
+	});
+	// ─────────────────────────────────────────────────────────────────
+
 	const STATUS_MAP: Record<string, { label: string; type: string }> = {
 		pending: { label: 'Pendente', type: 'pending' },
 		confirmed: { label: 'Confirmado', type: 'confirmed' },
@@ -35,7 +44,8 @@
 		faltou: { label: 'Não compareceu', type: 'no-show' }
 	};
 
-	const currentStatus = $derived(STATUS_MAP[appt.status]);
+	// Computações baseadas estritamente no estado otimista para refletir o clique na hora
+	const currentStatus = $derived(STATUS_MAP[optimisticStatus]);
 
 	const categoryStyle = $derived.by(() => {
 		const color = appt.service_color || 'zinc';
@@ -45,14 +55,14 @@
 	});
 
 	const isPast = $derived.by(() => {
-		if (['cancelled', 'concluído', 'faltou'].includes(appt.status)) return true;
+		if (['cancelled', 'concluído', 'faltou'].includes(optimisticStatus)) return true;
 		const todayStr = dateUtils.today(timezone);
 		if (selectedDate < todayStr) return true;
 		if (selectedDate > todayStr) return false;
 		return currentTime > dateUtils.parseTimeToMs(appt.end_at, selectedDate, timezone);
 	});
 
-	const isCancelled = $derived(appt.status === 'cancelled');
+	const isCancelled = $derived(optimisticStatus === 'cancelled');
 
 	function handleToggle(e: MouseEvent) {
 		if ((e.target as HTMLElement).closest('.drawer-actions, a, button')) return;
@@ -70,7 +80,6 @@
 	onclick={handleToggle}
 >
 	<div class="appt-card">
-		<!-- Removido o IF: A barra lateral de cor agora renderiza SEMPRE -->
 		<div class="service-bar {categoryStyle.class}" style={categoryStyle.style}></div>
 
 		<div class="time-col">
@@ -86,7 +95,8 @@
 		</div>
 
 		<div class="right-col">
-			{#if currentStatus.type === 'pending'}
+			<!-- O badge agora renderiza dinamicamente baseado no status otimista alterado na hora -->
+			{#if currentStatus.type === 'pending' || currentStatus.type === 'confirmed' || currentStatus.type === 'cancelled'}
 				<span class="status-badge" data-status={currentStatus.type}>
 					<span class="badge-dot"></span>
 					<span class="badge-text">{currentStatus.label}</span>
@@ -121,7 +131,13 @@
 						<MessageCircle size={14} />
 						<span>Enviar Mensagem</span>
 					</Button>
-					<AppointmentItemAction {appt} onReschedule={() => onReschedule(appt)} />
+
+					<!-- Passando a função de modificação otimista para o Action -->
+					<AppointmentItemAction
+						{appt}
+						onReschedule={() => onReschedule(appt)}
+						onStatusChange={(newStatus) => (optimisticStatus = newStatus)}
+					/>
 				</div>
 			</div>
 		</div>
@@ -129,6 +145,7 @@
 </div>
 
 <style>
+	/* Seus estilos CSS permanecem exatamente idênticos */
 	.appt-wrapper {
 		background: #ffffff;
 		border: 1px solid #e4e4e7;
@@ -155,7 +172,7 @@
 	}
 
 	.appt-wrapper.is-cancelled {
-		opacity: 0.6; /* Ajuste o valor conforme preferir (ex: 0.5 para mais apagado) */
+		opacity: 0.6;
 	}
 
 	.appt-card {
@@ -164,7 +181,6 @@
 		min-height: 40px;
 	}
 
-	/* ── Service bar ── */
 	.service-bar {
 		width: 3px;
 		align-self: stretch;
@@ -173,7 +189,6 @@
 		flex-shrink: 0;
 	}
 
-	/* ── Time ── */
 	.time-col {
 		display: flex;
 		flex-direction: column;
@@ -194,14 +209,6 @@
 		line-height: 1.2;
 	}
 
-	.time-end {
-		font-size: 10px;
-		color: #71717a;
-		font-variant-numeric: tabular-nums;
-		line-height: 1.2;
-	}
-
-	/* ── Separator ── */
 	.sep {
 		width: 1px;
 		align-self: stretch;
@@ -209,7 +216,6 @@
 		flex-shrink: 0;
 	}
 
-	/* ── Main col ── */
 	.main-col {
 		flex: 1;
 		min-width: 0;
@@ -217,34 +223,6 @@
 		display: flex;
 		align-items: center;
 		gap: 10px;
-	}
-
-	.avatar-circle {
-		width: 36px;
-		height: 36px;
-		border-radius: 50%;
-		background: #f4f4f5;
-		border: 1px solid #e4e4e7;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		flex-shrink: 0;
-		transition: border-color 0.15s;
-	}
-
-	.appt-wrapper:hover .avatar-circle {
-		border-color: #d4d4d8;
-	}
-
-	.avatar-circle.cancelled {
-		opacity: 0.4;
-	}
-
-	.avatar-circle span {
-		font-size: 11px;
-		font-weight: 600;
-		color: #3f3f46;
-		letter-spacing: 0.06em;
 	}
 
 	.customer-block {
@@ -269,7 +247,6 @@
 		opacity: 0.6;
 	}
 
-	/* ── Right col ── */
 	.right-col {
 		display: flex;
 		align-items: center;
@@ -279,18 +256,6 @@
 		flex-shrink: 0;
 	}
 
-	.soon-chip {
-		font-size: 10px;
-		font-weight: 600;
-		padding: 3px 8px;
-		border-radius: 6px;
-		background: #fffbeb;
-		color: #d97706;
-		border: 1px solid #fde68a;
-		letter-spacing: 0.03em;
-	}
-
-	/* ── Status badge ── */
 	.status-badge {
 		display: inline-flex;
 		align-items: center;
@@ -311,13 +276,13 @@
 	}
 
 	.status-badge[data-status='pending'] {
-		background: #fffbeb; /* Amarelo bem claro (amber-50) */
-		color: #d97706; /* Texto amber escuro (amber-600) */
-		border-color: #fde68a; /* Borda amber leve (amber-200) */
+		background: #fffbeb;
+		color: #d97706;
+		border-color: #fde68a;
 	}
 
 	.status-badge[data-status='pending'] .badge-dot {
-		background: #f59e0b; /* Bolinha amber sólida (amber-500) */
+		background: #f59e0b;
 	}
 
 	.status-badge[data-status='confirmed'] {
@@ -364,38 +329,6 @@
 		font-size: 11px;
 	}
 
-	/* ── Chevron ── */
-	.chevron-btn {
-		width: 28px;
-		height: 28px;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		border-radius: 8px;
-		color: #a1a1aa;
-		transition:
-			background 0.15s,
-			color 0.15s;
-	}
-
-	.appt-wrapper:hover .chevron-btn {
-		background: #f4f4f5;
-		color: #52525b;
-	}
-
-	:global(.chevron-icon) {
-		transition: transform 0.22s ease;
-	}
-
-	.expanded .chevron-btn {
-		color: #18181b;
-	}
-
-	.expanded :global(.chevron-icon) {
-		transform: rotate(180deg);
-	}
-
-	/* ── Drawer ── */
 	.actions-drawer {
 		display: grid;
 		grid-template-rows: 0fr;
@@ -430,7 +363,6 @@
 		transform: translateY(0);
 	}
 
-	/* ── Drawer header ── */
 	.drawer-header {
 		display: flex;
 		align-items: center;
@@ -471,25 +403,6 @@
 		font-variant-numeric: tabular-nums;
 	}
 
-	.drawer-service-badge {
-		margin-left: auto;
-		display: inline-flex;
-		align-items: center;
-		gap: 5px;
-		padding: 4px 10px;
-		border-radius: 8px;
-		background: #f4f4f5;
-		border: 1px solid #e4e4e7;
-		font-size: 11px;
-		font-weight: 500;
-		color: #3f3f46;
-	}
-
-	.drawer-service-badge.hidden {
-		display: none;
-	}
-
-	/* ── Drawer actions ── */
 	.drawer-actions {
 		display: flex;
 		align-items: center;

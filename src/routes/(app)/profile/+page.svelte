@@ -274,7 +274,7 @@
 					name="password"
 					type="password"
 					bind:value={password}
-					placeholder="Preencha apenas para alterar"
+					placeholder="Apenas se quiser alterar sua senha"
 				/>
 			</div>
 		</div>

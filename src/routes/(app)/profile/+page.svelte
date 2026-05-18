@@ -190,13 +190,14 @@
 			<div class="grid gap-2">
 				<Label for="username">Link da agenda</Label>
 				<InputGroup.Root>
-					<InputGroup.Text class="ml-2">coelo.dev/</InputGroup.Text>
+					<InputGroup.Text class="ml-2 pt-0.5">coelo.dev/</InputGroup.Text>
 					<InputGroup.Input
 						id="username"
 						name="username"
 						type="text"
 						bind:value={username}
 						placeholder="seu-link"
+						class="pl-0.5"
 						required
 					/>
 				</InputGroup.Root>

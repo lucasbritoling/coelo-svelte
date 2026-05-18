@@ -63,7 +63,7 @@
 				<div class="flex flex-col items-center">
 					<div class="flex items-center gap-1.5">
 						<h1
-							class="capitalize transition-opacity group-active:opacity-60 {navigating.to
+							class="whitespace-nowrap capitalize transition-opacity group-active:opacity-60 {navigating.to
 								? 'opacity-40'
 								: ''} 
                             {headerLabel.toLowerCase() === 'hoje'

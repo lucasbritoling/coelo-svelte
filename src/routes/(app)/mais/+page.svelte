@@ -6,7 +6,8 @@
 		ChevronLeft,
 		Clock,
 		BriefcaseBusiness,
-		LoaderCircle
+		LoaderCircle,
+		Settings2
 	} from '@lucide/svelte';
 	import { goto } from '$app/navigation';
 
@@ -77,6 +78,16 @@
 	<!-- ── CONFIGURAÇÕES ────────────────────────────────────────────── -->
 	<p class="section-label">configurações</p>
 	<div class="mx-3 overflow-hidden rounded-2xl border border-border/40 bg-card">
+		<a
+			href="/configuracoes"
+			class="flex w-full items-center gap-3 border-b border-border/40 px-4 py-3 text-left transition-colors active:bg-muted/50"
+		>
+			<div class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted">
+				<Settings2 class="size-4 text-muted-foreground" />
+			</div>
+			<p class="flex-1 text-[14px] font-medium">Agenda</p>
+			<ChevronRight class="size-4 shrink-0 text-muted-foreground/40" />
+		</a>
 		<a
 			href="/servicos"
 			class="flex w-full items-center gap-3 border-b border-border/40 px-4 py-3 text-left transition-colors active:bg-muted/50"

@@ -30,6 +30,7 @@
 	});
 </script>
 
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
 	class="no-scrollbar flex snap-x snap-mandatory gap-2.5 overflow-x-auto scroll-smooth px-5 py-3.5"
 	ontouchstart={(e) => e.stopPropagation()}

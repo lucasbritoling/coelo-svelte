@@ -26,6 +26,7 @@
 			workingHours: any[];
 			user: any;
 			timezone: string;
+			favoriteGhostSlotInterval: number;
 		};
 	}>();
 
@@ -88,7 +89,8 @@
 		if (data.services?.length === 1) {
 			return data.services[0].duration;
 		}
-		return data.user?.profile?.slot_interval ?? data.user?.slot_interval ?? 30;
+		// Prioriza o valor dinâmico configurado no banco de dados
+		return data.favoriteGhostSlotInterval ?? 30;
 	});
 
 	const timeToMins = (t: string) => {

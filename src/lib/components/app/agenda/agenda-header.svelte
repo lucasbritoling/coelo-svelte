@@ -5,16 +5,28 @@
 	import { navigating } from '$app/state';
 	import { dateUtils } from '$lib/utils/date';
 
-	let { headerLabel, selectedDate, user, timezone, onDateSelect, onOpenAppointment, onOpenSearch } =
-		$props<{
-			headerLabel: string;
-			selectedDate: string;
-			user: any;
-			timezone: string;
-			onDateSelect: (d: any) => void;
-			onOpenAppointment: () => void;
-			onOpenSearch: () => void;
-		}>();
+	let {
+		headerLabel,
+		selectedDate,
+		user,
+		timezone,
+		ticker,
+		onDateSelect,
+		onOpenAppointment,
+		onOpenSearch
+	} = $props<{
+		headerLabel: string;
+		selectedDate: string;
+		user: any;
+		timezone: string;
+		ticker: number;
+		onDateSelect: (d: any) => void;
+		onOpenAppointment: () => void;
+		onOpenSearch: () => void;
+	}>();
+
+	const isToday = $derived(headerLabel.toLowerCase() === 'hoje');
+	const currentTimeStr = $derived(dateUtils.toTime(ticker, timezone));
 
 	function goToToday(e: MouseEvent) {
 		e.stopPropagation();
@@ -66,6 +78,13 @@
 							class="mb-0.5 text-zinc-900 transition-transform group-active:translate-y-0.5
                             {headerLabel.toLowerCase() === 'hoje' ? 'mt-1' : 'mt-0.5'}"
 						/>
+						{#if isToday}
+							<span
+								class="mt-1 ml-1 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-bold text-zinc-500 shadow-sm"
+							>
+								{currentTimeStr}
+							</span>
+						{/if}
 					</div>
 
 					{#if headerLabel.toLowerCase() !== 'hoje'}

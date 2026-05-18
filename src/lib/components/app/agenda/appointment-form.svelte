@@ -34,6 +34,17 @@
 		onSuccess: () => void;
 	}>();
 
+	// ── Mapeamento estático para o Tailwind gerar as classes ──────
+	const colorMap: Record<string, string> = {
+		zinc: 'bg-zinc-500',
+		blue: 'bg-blue-500',
+		indigo: 'bg-indigo-500',
+		violet: 'bg-violet-500',
+		rose: 'bg-rose-500',
+		amber: 'bg-amber-500',
+		emerald: 'bg-emerald-500'
+	};
+
 	// Estado do formulário
 	let formState = $state({
 		customerId: '',
@@ -285,8 +296,7 @@
 									title={service.name}
 								>
 									<div
-										class="size-2 shrink-0 rounded-full"
-										style="background: {service.color || '#e4e4e7'}"
+										class="size-2 shrink-0 rounded-full {colorMap[service.color] ?? 'bg-zinc-300'}"
 									></div>
 
 									<span class="w-full truncate text-left text-xs font-bold">{service.name}</span>

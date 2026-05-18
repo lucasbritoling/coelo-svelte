@@ -48,7 +48,7 @@
 			onclick={() => onSelect(day.str)}
 			class="group flex h-[72px] w-[66px] shrink-0 cursor-pointer snap-center flex-col items-center justify-center rounded-[20px] border transition-all duration-300 ease-out select-none active:scale-95
 			{isSelected
-				? 'border-neutral-950 bg-white font-bold text-neutral-950 shadow-[0_4px_12px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)]'
+				? 'border-neutral-950 bg-white/85 font-bold text-neutral-950 shadow-[0_4px_12px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)]'
 				: 'border-neutral-200/50 bg-white/40 text-neutral-400 backdrop-blur-md hover:border-neutral-300 hover:bg-white/60 hover:text-neutral-600'}"
 		>
 			<span

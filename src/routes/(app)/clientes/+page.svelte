@@ -177,11 +177,7 @@
 		{#if !isSearching}
 			{#if searchQuery.trim() !== '' && filteredCustomers.length >= 50}
 				<p class="py-6 text-center text-[10px] font-bold tracking-widest text-zinc-400 uppercase">
-					Mostrando os primeiros 50 resultados
-				</p>
-			{:else if filteredCustomers.length > 0}
-				<p class="py-6 text-center text-[10px] font-bold tracking-widest text-zinc-200 uppercase">
-					Fim da lista
+					Mostrando os primeiros 100 resultados. Busque para mais.
 				</p>
 			{/if}
 		{/if}

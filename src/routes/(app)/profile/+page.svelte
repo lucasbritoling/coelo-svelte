@@ -8,24 +8,30 @@
 
 	let { data, form } = $props();
 
-	// Estados reativos com Runes
+	// Estados reativos mapeados com Runes do Svelte 5
 	let fullName = $state(data.user?.full_name ?? '');
 	let username = $state(data.user?.username ?? '');
+	let address = $state(data.user?.address ?? '');
+	let phone = $state(data.user?.phone ?? '');
+	let email = $state(data.user?.email ?? '');
+	let password = $state('');
 
-	// Sincroniza o avatarUrl com o retorno da Action ou com o dado inicial
 	const avatarUrl = $derived(data.user?.avatar_url ?? '');
-
 	let uploading = $state(false);
 	let isSaving = $state(false);
 	let saved = $state(false);
-	let nameFocused = $state(false);
-	let usernameFocused = $state(false);
 
-	// O $effect do avatarUrl não é mais necessário,
-	// pois o invalidateAll + $derived cuidam disso.
+	// Estados de foco dos inputs para efeito visual da barra animada
+	let activeField = $state('');
+
 	$effect(() => {
 		if (form?.success) {
-			toast.success('Foto atualizada!');
+			saved = true;
+			toast.success('Perfil updated com sucesso!');
+			password = '';
+			setTimeout(() => (saved = false), 2500);
+		} else if (form?.message) {
+			toast.error(form.message);
 		}
 	});
 
@@ -38,19 +44,8 @@
 			.toUpperCase() || '?'
 	);
 
-	// Função para disparar o clique no input escondido
 	function triggerFileInput() {
 		document.getElementById('avatar-input')?.click();
-	}
-
-	async function handleSave() {
-		isSaving = true;
-		// Aqui você chamará sua outra Action de salvar dados do perfil futuramente
-		await new Promise((r) => setTimeout(r, 1200));
-		isSaving = false;
-		saved = true;
-		toast.success('Perfil atualizado!');
-		setTimeout(() => (saved = false), 2500);
 	}
 </script>
 
@@ -73,16 +68,10 @@
 			use:enhance={() => {
 				uploading = true;
 				return async ({ result, update }) => {
-					if (result.type === 'error') {
-						toast.error('Erro crítico no servidor');
-					}
-
-					if (result.type === 'failure') {
+					if (result.type === 'error') toast.error('Erro crítico no servidor');
+					if (result.type === 'failure')
 						toast.error(`Erro: ${result.data?.message || 'Verifique o arquivo'}`);
-					}
-
 					if (result.type === 'success') {
-						// O update() aqui vai atualizar o objeto 'form'
 						await invalidateAll();
 						await update();
 					}
@@ -101,18 +90,15 @@
 					{/if}
 				</div>
 
-				<!-- Input real escondido -->
 				<input
 					id="avatar-input"
 					type="file"
 					name="avatar"
 					accept="image/*"
-					class="hidden"
 					style="display: none"
 					onchange={(e) => e.currentTarget.form?.requestSubmit()}
 				/>
 
-				<!-- Botão visual que dispara o input -->
 				<button
 					type="button"
 					class="camera-trigger"
@@ -139,52 +125,138 @@
 		</div>
 	</div>
 
-	<!-- FORM -->
-	<div class="form-body mx-auto max-w-sm">
-		<!-- Card -->
+	<!-- FORMULÁRIO PRINCIPAL -->
+	<form
+		method="POST"
+		action="?/updateProfile"
+		use:enhance={() => {
+			isSaving = true;
+			return async ({ update }) => {
+				await invalidateAll();
+				await update();
+				isSaving = false;
+			};
+		}}
+		class="form-body mx-auto max-w-sm"
+	>
 		<div class="form-card">
 			<!-- Campo Nome -->
-			<div class="field" class:is-focused={nameFocused}>
-				<label for="name" class="field-label">Nome</label>
+			<div class="field" class:is-focused={activeField === 'fullName'}>
+				<label for="fullName" class="field-label">Nome</label>
 				<input
-					id="name"
+					id="fullName"
+					name="fullName"
 					type="text"
 					bind:value={fullName}
-					onfocus={() => (nameFocused = true)}
-					onblur={() => (nameFocused = false)}
+					onfocus={() => (activeField = 'fullName')}
+					onblur={() => (activeField = '')}
 					placeholder="Como você se chama?"
-					autocomplete="name"
 					class="native-input"
+					required
 				/>
-				<div class="field-bar" class:active={nameFocused}></div>
+				<div class="field-bar" class:active={activeField === 'fullName'}></div>
 			</div>
 
 			<div class="field-divider"></div>
 
 			<!-- Campo Link -->
-			<div class="field" class:is-focused={usernameFocused}>
+			<div class="field" class:is-focused={activeField === 'username'}>
 				<label for="username" class="field-label">Link da agenda</label>
 				<div class="field-prefix-wrap">
 					<span class="field-prefix">coelo.dev/</span>
 					<input
 						id="username"
+						name="username"
 						type="text"
 						bind:value={username}
-						onfocus={() => (usernameFocused = true)}
-						onblur={() => (usernameFocused = false)}
+						onfocus={() => (activeField = 'username')}
+						onblur={() => (activeField = '')}
 						placeholder="seu-link"
-						autocomplete="username"
 						class="native-input"
 						style="flex:1;min-width:0"
+						required
 					/>
 				</div>
-				<div class="field-bar" class:active={usernameFocused}></div>
+				<div class="field-bar" class:active={activeField === 'username'}></div>
+			</div>
+
+			<div class="field-divider"></div>
+
+			<!-- Campo Endereço -->
+			<div class="field" class:is-focused={activeField === 'address'}>
+				<label for="address" class="field-label">Endereço de Atendimento</label>
+				<input
+					id="address"
+					name="address"
+					type="text"
+					bind:value={address}
+					onfocus={() => (activeField = 'address')}
+					onblur={() => (activeField = '')}
+					placeholder="Rua, Número, Sala ou 'Atendimento Online'"
+					class="native-input"
+				/>
+				<div class="field-bar" class:active={activeField === 'address'}></div>
+			</div>
+
+			<div class="field-divider"></div>
+
+			<!-- Campo Telefone -->
+			<div class="field" class:is-focused={activeField === 'phone'}>
+				<label for="phone" class="field-label">Telefone / WhatsApp</label>
+				<input
+					id="phone"
+					name="phone"
+					type="tel"
+					bind:value={phone}
+					onfocus={() => (activeField = 'phone')}
+					onblur={() => (activeField = '')}
+					placeholder="(11) 99999-9999"
+					class="native-input"
+				/>
+				<div class="field-bar" class:active={activeField === 'phone'}></div>
+			</div>
+
+			<div class="field-divider"></div>
+
+			<!-- Campo Email -->
+			<div class="field" class:is-focused={activeField === 'email'}>
+				<label for="email" class="field-label">E-mail de Login</label>
+				<input
+					id="email"
+					name="email"
+					type="email"
+					bind:value={email}
+					onfocus={() => (activeField = 'email')}
+					onblur={() => (activeField = '')}
+					placeholder="seu@email.com"
+					class="native-input"
+					required
+				/>
+				<div class="field-bar" class:active={activeField === 'email'}></div>
+			</div>
+
+			<div class="field-divider"></div>
+
+			<!-- Campo Senha -->
+			<div class="field" class:is-focused={activeField === 'password'}>
+				<label for="password" class="field-label">Nova Senha</label>
+				<input
+					id="password"
+					name="password"
+					type="password"
+					bind:value={password}
+					onfocus={() => (activeField = 'password')}
+					onblur={() => (activeField = '')}
+					placeholder="Preencha apenas para alterar"
+					class="native-input"
+				/>
+				<div class="field-bar" class:active={activeField === 'password'}></div>
 			</div>
 		</div>
 
 		<!-- Botão Salvar -->
 		<button
-			onclick={handleSave}
+			type="submit"
 			disabled={isSaving || saved}
 			class="save-btn mx-auto max-w-xs"
 			class:is-done={saved}
@@ -199,7 +271,7 @@
 				<span>Salvar alterações</span>
 			{/if}
 		</button>
-	</div>
+	</form>
 </div>
 
 <style>
@@ -208,10 +280,9 @@
 		flex-direction: column;
 		min-height: 100%;
 		background: hsl(var(--background));
-
-		width: 100%; /* Garante que ocupe o espaço disponível */
-		max-width: 48rem; /* Equivalente ao max-w-3xl (768px) */
-		margin: 0 auto; /* Margem automática nas laterais */
+		width: 100%;
+		max-width: 48rem;
+		margin: 0 auto;
 	}
 
 	/* ── Topbar ─────────────────────────────────── */
@@ -289,8 +360,8 @@
 		position: absolute;
 		bottom: 2px;
 		right: 2px;
-		width: 1.375rem; /* era 1.75rem */
-		height: 1.375rem; /* era 1.75rem */
+		width: 1.375rem;
+		height: 1.375rem;
 		border-radius: 9999px;
 		background: #ffffff;
 		border: 1.5px solid hsl(var(--border));
@@ -368,31 +439,18 @@
 	.field-label {
 		display: block;
 		font-size: 11px;
-
-		/* 1. Peso: 600 ainda é forte. 500 ou 600 com menos opacidade 
-       ajuda a não "competir" com o texto principal */
 		font-weight: 600;
-
-		/* 2. Letter-spacing: 0.07em é bem aberto. 
-       0.04em ou 0.05em costuma ser o "sweet spot" para uppercase no mobile */
 		letter-spacing: 0.05em;
-
 		text-transform: uppercase;
-
-		/* 3. Saturação/Peso Visual: Reduzi de 0.55 para 0.4.
-       Isso faz o label "recuar" no layout, dando destaque ao dado do usuário */
 		color: hsl(var(--muted-foreground) / 0.4);
-
 		margin-bottom: 0.2rem;
 		transition: color 0.2s ease;
 	}
 
 	.field.is-focused .field-label {
-		/* No foco, trazemos ele para perto do preto total para dar feedback de atividade */
 		color: hsl(var(--foreground) / 0.85);
 	}
 
-	/* Input nativo — sem depender de shadcn */
 	.native-input {
 		display: block;
 		width: 100%;
@@ -463,11 +521,8 @@
 		width: 100%;
 		border-radius: 9999px;
 		border: none;
-
-		/* Cores fixas: bg-black e text-white */
 		background: #000000;
 		color: #ffffff;
-
 		font-size: 15px;
 		font-weight: 600;
 		font-family: inherit;
@@ -479,8 +534,6 @@
 			opacity 0.15s;
 		-webkit-tap-highlight-color: transparent;
 		margin-top: 0.25rem;
-
-		/* Sombra sutil para dar profundidade no fundo branco */
 		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 	}
 

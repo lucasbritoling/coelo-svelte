@@ -1,76 +1,99 @@
-import { fail } from '@sveltejs/kit';
-import type { Actions } from './$types';
+import { fail, redirect, error } from '@sveltejs/kit';
+import type { PageServerLoad, Actions } from './$types';
+
+export const load: PageServerLoad = async ({ locals }) => {
+	const session = await locals.session;
+
+	// Proteção de rota simples
+	if (!session) {
+		throw redirect(303, '/login');
+	}
+
+	try {
+		// Busca os dados direto pelo Postgres.js para performance máxima
+		const rows = await locals.sql`
+			SELECT full_name, username, avatar_url, address
+			FROM public.profiles 
+			WHERE id = ${session.user.id}
+		`;
+
+		const profile = rows[0];
+		if (!profile) {
+			throw error(404, 'Perfil não encontrado no sistema.');
+		}
+
+		// Resolve a URL pública do avatar caso exista um path salvo
+		let fullAvatarUrl = '';
+		if (profile.avatar_url) {
+			if (profile.avatar_url.startsWith('http')) {
+				fullAvatarUrl = profile.avatar_url;
+			} else {
+				const { data } = locals.supabase.storage.from('avatars').getPublicUrl(profile.avatar_url);
+				fullAvatarUrl = data?.publicUrl || '';
+			}
+		}
+
+		return {
+			user: {
+				full_name: profile.full_name,
+				username: profile.username,
+				address: profile.address || '',
+				// E-mail e Telefone principais vêm direto do objeto seguro de Auth do Supabase
+				email: session.user.email || '',
+				phone: session.user.phone || '',
+				avatar_url: fullAvatarUrl
+			}
+		};
+	} catch (err) {
+		console.error('Erro ao carregar dados do perfil:', err);
+		throw error(500, 'Erro interno ao carregar o perfil.');
+	}
+};
 
 export const actions: Actions = {
 	updateAvatar: async ({ request, locals }) => {
 		const session = await locals.session;
-		if (!session) {
-			return fail(401);
-		}
+		if (!session) return fail(401);
 
 		try {
 			const formData = await request.formData();
 			const file = formData.get('avatar') as File;
 
 			if (!file || file.size === 0) {
-				console.warn('Aviso: Arquivo vazio ou não enviado');
 				return fail(400);
 			}
 
-			// 1. BUSCAR O CAMINHO DO ARQUIVO ANTIGO
-			// Consultamos o banco antes da atualização para saber o que deletar
 			const currentProfile = await locals.sql`
-                SELECT avatar_url FROM public.profiles 
-                WHERE id = ${session.user.id}
-            `;
+				SELECT avatar_url FROM public.profiles  
+				WHERE id = ${session.user.id}
+			`;
 			const oldFilePath = currentProfile[0]?.avatar_url;
 
-			// 2. PREPARAR NOVO ARQUIVO
 			const fileExt = file.name.split('.').pop();
 			const filePath = `${session.user.id}-${Date.now()}.${fileExt}`;
 
-			// 3. UPLOAD DO NOVO ARQUIVO
 			const { error: storageError } = await locals.supabase.storage
 				.from('avatars')
 				.upload(filePath, file, { upsert: true });
 
 			if (storageError) {
-				console.error('Erro no Supabase Storage:', storageError);
 				return fail(500, { message: storageError.message });
 			}
 
-			// 4. ATUALIZAÇÃO DA TABELA PÚBLICA
-			try {
-				await locals.sql`
-                    UPDATE public.profiles 
-                    SET avatar_url = ${filePath} 
-                    WHERE id = ${session.user.id}
-                `;
-			} catch (dbError) {
-				console.error('Erro ao atualizar tabela profiles:', dbError);
-				return fail(500, { message: 'Erro interno ao salvar no banco de dados.' });
-			}
+			await locals.sql`
+				UPDATE public.profiles 
+				SET avatar_url = ${filePath} 
+				WHERE id = ${session.user.id}
+			`;
 
-			// 5. UPDATE AUTH METADATA
 			await locals.supabase.auth.updateUser({
 				data: { avatar_url: filePath }
 			});
 
-			// 6. LIMPEZA: EXCLUSÃO DO ARQUIVO ANTIGO
-			// Só tentamos deletar se existia um arquivo anterior e se ele é diferente do novo
-			if (oldFilePath && oldFilePath !== filePath) {
-				const { error: deleteError } = await locals.supabase.storage
-					.from('avatars')
-					.remove([oldFilePath]);
-
-				if (deleteError) {
-					// Logamos o erro mas não interrompemos o sucesso,
-					// pois o novo upload já foi concluído com êxito.
-				} else {
-				}
+			if (oldFilePath && oldFilePath !== filePath && !oldFilePath.startsWith('http')) {
+				await locals.supabase.storage.from('avatars').remove([oldFilePath]);
 			}
 
-			// 7. GERAÇÃO DA URL PÚBLICA PARA RESPOSTA
 			const {
 				data: { publicUrl }
 			} = locals.supabase.storage.from('avatars').getPublicUrl(filePath);
@@ -80,6 +103,7 @@ export const actions: Actions = {
 			return fail(500);
 		}
 	},
+
 	updateProfile: async ({ request, locals }) => {
 		const session = await locals.session;
 		if (!session) return fail(401);
@@ -92,12 +116,10 @@ export const actions: Actions = {
 		const email = formData.get('email')?.toString().trim();
 		const password = formData.get('password')?.toString();
 
-		// Validações Básicas Obrigatórias
 		if (!fullName || !username) {
 			return fail(400, { message: 'Nome e Link da agenda são obrigatórios.' });
 		}
 
-		// Regex simples para evitar caracteres estranhos no link da agenda
 		if (!/^[a-z0-9-_]+$/.test(username)) {
 			return fail(400, {
 				message: 'O link da agenda deve conter apenas letras, números, hífens ou underlines.'
@@ -105,7 +127,6 @@ export const actions: Actions = {
 		}
 
 		try {
-			// 1. Verificar se o username já está em uso por outro usuário
 			const existingUser = await locals.sql`
 				SELECT id FROM public.profiles 
 				WHERE username = ${username} AND id != ${session.user.id}
@@ -114,8 +135,6 @@ export const actions: Actions = {
 				return fail(400, { message: 'Este link de agenda já está sendo utilizado.' });
 			}
 
-			// 2. Atualizar dados na tabela pública public.profiles
-			// Se o campo de telefone não existir na tabela, remova a linha correspondente
 			await locals.sql`
 				UPDATE public.profiles
 				SET 
@@ -125,17 +144,18 @@ export const actions: Actions = {
 				WHERE id = ${session.user.id}
 			`;
 
-			// 3. Atualizar metadados de exibição no Auth do Supabase
 			const authAttributes: any = {
 				data: { full_name: fullName, username: username }
 			};
 
-			// Se o usuário preencheu um novo e-mail e ele é diferente do atual
 			if (email && email !== session.user.email) {
 				authAttributes.email = email;
 			}
 
-			// Se o usuário digitou uma nova senha
+			if (phone && phone !== session.user.phone) {
+				authAttributes.phone = phone;
+			}
+
 			if (password && password.length > 0) {
 				if (password.length < 6) {
 					return fail(400, { message: 'A nova senha deve ter no mínimo 6 caracteres.' });
@@ -143,7 +163,6 @@ export const actions: Actions = {
 				authAttributes.password = password;
 			}
 
-			// 4. Executa a atualização no Supabase Auth se houver e-mail, senha ou metadados novos
 			const { error: authError } = await locals.supabase.auth.updateUser(authAttributes);
 
 			if (authError) {

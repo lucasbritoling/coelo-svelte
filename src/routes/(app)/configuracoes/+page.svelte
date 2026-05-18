@@ -56,6 +56,14 @@
 					Digite o intervalo de tempo padrão (em minutos) utilizado para a geração visual de
 					horários livres no seu painel.
 				</p>
+				<div
+					class="rounded-xl border border-zinc-100 bg-zinc-50 p-3 text-xs leading-relaxed text-zinc-500"
+				>
+					<span class="mb-0.5 block font-bold text-zinc-700">Nota sobre o funcionamento:</span>
+					Esta definição só entra em vigor se você tiver
+					<strong class="text-zinc-800">2 ou mais serviços ativos</strong> cadastrados. Caso tenha apenas
+					1 serviço, os horários livres seguirão automaticamente a duração exata dele.
+				</div>
 
 				<div class="relative mt-2">
 					<Input

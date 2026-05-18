@@ -64,6 +64,13 @@
 	const pendingCount = $derived(
 		(data.appointments || []).filter((a) => a.status === 'pending').length
 	);
+	const hasAppointments = $derived(agendaItems.some((item) => item.type === 'appointment'));
+
+	// Extrai a quantidade de slots livres de dentro do agrupamento de ghosts
+	const freeSlotsCount = $derived.by(() => {
+		const ghostGroup = agendaItems.find((item) => item.type === 'ghost-group');
+		return ghostGroup?.type === 'ghost-group' ? ghostGroup.slots.length : 0;
+	});
 
 	// ── Navegação de Datas ────────────────────────────────────────
 	function updateDate(newDate: string) {
@@ -252,9 +259,18 @@
 	<div class="flex-1 space-y-2 overflow-y-auto px-4 pt-4 pb-20">
 		{#if pendingCount > 0}
 			<div
-				class="mb-3 flex items-center gap-1.5 px-1 text-[10px] font-semibold tracking-wider text-amber-500 uppercase select-none"
+				class="mb-3 flex items-center gap-2 px-1 text-[10px] font-semibold tracking-wider uppercase select-none"
 			>
-				<span>{pendingCount} {pendingCount === 1 ? 'pendente' : 'pendentes'}</span>
+				<span class="text-amber-500">
+					{pendingCount}
+					{pendingCount === 1 ? 'pendente' : 'pendentes'}
+				</span>
+
+				<!-- Só mostra "horários livres" se houver agendamentos dividindo o dia -->
+				{#if hasAppointments && agendaItems.some((item) => item.type === 'ghost-group')}
+					<span class="font-normal text-zinc-300">•</span>
+					<span class="text-zinc-400">horários livres</span>
+				{/if}
 			</div>
 		{/if}
 

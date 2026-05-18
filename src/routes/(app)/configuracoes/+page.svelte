@@ -1,35 +1,33 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { toast } from 'svelte-sonner';
-	// 🔴 ALTERAÇÃO: Importado ChevronLeft junto com Clock e LoaderCircle
 	import { Clock, LoaderCircle, ChevronLeft } from '@lucide/svelte';
 	import { Label } from '$lib/components/ui/label';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
-	// 🔴 ALTERAÇÃO: Importado o goto para a navegação do botão voltar
 	import { goto } from '$app/navigation';
 
 	let { data } = $props();
 
 	let isSaving = $state(false);
-
 	let currentInterval = $state(data.profile?.favorite_ghost_slot_interval ?? 30);
 </script>
 
-<div class="mx-auto max-w-xl p-5">
-	<div class="flex items-center gap-2 pt-3">
+<div class="mx-auto max-w-xl p-5" in:fly={{ x: 16, duration: 250 }}>
+	<div class="flex items-center gap-3 pt-3">
 		<button
 			onclick={() => goto('/mais')}
-			class="-ml-2 flex items-center p-2 text-zinc-500 transition-transform active:scale-90"
+			class="-ml-2.5 flex size-9 cursor-pointer items-center justify-center rounded-xl border border-zinc-200/40 bg-white/40 text-zinc-500 transition-all hover:border-zinc-300 hover:bg-white hover:text-zinc-800 active:scale-90"
+			aria-label="Voltar para configurações"
 		>
-			<ChevronLeft size={24} strokeWidth={2.5} />
+			<ChevronLeft size={20} strokeWidth={2.5} />
 		</button>
-		<h1 class="text-[26px] leading-tight font-medium tracking-tight text-zinc-900">
-			Ajustes da Agenda
-		</h1>
+		<h1 class="text-2xl font-semibold tracking-tight text-zinc-900">Ajustes da Agenda</h1>
 	</div>
 
-	<div class="mt-5 overflow-hidden rounded-2xl border border-border/40 bg-card p-5">
+	<div
+		class="mt-5 overflow-hidden rounded-[22px] border border-zinc-200/50 bg-white/70 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.01)] backdrop-blur-md"
+	>
 		<form
 			method="POST"
 			action="?/updateInterval"
@@ -46,26 +44,28 @@
 					}
 				};
 			}}
-			class="space-y-4"
+			class="space-y-5"
 		>
-			<div class="space-y-2">
-				<Label for="interval" class="text-[11px] font-bold tracking-widest text-zinc-500 uppercase">
+			<div class="space-y-2.5">
+				<Label for="interval" class="text-[11px] font-bold tracking-wider text-zinc-400 uppercase">
 					Duração Padrão dos Encaixes (Minutos)
 				</Label>
-				<p class="text-xs leading-relaxed text-zinc-600">
+
+				<p class="text-[13px] leading-relaxed font-medium text-zinc-500">
 					Digite o intervalo de tempo padrão (em minutos) utilizado para a geração visual de
 					horários livres no seu painel.
 				</p>
+
 				<div
-					class="rounded-xl border border-zinc-100 bg-zinc-50 p-3 text-xs leading-relaxed text-zinc-500"
+					class="rounded-xl border border-zinc-200/40 bg-zinc-50/40 p-3 text-[12px] leading-relaxed text-zinc-400"
 				>
-					<span class="mb-0.5 block font-bold text-zinc-700">Nota sobre o funcionamento:</span>
+					<span class="mb-0.5 block font-bold text-zinc-600">Nota sobre o funcionamento:</span>
 					Esta definição só entra em vigor se você tiver
-					<strong class="text-zinc-800">2 ou mais serviços ativos</strong> cadastrados. Caso tenha apenas
-					1 serviço, os horários livres seguirão automaticamente a duração exata dele.
+					<strong class="font-semibold text-zinc-600">2 ou mais serviços ativos</strong> cadastrados.
+					Caso tenha apenas 1 serviço, os horários livres seguirão automaticamente a duração exata dele.
 				</div>
 
-				<div class="relative mt-2">
+				<div class="relative pt-1.5">
 					<Input
 						id="interval"
 						type="text"
@@ -75,21 +75,17 @@
 						disabled={isSaving}
 						oninput={(e) => {
 							const input = e.currentTarget;
-							// Remove qualquer caractere que não seja número de 0 a 9
 							let raw = input.value.replace(/\D/g, '');
-
-							// Evita valores absurdos ou que estourem o smallint do Postgres
-							if (parseInt(raw, 10) > 1440) raw = '1440'; // Máximo 24h
-
+							if (parseInt(raw, 10) > 1440) raw = '1440';
 							input.value = raw;
 							currentInterval = raw ? parseInt(raw, 10) : 0;
 						}}
-						class="h-12 w-full rounded-xl border border-zinc-100 bg-zinc-50 pr-10 pl-4 font-bold text-zinc-900 focus-visible:ring-zinc-200 disabled:opacity-60"
+						class="h-12 w-full rounded-[16px] border-zinc-200/80 bg-zinc-50/50 pr-11 pl-4 text-[15px] font-bold text-zinc-900 transition-colors focus-visible:bg-white focus-visible:ring-zinc-300 disabled:opacity-60"
 						placeholder="Ex: 30"
 						required
 					/>
 					<div
-						class="pointer-events-none absolute inset-y-0 right-4 flex items-center text-zinc-400"
+						class="pointer-events-none absolute top-[calc(50%+3px)] right-4 flex size-5 -translate-y-1/2 items-center justify-center text-zinc-400"
 					>
 						<Clock size={16} />
 					</div>
@@ -99,7 +95,7 @@
 			<Button
 				type="submit"
 				disabled={isSaving || !currentInterval}
-				class="h-11 w-full rounded-xl bg-zinc-900 font-bold text-white transition-all active:scale-95 disabled:bg-zinc-700"
+				class="h-12 w-full rounded-[16px] bg-zinc-900 font-semibold text-white transition-all hover:bg-zinc-800 active:scale-[0.98] disabled:bg-zinc-300"
 			>
 				{#if isSaving}
 					<LoaderCircle class="mr-2 size-4 animate-spin" />
@@ -111,3 +107,9 @@
 		</form>
 	</div>
 </div>
+
+<style>
+	button {
+		-webkit-tap-highlight-color: transparent;
+	}
+</style>

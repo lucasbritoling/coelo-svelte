@@ -203,6 +203,72 @@
 	</header>
 
 	<main class="mx-auto w-full max-w-xl flex-1 space-y-10 px-4 pb-32">
+		<!-- EXCEÇÕES -->
+		<section>
+			<div class="mb-3 flex items-center justify-between px-1">
+				<h2 class="text-[11px] font-bold tracking-widest text-muted-foreground uppercase">
+					Próximas Exceções
+				</h2>
+			</div>
+
+			{#if data.overrides.length === 0}
+				<div
+					class="flex flex-col items-center justify-center gap-3 rounded-3xl border-2 border-dashed border-muted bg-background/50 px-6 py-12 text-center"
+				>
+					<div class="flex size-12 items-center justify-center rounded-full bg-muted">
+						<CalendarX class="size-6 text-muted-foreground/50" />
+					</div>
+					<p class="text-sm font-medium text-muted-foreground">
+						Sua agenda está seguindo a rotina abaixo.
+					</p>
+				</div>
+			{:else}
+				<div class="divide-y overflow-hidden rounded-2xl border bg-card shadow-sm">
+					{#each data.overrides as override (override.id)}
+						<button
+							type="button"
+							onclick={() => openDialog(override)}
+							class="flex w-full items-center gap-4 px-4 py-4 text-left transition-colors active:bg-muted/50"
+						>
+							<div
+								class="flex size-10 shrink-0 items-center justify-center rounded-xl {override.is_available
+									? 'bg-green-100 text-green-700'
+									: 'bg-red-100 text-red-700'}"
+							>
+								{#if override.is_available}
+									<CalendarCheck class="size-5" />
+								{:else}
+									<CalendarX class="size-5" />
+								{/if}
+							</div>
+
+							<div class="min-w-0 flex-1">
+								<p class="truncate text-sm font-bold capitalize">{fmtDate(override.date)}</p>
+								<p class="text-xs font-medium text-muted-foreground">
+									<span
+										class="font-semibold {override.is_available
+											? 'text-green-600 dark:text-green-500'
+											: 'text-red-600 dark:text-red-500'}"
+									>
+										{override.start_time?.slice(0, 5) ?? '00:00'} – {override.end_time?.slice(
+											0,
+											5
+										) ?? '00:00'}
+									</span>
+
+									{#if override.note}
+										<span class="text-[11px] font-normal italic">"{override.note}"</span>
+									{/if}
+								</p>
+							</div>
+
+							<Pencil class="size-4 text-muted-foreground/50" />
+						</button>
+					{/each}
+				</div>
+			{/if}
+		</section>
+
 		<!-- ROTINA SEMANAL -->
 		<section>
 			<div class="mb-4 flex items-center justify-between px-2">
@@ -358,72 +424,6 @@
 					</div>
 				{/if}
 			</div>
-		</section>
-
-		<!-- EXCEÇÕES -->
-		<section>
-			<div class="mb-3 flex items-center justify-between px-1">
-				<h2 class="text-[11px] font-bold tracking-widest text-muted-foreground uppercase">
-					Próximas Exceções
-				</h2>
-			</div>
-
-			{#if data.overrides.length === 0}
-				<div
-					class="flex flex-col items-center justify-center gap-3 rounded-3xl border-2 border-dashed border-muted bg-background/50 px-6 py-12 text-center"
-				>
-					<div class="flex size-12 items-center justify-center rounded-full bg-muted">
-						<CalendarX class="size-6 text-muted-foreground/50" />
-					</div>
-					<p class="text-sm font-medium text-muted-foreground">
-						Sua agenda está seguindo a rotina padrão sem interrupções.
-					</p>
-				</div>
-			{:else}
-				<div class="divide-y overflow-hidden rounded-2xl border bg-card shadow-sm">
-					{#each data.overrides as override (override.id)}
-						<button
-							type="button"
-							onclick={() => openDialog(override)}
-							class="flex w-full items-center gap-4 px-4 py-4 text-left transition-colors active:bg-muted/50"
-						>
-							<div
-								class="flex size-10 shrink-0 items-center justify-center rounded-xl {override.is_available
-									? 'bg-green-100 text-green-700'
-									: 'bg-red-100 text-red-700'}"
-							>
-								{#if override.is_available}
-									<CalendarCheck class="size-5" />
-								{:else}
-									<CalendarX class="size-5" />
-								{/if}
-							</div>
-
-							<div class="min-w-0 flex-1">
-								<p class="truncate text-sm font-bold capitalize">{fmtDate(override.date)}</p>
-								<p class="text-xs font-medium text-muted-foreground">
-									<span
-										class="font-semibold {override.is_available
-											? 'text-green-600 dark:text-green-500'
-											: 'text-red-600 dark:text-red-500'}"
-									>
-										{override.start_time?.slice(0, 5) ?? '00:00'} – {override.end_time?.slice(
-											0,
-											5
-										) ?? '00:00'}
-									</span>
-
-									{#if override.note}
-										<span class="text-[11px] font-normal italic">"{override.note}"</span>
-									{/if}
-								</p>
-							</div>
-
-							<Pencil class="size-4 text-muted-foreground/50" />
-						</button>
-					{/each}
-				</div>
-			{/if}
 		</section>
 	</main>
 </div>

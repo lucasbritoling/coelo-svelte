@@ -9,13 +9,13 @@
 		User2,
 		Share,
 		ChevronLeft,
-		Download
+		Download,
+		MapPin // <-- Adicionado o ícone de localização
 	} from '@lucide/svelte';
 	import { fade, fly } from 'svelte/transition';
 
-	// 1. Importações dos seus utilitários de fuso horário
 	import { getLocalTimeZone } from '@internationalized/date';
-	import { createFormatters, dateUtils } from '$lib/utils/date'; // Ajuste o caminho conforme seu projeto
+	import { createFormatters, dateUtils } from '$lib/utils/date'; 
 
 	let { data } = $props();
 	const { appointment, professional } = data;
@@ -23,14 +23,11 @@
 	let copied = $state(false);
 	const firstName = $derived(appointment.customer_name.split(' ')[0]);
 
-	// 2. Pegamos dinamicamente a timezone do navegador do cliente
 	const clientTz = getLocalTimeZone();
 	const formatters = createFormatters(clientTz);
 
-	// 3. States derivados calculados de forma reativa e segura baseados no startMs
 	const formattedTime = $derived(dateUtils.toTime(appointment.startMs, clientTz));
 
-	// Formata a data de forma amigável: "26/05/2026"
 	const formattedDate = $derived(
 		new Intl.DateTimeFormat('pt-BR', {
 			timeZone: clientTz,
@@ -40,16 +37,16 @@
 		}).format(appointment.startMs)
 	);
 
-	// Obtém o nome do dia da semana traduzido baseado no timestamp e fuso ativo
 	const dayName = $derived(
 		new Intl.DateTimeFormat('pt-BR', { timeZone: clientTz, weekday: 'long' })
 			.format(appointment.startMs)
-			// Capitaliza a primeira letra (ex: "terça-feira" -> "Terça-feira")
 			.replace(/^\w/, (c) => c.toUpperCase())
 	);
 
 	async function handleShare() {
-		const message = `${appointment.service_name} com ${professional.full_name} no dia ${formattedDate} (${dayName}) às ${formattedTime}`;
+		// Opcional: Adicionado o endereço na mensagem de compartilhamento também se houver
+		const addressInfo = professional.address ? ` em ${professional.address}` : '';
+		const message = `${appointment.service_name} com ${professional.full_name} no dia ${formattedDate} (${dayName}) às ${formattedTime}${addressInfo}`;
 
 		const shareData = {
 			title: 'Meu Agendamento',
@@ -167,11 +164,26 @@
 					</div>
 				</div>
 
+				<!-- Bloco do Endereço (renderiza apenas se o campo address estiver preenchido) -->
+				{#if professional.address}
+					<div class="mt-2 border-t border-dashed pt-6">
+						<div class="flex items-start gap-2.5">
+							<MapPin class="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+							<div class="flex flex-col">
+								<span class="text-[10px] font-bold tracking-tight text-muted-foreground uppercase"
+									>Local de Atendimento</span
+								>
+								<span class="mt-0.5 text-sm font-medium leading-relaxed text-foreground">
+									{professional.address}
+								</span>
+							</div>
+						</div>
+					</div>
+				{/if}
+
 				<div class="rounded-2xl border border-border/50 bg-muted/40 p-4">
 					<div class="flex flex-col">
-						<span class="mb-1 text-[10px] font-bold tracking-tight text-muted-foreground uppercase"
-							>Serviço Selecionado</span
-						>
+						
 						<span class="text-base font-bold text-primary">{appointment.service_name}</span>
 					</div>
 				</div>
@@ -211,7 +223,6 @@
 </div>
 
 <style>
-	/* Mantido o seu estilo de impressão customizado */
 	@media print {
 		:global(body) {
 			background: white !important;

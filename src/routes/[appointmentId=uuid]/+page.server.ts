@@ -13,6 +13,7 @@ export const load: PageServerLoad = async ({ params, locals: { sql } }) => {
                 s.name as service_name,
                 p.full_name as professional_full_name,
                 p.username as professional_username,
+				p.address as professional_address,
                 c.name as customer_name
             FROM public.appointments a
             JOIN public.services s ON a.service_id = s.id
@@ -41,7 +42,8 @@ export const load: PageServerLoad = async ({ params, locals: { sql } }) => {
 			},
 			professional: {
 				full_name: row.professional_full_name,
-				username: row.professional_username
+				username: row.professional_username,
+				address: row.professional_address
 			}
 		};
 	} catch (err) {

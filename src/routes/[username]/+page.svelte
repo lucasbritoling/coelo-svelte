@@ -368,7 +368,7 @@
 						bind:value={customerName}
 						placeholder="Ex: João Silva"
 						required
-						class="h-10 border-neutral-200/80 placeholder:text-neutral-400 focus-visible:ring-neutral-950"
+						class="h-10 border-neutral-200/80 placeholder:text-neutral-400 focus-visible:ring-neutral-200"
 					/>
 				</div>
 
@@ -386,9 +386,9 @@
 							onblur={() => (phoneTouched = true)}
 							placeholder="(11) 99999-9999"
 							required
-							class="h-10 border-neutral-200/80 placeholder:text-neutral-400 focus-visible:ring-neutral-950
+							class="h-10 border-neutral-200/80 placeholder:text-neutral-400 focus-visible:ring-neutral-200
                             {showPhoneError
-								? 'border-red-500 bg-red-50/10 focus-visible:ring-red-500'
+								? 'border-red-500 bg-red-50/10 focus-visible:ring-red-200'
 								: ''}"
 						/>
 					</div>
@@ -418,9 +418,9 @@
 							onblur={() => (confirmPhoneTouched = true)}
 							placeholder="(11) 99999-9999"
 							required
-							class="h-10 border-neutral-200/80 placeholder:text-neutral-400 focus-visible:ring-neutral-950
+							class="h-10 border-neutral-200/80 placeholder:text-neutral-400 focus-visible:ring-neutral-200
                             {showConfirmPhoneError
-								? 'border-red-500 bg-red-50/10 focus-visible:ring-red-500'
+								? 'border-red-500 bg-red-50/10 focus-visible:ring-red-200'
 								: ''}"
 						/>
 

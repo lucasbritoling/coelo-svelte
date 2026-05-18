@@ -48,6 +48,7 @@ export const load: PageServerLoad = async ({ url, cookies, platform, locals: { s
 
 		return {
 			appointments: agenda.appointments ?? [],
+			overrides: agenda.overrides ?? [],
 			services: agenda.services ?? [],
 			workingHours: agenda.workingHours ?? [],
 			username: agenda.profile?.username ?? 'user',

@@ -64,7 +64,7 @@
 		<div class="w-9"></div>
 	</div>
 
-	<div class="flex flex-col items-center gap-4 py-0 sm:flex-row sm:gap-6">
+	<div class="mb-7 flex flex-col items-center gap-4 py-0 sm:flex-row sm:gap-6">
 		<form
 			method="POST"
 			action="?/updateAvatar"

@@ -61,6 +61,10 @@
 	// Define se exibe a barra lateral de cor (Se o profissional possuir 2 ou mais serviços cadastrados no total)
 	const showServiceColor = $derived((data.services?.length ?? 0) >= 2);
 
+	const pendingCount = $derived(
+		(data.appointments || []).filter((a) => a.status === 'pending').length
+	);
+
 	// ── Navegação de Datas ────────────────────────────────────────
 	function updateDate(newDate: string) {
 		if (!newDate || newDate === data.selectedDate) return;
@@ -246,6 +250,13 @@
 	<AgendaStrip selectedDate={data.selectedDate} onSelect={updateDate} />
 
 	<div class="flex-1 space-y-2 overflow-y-auto px-4 pt-4 pb-20">
+		{#if pendingCount > 0}
+			<div
+				class="mb-3 flex items-center gap-1.5 px-1 text-[10px] font-bold tracking-wider text-zinc-400 uppercase select-none"
+			>
+				<span>{pendingCount} {pendingCount === 1 ? 'pendente' : 'pendentes'}</span>
+			</div>
+		{/if}
 		{#if isFreeDay}
 			<div
 				class="flex h-[50vh] flex-col items-center justify-center gap-2.5 text-zinc-400"

@@ -107,14 +107,6 @@
 							<span class="drawer-phone">{appt.customer_phone}</span>
 						{/if}
 					</div>
-
-					<!-- O nome do serviço é ocultado se houver apenas 1 serviço ativo -->
-					{#if appt.service_name}
-						<div class="drawer-service-badge" class:hidden={!showServiceColor}>
-							<Sparkles size={11} class="text-zinc-400" />
-							<span>{appt.service_name}</span>
-						</div>
-					{/if}
 				</div>
 				<div class="drawer-actions">
 					<Button

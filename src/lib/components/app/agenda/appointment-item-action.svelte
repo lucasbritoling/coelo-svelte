@@ -5,7 +5,8 @@
 		CircleCheckBig,
 		CircleSlash,
 		Trash2,
-		LoaderCircle
+		LoaderCircle,
+		CalendarClock // <-- Importado aqui
 	} from '@lucide/svelte';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
@@ -20,6 +21,7 @@
 	let isLoading = $state(false);
 	let loadingStatus = $state<string | null>(null);
 	let showConfirmDialog = $state(false);
+	let showRescheduleDialog = $state(false); // <-- Estado caso queira abrir um modal de reagendamento futuramente
 
 	// Referência para o formulário fantasma e os inputs
 	let statusForm: HTMLFormElement;
@@ -102,6 +104,17 @@
 				{/if}
 			</button>
 		{/each}
+		<!-- Nova Action: Reagendar -->
+		<DropdownMenu.Item
+			onSelect={() => {
+				showRescheduleDialog = true;
+				isDropdownOpen = false;
+				// Adicione sua lógica de reagendamento aqui (ex: abrir um modal)
+			}}
+		>
+			<CalendarClock class="mr-2 ml-0.5 h-4 w-4" />
+			Reagendar
+		</DropdownMenu.Item>
 
 		<DropdownMenu.Separator />
 

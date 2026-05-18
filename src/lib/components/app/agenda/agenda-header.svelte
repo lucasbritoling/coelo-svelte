@@ -72,12 +72,7 @@
 						>
 							{headerLabel}
 						</h1>
-						<ChevronDown
-							size={headerLabel.toLowerCase() === 'hoje' ? 22 : 18}
-							strokeWidth={headerLabel.toLowerCase() === 'hoje' ? 2.5 : 2}
-							class="mb-0.5 text-zinc-900 transition-transform group-active:translate-y-0.5
-                            {headerLabel.toLowerCase() === 'hoje' ? 'mt-1' : 'mt-0.5'}"
-						/>
+
 						{#if isToday}
 							<span
 								class="mt-1 ml-1 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-bold text-zinc-500 shadow-sm"
@@ -85,6 +80,12 @@
 								{currentTimeStr}
 							</span>
 						{/if}
+						<ChevronDown
+							size={headerLabel.toLowerCase() === 'hoje' ? 22 : 18}
+							strokeWidth={headerLabel.toLowerCase() === 'hoje' ? 2.5 : 2}
+							class="mb-0.5 text-zinc-900 transition-transform group-active:translate-y-0.5
+                            {headerLabel.toLowerCase() === 'hoje' ? 'mt-1' : 'mt-0.5'}"
+						/>
 					</div>
 
 					{#if headerLabel.toLowerCase() !== 'hoje'}

@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { ui } from '$lib/state/ui.svelte';
-	import { Plus, Search, ChevronRight, LoaderCircle } from '@lucide/svelte';
+	import { Plus, Search, ChevronRight, LoaderCircle, ChevronLeft } from '@lucide/svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { enhance } from '$app/forms';
 	import { toast } from 'svelte-sonner';
+	import { goto } from '$app/navigation';
 
 	let { data } = $props();
 
@@ -124,9 +125,19 @@
 
 <div class="flex h-full flex-col">
 	<header class="flex flex-col gap-4 px-6 pt-8 pb-4">
-		<div>
-			<h1 class="text-3xl font-semibold tracking-tight text-zinc-900">Clientes</h1>
-			<p class="text-sm text-zinc-500">Sua base de contatos</p>
+		<div class="flex items-center gap-3.5">
+			<button
+				onclick={() => goto('/agenda')}
+				class="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-xl border border-zinc-200/60 bg-white/50 text-zinc-500 backdrop-blur-sm transition-all hover:border-zinc-300 hover:bg-white hover:text-zinc-800 active:scale-95"
+				aria-label="Voltar para agenda"
+			>
+				<ChevronLeft class="size-5 stroke-[2.5]" />
+			</button>
+
+			<div class="min-w-0">
+				<h1 class="text-3xl font-semibold tracking-tight text-zinc-900">Clientes</h1>
+				<p class="text-sm text-zinc-500">Sua base de contatos</p>
+			</div>
 		</div>
 
 		<div class="relative mt-2">

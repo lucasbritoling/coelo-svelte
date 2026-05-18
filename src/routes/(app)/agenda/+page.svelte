@@ -250,6 +250,7 @@
 	const isFreeDay = $derived(!isPastDate && agendaItems.length === 0);
 </script>
 
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
 	class="flex h-full touch-pan-y flex-col"
 	ontouchstart={(e) => (touchStartX = e.changedTouches[0].screenX)}

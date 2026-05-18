@@ -68,7 +68,13 @@
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="appt-wrapper" class:is-past={isPast} class:expanded={isExpanded} onclick={handleToggle}>
+<div
+	class="appt-wrapper"
+	class:is-past={isPast}
+	class:is-cancelled={isCancelled}
+	class:expanded={isExpanded}
+	onclick={handleToggle}
+>
 	<div class="appt-card">
 		<!-- Removido o IF: A barra lateral de cor agora renderiza SEMPRE -->
 		<div class="service-bar {categoryStyle.class}" style={categoryStyle.style}></div>
@@ -160,6 +166,10 @@
 	.appt-wrapper.is-past {
 		opacity: 1;
 		filter: none;
+	}
+
+	.appt-wrapper.is-cancelled {
+		opacity: 0.6; /* Ajuste o valor conforme preferir (ex: 0.5 para mais apagado) */
 	}
 
 	.appt-card {
@@ -270,7 +280,7 @@
 
 	.customer-name.cancelled {
 		text-decoration: line-through;
-		color: #a1a1aa;
+		opacity: 0.6;
 	}
 
 	/* ── Right col ── */

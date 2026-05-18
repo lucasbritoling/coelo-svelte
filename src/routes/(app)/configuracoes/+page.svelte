@@ -1,20 +1,34 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { toast } from 'svelte-sonner';
-	import { Clock, LoaderCircle } from '@lucide/svelte';
+	// 🔴 ALTERAÇÃO: Importado ChevronLeft junto com Clock e LoaderCircle
+	import { Clock, LoaderCircle, ChevronLeft } from '@lucide/svelte';
 	import { Label } from '$lib/components/ui/label';
 	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input'; // Certifique-se de importar o Input
+	import { Input } from '$lib/components/ui/input';
+	// 🔴 ALTERAÇÃO: Importado o goto para a navegação do botão voltar
+	import { goto } from '$app/navigation';
 
 	let { data } = $props();
 
 	let isSaving = $state(false);
 
-	// Estado reativo iniciado com o valor numérico vindo do banco
 	let currentInterval = $state(data.profile?.favorite_ghost_slot_interval ?? 30);
 </script>
 
 <div class="mx-auto max-w-xl p-5">
+	<div class="flex items-center gap-2 pt-3 pb-5">
+		<button
+			onclick={() => goto('/mais')}
+			class="-ml-2 flex items-center p-2 text-zinc-500 transition-transform active:scale-90"
+		>
+			<ChevronLeft size={24} strokeWidth={2.5} />
+		</button>
+		<h1 class="text-[26px] leading-tight font-medium tracking-tight text-zinc-900">
+			Ajustes da Agenda
+		</h1>
+	</div>
+
 	<div class="overflow-hidden rounded-2xl border border-border/40 bg-card p-5">
 		<form
 			method="POST"

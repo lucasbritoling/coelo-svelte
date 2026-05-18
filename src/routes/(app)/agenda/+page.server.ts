@@ -243,5 +243,95 @@ export const actions: Actions = {
 			console.error('Erro ao excluir agendamento:', err);
 			return fail(500, { message: 'Erro interno ao excluir.' });
 		}
+	},
+	reschedule: async ({ request, cookies, platform, locals: { sql, user } }) => {
+		if (!user) return fail(401);
+
+		const formData = await request.formData();
+		const id = formData.get('id')?.toString();
+		const date = formData.get('date')?.toString();
+		const start_at = formData.get('start_at')?.toString();
+		const end_at = formData.get('end_at')?.toString();
+
+		if (!id || !date || !start_at || !end_at) {
+			return fail(400, { message: 'Dados insuficientes para reagendamento.' });
+		}
+
+		const tz = getSafeTimezone(cookies, platform);
+		const startLocalStr = `${date} ${start_at}:00`;
+		const endLocalStr = `${date} ${end_at}:00`;
+
+		try {
+			// Executa toda a mutação e liberação de slots em uma única transação atômica
+			const txResult = await sql.begin(async (sql) => {
+				// 1. Converte as strings locais com o timezone correto para gerar os timestamps com segurança
+				const [timeBounds] = await sql`
+					SELECT 
+						(${startLocalStr} || ' ' || ${tz})::timestamptz as start_tstz,
+						(${endLocalStr} || ' ' || ${tz})::timestamptz as end_tstz
+				`;
+
+				const newSlot = `[${timeBounds.start_tstz.toISOString()},${timeBounds.end_tstz.toISOString()})`;
+
+				// 2. Verifica se há conflito de horário com outros agendamentos ativos
+				const conflicts = await sql`
+					SELECT id FROM public.appointments
+					WHERE profile_id = ${user.id}
+					  AND id != ${id}
+					  AND status != 'cancelled'
+					  AND slot && ${newSlot}::tstzrange
+				`;
+
+				if (conflicts.count > 0) {
+					return { error: 'conflict' };
+				}
+
+				// 3. Atualiza o slot temporal do agendamento alvo
+				const updateResult = await sql`
+					UPDATE public.appointments
+					SET slot = ${newSlot}::tstzrange,
+					    status = 'pending'::appointment_status -- ou mantém o status anterior se preferir
+					WHERE id = ${id} AND profile_id = ${user.id}
+					RETURNING id
+				`;
+
+				if (updateResult.count === 0) {
+					return { error: 'not_found' };
+				}
+
+				// 4. Desvincula o agendamento dos slots antigos que ele ocupava
+				await sql`
+					UPDATE public.generated_slots
+					SET is_booked = false, appointment_id = NULL
+					WHERE appointment_id = ${id} AND profile_id = ${user.id}
+				`;
+
+				// 5. Ocupa os novos slots correspondentes à nova janela temporal
+				await sql`
+					UPDATE public.generated_slots
+					SET is_booked = true, appointment_id = ${id}
+					WHERE profile_id = ${user.id}
+					  AND slot && ${newSlot}::tstzrange
+				`;
+
+				// 6. Recalcula e sincroniza a esteira de horários para os próximos 90 dias
+				await sql`SELECT public.refresh_profile_slots(${user.id}, 90)`;
+
+				return { success: true };
+			});
+
+			if (txResult?.error === 'conflict') {
+				return fail(400, { message: 'Horário indisponível: coincide com outro agendamento.' });
+			}
+
+			if (txResult?.error === 'not_found') {
+				return fail(404, { message: 'Agendamento original não encontrado.' });
+			}
+
+			return { success: true };
+		} catch (err) {
+			console.error(`[Reschedule Action Error] User: ${user.id}, Appt: ${id}:`, err);
+			return fail(500, { message: 'Erro interno ao processar o reagendamento.' });
+		}
 	}
 };

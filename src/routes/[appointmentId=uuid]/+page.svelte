@@ -12,7 +12,10 @@
 		Download
 	} from '@lucide/svelte';
 	import { fade, fly } from 'svelte/transition';
+
+	// 1. Importações dos seus utilitários de fuso horário
 	import { getLocalTimeZone } from '@internationalized/date';
+	import { createFormatters, dateUtils } from '$lib/utils/date'; // Ajuste o caminho conforme seu projeto
 
 	let { data } = $props();
 	const { appointment, professional } = data;
@@ -20,8 +23,33 @@
 	let copied = $state(false);
 	const firstName = $derived(appointment.customer_name.split(' ')[0]);
 
+	// 2. Pegamos dinamicamente a timezone do navegador do cliente
+	const clientTz = getLocalTimeZone();
+	const formatters = createFormatters(clientTz);
+
+	// 3. States derivados calculados de forma reativa e segura baseados no startMs
+	const formattedTime = $derived(dateUtils.toTime(appointment.startMs, clientTz));
+
+	// Formata a data de forma amigável: "26/05/2026"
+	const formattedDate = $derived(
+		new Intl.DateTimeFormat('pt-BR', {
+			timeZone: clientTz,
+			day: '2-digit',
+			month: '2-digit',
+			year: 'numeric'
+		}).format(appointment.startMs)
+	);
+
+	// Obtém o nome do dia da semana traduzido baseado no timestamp e fuso ativo
+	const dayName = $derived(
+		new Intl.DateTimeFormat('pt-BR', { timeZone: clientTz, weekday: 'long' })
+			.format(appointment.startMs)
+			// Capitaliza a primeira letra (ex: "terça-feira" -> "Terça-feira")
+			.replace(/^\w/, (c) => c.toUpperCase())
+	);
+
 	async function handleShare() {
-		const message = `${appointment.service_name} com ${professional.full_name} no dia ${appointment.date} (${getDayName(appointment.date)}) às ${appointment.time}`;
+		const message = `${appointment.service_name} com ${professional.full_name} no dia ${formattedDate} (${dayName}) às ${formattedTime}`;
 
 		const shareData = {
 			title: 'Meu Agendamento',
@@ -34,26 +62,11 @@
 				await navigator.share(shareData);
 			} catch (err) {}
 		} else {
-			// Para o Clipboard, somamos a mensagem + URL para não perder informação
 			const fullText = `${shareData.title}: ${message}\n\nLink: ${window.location.href}`;
 			await navigator.clipboard.writeText(fullText);
 			copied = true;
 			setTimeout(() => (copied = false), 2000);
 		}
-	}
-
-	function getDayName(dateStr: string) {
-		if (!dateStr) return '';
-
-		// Converte "12/05/2026" em ["12", "05", "2026"]
-		const [day, month, year] = dateStr.split('/').map(Number);
-
-		// O mês no JS começa em 0 (Janeiro = 0, Maio = 4)
-		const date = new Date(year, month - 1, day);
-
-		const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
-
-		return days[date.getDay()];
 	}
 </script>
 
@@ -62,12 +75,11 @@
 	<meta property="og:title" content="Agendamento Confirmado ✅" />
 	<meta
 		property="og:description"
-		content="{appointment.service_name} com {professional.full_name} em {appointment.date} às {appointment.time}."
+		content="{appointment.service_name} com {professional.full_name} em {formattedDate} às {formattedTime}."
 	/>
 	<meta property="og:image" content="{page.url.origin}/icon-300-squared.png?v=definitivo" />
 	<meta property="og:image:width" content="298" />
 	<meta property="og:image:height" content="298" />
-
 	<meta property="og:type" content="website" />
 	<meta name="twitter:card" content="summary" />
 </svelte:head>
@@ -75,7 +87,6 @@
 <div
 	class="flex min-h-screen flex-col items-center justify-center bg-[#fafafa] p-6 antialiased dark:bg-[#0a0a0a]"
 >
-	<!-- Botão Voltar (Estilo Apple) -->
 	<div class="mb-8 flex w-full max-w-sm justify-start">
 		<a
 			href="/{professional.username}"
@@ -94,11 +105,9 @@
 			<p class="text-sm text-muted-foreground">Seu horário está garantido.</p>
 		</div>
 
-		<!-- Forçamos o Root a ignorar paddings/gaps para o header sangrar -->
 		<Card.Root
 			class="!gap-0 overflow-hidden border-none bg-white !p-0 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:bg-[#111] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)]"
 		>
-			<!-- Header Verde (Encostado no topo) -->
 			<div
 				class="flex flex-col items-center border-b border-emerald-100/20 bg-emerald-50/50 px-8 pt-12 pb-8 dark:bg-emerald-500/10"
 			>
@@ -117,9 +126,7 @@
 				</p>
 			</div>
 
-			<!-- Conteúdo do Ticket com padding controlado -->
 			<div class="space-y-8 p-8">
-				<!-- Profissional -->
 				<div class="flex items-center gap-4">
 					<div
 						class="flex size-10 items-center justify-center overflow-hidden rounded-full border bg-muted text-muted-foreground shadow-sm"
@@ -136,33 +143,30 @@
 					</div>
 				</div>
 
-				<!-- Detalhes Grid Refinado -->
 				<div class="mt-2 flex items-center justify-between border-t border-dashed pt-6">
 					<div class="flex flex-col gap-1">
 						<div class="flex items-center gap-2">
 							<Calendar class="size-3.5 text-muted-foreground" />
-							<span class="text-sm font-bold">{appointment.date}</span>
+							<span class="text-sm font-bold">{formattedDate}</span>
 						</div>
 						<span class="text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
-							{getDayName(appointment.date)}
+							{dayName}
 						</span>
 					</div>
 
 					<div class="h-8 w-px bg-border/50"></div>
-					<!-- Divisor vertical -->
 
 					<div class="flex flex-col items-end gap-1">
 						<div class="flex items-center gap-2">
 							<Clock class="size-3.5 text-muted-foreground" />
-							<span class="text-sm font-bold">{appointment.time}</span>
+							<span class="text-sm font-bold">{formattedTime}</span>
 						</div>
 						<span class="text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
-							Horário local
+							Horário Local
 						</span>
 					</div>
 				</div>
 
-				<!-- Serviço -->
 				<div class="rounded-2xl border border-border/50 bg-muted/40 p-4">
 					<div class="flex flex-col">
 						<span class="mb-1 text-[10px] font-bold tracking-tight text-muted-foreground uppercase"
@@ -173,7 +177,6 @@
 				</div>
 			</div>
 
-			<!-- Rodapé de Ações -->
 			<div class="flex flex-col gap-3 px-8 pb-8">
 				<Button
 					variant="default"
@@ -208,6 +211,7 @@
 </div>
 
 <style>
+	/* Mantido o seu estilo de impressão customizado */
 	@media print {
 		:global(body) {
 			background: white !important;

@@ -16,7 +16,6 @@
 	import GhostSlot from '$lib/components/app/agenda/ghost-slot.svelte';
 	import { scale } from 'svelte/transition';
 
-	// ── Props com Svelte 5 Runes ──────────────────────────────────
 	let { data } = $props<{
 		data: {
 			appointments: Appointment[];
@@ -31,7 +30,6 @@
 		};
 	}>();
 
-	// ── ESTADO ELEVADO PARA O REAGENDAMENTO ────────────────────────
 	let rescheduleTarget = $state<Appointment | null>(null);
 	let showRescheduleDialog = $state(false);
 
@@ -40,7 +38,6 @@
 		showRescheduleDialog = true;
 	}
 
-	// ── Lógica de Tempo & Ticker ──────────────────────────────────
 	let ticker = $state(Date.now());
 	$effect(() => {
 		const timeout = setTimeout(
@@ -56,7 +53,6 @@
 		return () => clearTimeout(timeout);
 	});
 
-	// ── Estado de UI Local ────────────────────────────────────────
 	let ui = $state({ modal: false, copied: false });
 	let selectedTime = $state('');
 
@@ -64,25 +60,19 @@
 		globalUI.isModalOpen = ui.modal;
 	});
 
-	// ── Dados Derivados (Reatividade Limpa) ───────────────────────
 	const schedulingLink = $derived(`coelo.dev/${data.username}`);
 	const headerLabel = $derived(dateUtils.getHeaderLabel(data.selectedDate, data.timezone));
-
-	// Define se exibe a barra lateral de cor (Se o profissional possuir 2 ou mais serviços cadastrados no total)
 	const showServiceColor = $derived((data.services?.length ?? 0) >= 2);
-
 	const pendingCount = $derived(
 		(data.appointments || []).filter((a) => a.status === 'pending').length
 	);
 	const hasAppointments = $derived(agendaItems.some((item) => item.type === 'appointment'));
 
-	// Extrai a quantidade de slots livres de dentro do agrupamento de ghosts
 	const freeSlotsCount = $derived.by(() => {
 		const ghostGroup = agendaItems.find((item) => item.type === 'ghost-group');
 		return ghostGroup?.type === 'ghost-group' ? ghostGroup.slots.length : 0;
 	});
 
-	// ── Navegação de Datas ────────────────────────────────────────
 	function updateDate(newDate: string) {
 		if (!newDate || newDate === data.selectedDate) return;
 		const newUrl = new URL(page.url);
@@ -98,19 +88,14 @@
 		updateDate(formatters.iso.format(date));
 	}
 
-	// Gestos de Swipe
 	let touchStartX = 0;
 	function handleTouchEnd(e: TouchEvent) {
 		const dx = touchStartX - e.changedTouches[0].screenX;
 		if (Math.abs(dx) > 80) navigateDay(dx > 0 ? 1 : -1);
 	}
 
-	// ── Engenharia de Horários e Lacunas Livres ───────────────────
 	const defaultDuration = $derived.by(() => {
-		if (data.services?.length === 1) {
-			return data.services[0].duration;
-		}
-		// Prioriza o valor dinâmico configurado no banco de dados
+		if (data.services?.length === 1) return data.services[0].duration;
 		return data.favoriteGhostSlotInterval ?? 30;
 	});
 
@@ -123,21 +108,55 @@
 		return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
 	};
 
-	const nextAppointmentId = $derived.by(() => {
+	// ── NOVA LÓGICA DO SOONLABEL (REGRAS 1, 2 E 3) ────────────────
+	const activeAndNextAppts = $derived.by(() => {
 		const isToday = data.selectedDate === dateUtils.today(data.timezone);
-		if (!isToday) return null;
+		if (!isToday) return { currentId: null, nextId: null };
 
-		const nowStr = dateUtils.toTime(ticker, data.timezone);
+		const validAppts = data.appointments
+			.filter((a) => !['cancelled', 'concluído', 'faltou'].includes(a.status))
+			.map((a) => {
+				const startMs = dateUtils.parseTimeToMs(a.start_at, data.selectedDate, data.timezone);
+				const endMs = dateUtils.parseTimeToMs(a.end_at, data.selectedDate, data.timezone);
+				return { id: a.id, startMs, endMs };
+			})
+			.sort((a, b) => a.startMs - b.startMs);
 
-		const next = data.appointments
-			.filter((a) => a.status !== 'cancelled' && a.start_at > nowStr)
-			.sort((a, b) => a.start_at.localeCompare(b.start_at))[0];
-		return next?.id;
+		let currentId = null;
+		let nextId = null;
+
+		for (const appt of validAppts) {
+			// Regra 2: "Agora" (se o ticker estiver dentro do agendamento)
+			if (ticker >= appt.startMs && ticker < appt.endMs) {
+				currentId = appt.id;
+			}
+			// Regra 3: Se já achou o "agora" ou não, pega o MAIS PRÓXIMO no futuro
+			else if (appt.startMs > ticker && !nextId) {
+				nextId = appt.id;
+			}
+		}
+
+		return { currentId, nextId };
 	});
+
+	// Regra 1: Formatação arredondada de tempo
+	function getSoonText(startMs: number, endMs: number, currentMs: number): string | null {
+		if (currentMs >= startMs && currentMs < endMs) return 'agora';
+		if (currentMs < startMs) {
+			const diffMins = Math.ceil((startMs - currentMs) / 60000);
+			if (diffMins < 60) {
+				return `em ${diffMins} ${diffMins === 1 ? 'minuto' : 'minutos'}`;
+			} else {
+				const diffHours = Math.floor(diffMins / 60);
+				return `em ${diffHours} ${diffHours === 1 ? 'hora' : 'horas'}`;
+			}
+		}
+		return null;
+	}
+	// ──────────────────────────────────────────────────────────────
 
 	const agendaItems = $derived.by(() => {
 		const appointments = data.appointments || [];
-
 		const rawItems: Array<
 			| { type: 'appointment'; data: any; sortTime: string; isPast: boolean }
 			| { type: 'ghost'; startAt: string; duration: number; sortTime: string }
@@ -148,8 +167,7 @@
 
 		appointments.forEach((appt) => {
 			let apptIsPast = false;
-
-			if (appt.status === 'cancelled' || appt.status === 'concluído' || appt.status === 'faltou') {
+			if (['cancelled', 'concluído', 'faltou'].includes(appt.status)) {
 				apptIsPast = true;
 			} else if (data.selectedDate < todayStr) {
 				apptIsPast = true;
@@ -157,7 +175,6 @@
 				const endMs = dateUtils.parseTimeToMs(appt.end_at, data.selectedDate, data.timezone);
 				apptIsPast = ticker > endMs;
 			}
-
 			rawItems.push({
 				type: 'appointment',
 				data: appt,
@@ -178,12 +195,7 @@
 				let current = startMin;
 				while (current + slotLen <= endMin) {
 					const timeStr = minsToTime(current);
-					rawItems.push({
-						type: 'ghost',
-						startAt: timeStr,
-						duration: slotLen,
-						sortTime: timeStr
-					});
+					rawItems.push({ type: 'ghost', startAt: timeStr, duration: slotLen, sortTime: timeStr });
 					current += slotLen;
 				}
 			};
@@ -195,13 +207,11 @@
 			if (activeAppts.length > 0) {
 				const firstStart = timeToMins(activeAppts[0].start_at);
 				if (firstStart > dayStart) fillGap(dayStart, firstStart);
-
 				for (let i = 0; i < activeAppts.length - 1; i++) {
 					const currentEnd = timeToMins(activeAppts[i].end_at);
 					const nextStart = timeToMins(activeAppts[i + 1].start_at);
 					if (nextStart > currentEnd) fillGap(currentEnd, nextStart);
 				}
-
 				const lastEnd = timeToMins(activeAppts[activeAppts.length - 1].end_at);
 				if (dayEnd > lastEnd) fillGap(lastEnd, dayEnd);
 			} else {
@@ -210,15 +220,12 @@
 		}
 
 		const nowTimeStr = dateUtils.toTime(ticker, data.timezone);
-
-		// Filtragem de slots antigos
 		const filteredItems = rawItems.filter((item) => {
 			if (item.type === 'appointment') return true;
 			if (isSelectedToday) return item.startAt >= nowTimeStr;
 			return data.selectedDate > todayStr;
 		});
 
-		// Separação explícita para agrupar fantasmas no final
 		const appointmentsOnly = filteredItems
 			.filter((item) => item.type === 'appointment')
 			.sort((a, b) => a.sortTime.localeCompare(b.sortTime));
@@ -228,25 +235,21 @@
 			.sort((a, b) => a.sortTime.localeCompare(b.sortTime));
 
 		const groupedItems = [...appointmentsOnly];
-
 		if (ghostsOnly.length > 0) {
 			groupedItems.push({
 				type: 'ghost-group',
 				sortTime: ghostsOnly[0].sortTime,
-				slots: ghostsOnly.map((g) => ({
-					startAt: g.startAt,
-					duration: g.duration
-				}))
+				slots: ghostsOnly.map((g) => ({ startAt: g.startAt, duration: g.duration }))
 			});
 		}
 
 		return groupedItems;
 	});
+
 	const isPastDate = $derived(data.selectedDate < dateUtils.today(data.timezone));
 	const isFreeDay = $derived(!isPastDate && agendaItems.length === 0);
 </script>
 
-<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
 	class="flex h-full touch-pan-y flex-col"
 	ontouchstart={(e) => (touchStartX = e.changedTouches[0].screenX)}
@@ -275,8 +278,6 @@
 					{pendingCount}
 					{pendingCount === 1 ? 'pendente' : 'pendentes'}
 				</span>
-
-				<!-- Só mostra "horários livres" se houver agendamentos dividindo o dia -->
 				{#if hasAppointments && agendaItems.some((item) => item.type === 'ghost-group')}
 					<span class="font-normal text-zinc-300">•</span>
 					<span class="text-zinc-400">horários livres</span>
@@ -297,9 +298,10 @@
 						data.selectedDate,
 						data.timezone
 					)}
-					{@const isNext = item.data.id === nextAppointmentId}
-					{@const isNow = ticker >= startMs && ticker <= endMs}
-					{@const isToday = data.selectedDate === dateUtils.today(data.timezone)}
+					<!-- Verifica se a lógica computada o aponta como o atual ou o próximo -->
+					{@const isCurrentOrNext =
+						activeAndNextAppts.currentId === item.data.id ||
+						activeAndNextAppts.nextId === item.data.id}
 
 					<div>
 						<AppointmentItem
@@ -308,9 +310,7 @@
 							currentTime={ticker}
 							selectedDate={data.selectedDate}
 							timezone={data.timezone}
-							soon={isToday && (isNext || isNow)
-								? dateUtils.getSoonLabel(startMs, endMs, ticker)
-								: null}
+							soon={isCurrentOrNext ? getSoonText(startMs, endMs, ticker) : null}
 							onReschedule={openReschedule}
 						/>
 					</div>
@@ -325,6 +325,7 @@
 				{/if}
 			{/each}
 		</div>
+
 		{#if agendaItems.length === 0}
 			<div
 				class="flex h-[50vh] flex-col items-center justify-center gap-2.5 text-zinc-400"

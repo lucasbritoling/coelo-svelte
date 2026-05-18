@@ -27,14 +27,11 @@
 
 	let isExpanded = $state(false);
 
-	// ── ESTADO OTIMISTA CENTRALIZADO ─────────────────────────────────
 	let optimisticStatus = $state(appt.status);
 
-	// Mantém sincronizado caso a prop mude de fora (mudança de página, etc)
 	$effect(() => {
 		optimisticStatus = appt.status;
 	});
-	// ─────────────────────────────────────────────────────────────────
 
 	const STATUS_MAP: Record<string, { label: string; type: string }> = {
 		pending: { label: 'Pendente', type: 'pending' },
@@ -44,7 +41,6 @@
 		faltou: { label: 'Não compareceu', type: 'no-show' }
 	};
 
-	// Computações baseadas estritamente no estado otimista para refletir o clique na hora
 	const currentStatus = $derived(STATUS_MAP[optimisticStatus]);
 
 	const categoryStyle = $derived.by(() => {
@@ -70,8 +66,6 @@
 	}
 </script>
 
-<!-- svelte-ignore a11y_click_events_have_key_events -->
-<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
 	class="appt-wrapper"
 	class:is-past={isPast}
@@ -95,7 +89,11 @@
 		</div>
 
 		<div class="right-col">
-			<!-- O badge agora renderiza dinamicamente baseado no status otimista alterado na hora -->
+			<!-- NOVO: Adicionado chip do soonLabel -->
+			{#if soon && !isPast}
+				<span class="soon-chip">{soon}</span>
+			{/if}
+
 			{#if currentStatus.type === 'pending' || currentStatus.type === 'confirmed' || currentStatus.type === 'cancelled'}
 				<span class="status-badge" data-status={currentStatus.type}>
 					<span class="badge-dot"></span>
@@ -132,7 +130,6 @@
 						<span>Enviar Mensagem</span>
 					</Button>
 
-					<!-- Passando a função de modificação otimista para o Action -->
 					<AppointmentItemAction
 						{appt}
 						onReschedule={() => onReschedule(appt)}
@@ -254,6 +251,20 @@
 		padding-left: 0px !important;
 		padding: 0 12px;
 		flex-shrink: 0;
+	}
+
+	.soon-chip {
+		display: inline-flex;
+		align-items: center;
+		padding: 4px 10px;
+		border-radius: 8px;
+		font-size: 11px;
+		font-weight: 600;
+		background: #eff6ff;
+		color: #2563eb;
+		border: 1px solid #bfdbfe;
+		white-space: nowrap;
+		letter-spacing: -0.01em;
 	}
 
 	.status-badge {

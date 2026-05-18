@@ -29,91 +29,124 @@
 		if (confirmLogout && !isLoggingOut) {
 			const timer = setTimeout(() => {
 				confirmLogout = false;
-			}, 2000);
+			}, 2500); // 2.5s dá um tempo mais confortável de leitura para a confirmação
 			return () => clearTimeout(timer);
 		}
 	});
 </script>
 
-<div class="mx-auto flex min-h-full max-w-xl flex-col pb-28" in:fly={{ x: -24, duration: 200 }}>
-	<div class="px-5 pt-8 pb-4">
-		<div class="flex items-center gap-2">
+<div class="mx-auto flex min-h-full max-w-xl flex-col pb-28" in:fly={{ x: -16, duration: 250 }}>
+	<div class="px-6 pt-8 pb-3">
+		<div class="flex items-center gap-3">
 			<button
 				onclick={() => goto('/agenda')}
-				class="-ml-2 flex items-center p-2 text-muted-foreground transition-transform active:scale-90"
+				class="-ml-2.5 flex size-9 cursor-pointer items-center justify-center rounded-xl border border-zinc-200/40 bg-white/40 text-zinc-500 transition-all hover:border-zinc-300 hover:bg-white hover:text-zinc-800 active:scale-90"
+				aria-label="Voltar para agenda"
 			>
-				<ChevronLeft size={24} strokeWidth={2.5} />
+				<ChevronLeft size={20} strokeWidth={2.5} />
 			</button>
-			<h1 class="text-[26px] leading-tight font-medium tracking-tight">Mais</h1>
+			<h1 class="text-2xl font-semibold tracking-tight text-zinc-900">Mais</h1>
 		</div>
 	</div>
 
-	<!-- ── CONTA ────────────────────────────────────────────────────── -->
 	<p class="section-label">conta</p>
-	<div class="mx-3 overflow-hidden rounded-2xl border border-border/40 bg-card">
+	<div
+		class="mx-4 overflow-hidden rounded-[22px] border border-zinc-200/50 bg-white/70 shadow-[0_2px_8px_rgba(0,0,0,0.01)] backdrop-blur-md"
+	>
 		<a
 			href="/profile"
-			class="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors active:bg-muted/50"
+			class="group flex w-full items-center gap-3.5 px-4 py-3.5 text-left transition-all duration-200 active:bg-zinc-50/70"
 		>
 			<div
-				class="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border/40 bg-muted"
+				class="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-zinc-200/60 bg-zinc-100 shadow-sm ring-1 ring-zinc-950/[0.02]"
 			>
 				{#if avatarUrl}
 					<img src={avatarUrl} alt={profile.name} class="h-full w-full object-cover" />
 				{:else}
-					<span class="text-sm font-medium text-muted-foreground uppercase">
+					<span class="text-sm font-bold text-zinc-500 uppercase">
 						{initials}
 					</span>
 				{/if}
 			</div>
 
 			<div class="min-w-0 flex-1">
-				<p class="truncate text-[14px] font-medium">{profile.name}</p>
-				<p class="truncate text-[12px] text-muted-foreground">coelo.dev/{profile.slug}</p>
+				<p class="truncate text-[15px] font-semibold tracking-tight text-zinc-900">
+					{profile.name}
+				</p>
+				<p class="truncate text-[12.5px] font-medium text-zinc-400">coelo.dev/{profile.slug}</p>
 			</div>
-			<ChevronRight class="size-4 shrink-0 text-muted-foreground/40" />
+			<ChevronRight
+				class="size-4 shrink-0 text-zinc-300 transition-transform group-hover:translate-x-0.5 group-hover:text-zinc-400"
+			/>
 		</a>
 	</div>
 
-	<!-- ── CONFIGURAÇÕES ────────────────────────────────────────────── -->
 	<p class="section-label">configurações</p>
-	<div class="mx-3 overflow-hidden rounded-2xl border border-border/40 bg-card">
+	<div
+		class="mx-4 overflow-hidden rounded-[22px] border border-zinc-200/50 bg-white/70 shadow-[0_2px_8px_rgba(0,0,0,0.01)] backdrop-blur-md"
+	>
 		<a
 			href="/configuracoes"
-			class="flex w-full items-center gap-3 border-b border-border/40 px-4 py-3 text-left transition-colors active:bg-muted/50"
+			class="group flex w-full items-center gap-3.5 border-b border-zinc-100 px-4 py-3.5 text-left transition-all duration-200 active:bg-zinc-50/70"
 		>
-			<div class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted">
-				<CalendarCog class="size-4 text-muted-foreground" />
+			<div
+				class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-100/80 text-zinc-600 transition-colors group-hover:bg-zinc-100 group-hover:text-zinc-900"
+			>
+				<CalendarCog class="size-4.5" />
 			</div>
-			<p class="flex-1 text-[14px] font-medium">Ajustes da Agenda</p>
-			<ChevronRight class="size-4 shrink-0 text-muted-foreground/40" />
+			<p
+				class="flex-1 text-[14.5px] font-medium tracking-tight text-zinc-700 group-hover:text-zinc-900"
+			>
+				Ajustes da Agenda
+			</p>
+			<ChevronRight
+				class="size-4 shrink-0 text-zinc-300 transition-transform group-hover:translate-x-0.5 group-hover:text-zinc-400"
+			/>
 		</a>
+
 		<a
 			href="/servicos"
-			class="flex w-full items-center gap-3 border-b border-border/40 px-4 py-3 text-left transition-colors active:bg-muted/50"
+			class="group flex w-full items-center gap-3.5 border-b border-zinc-100 px-4 py-3.5 text-left transition-all duration-200 active:bg-zinc-50/70"
 		>
-			<div class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted">
-				<BriefcaseBusiness class="size-4 text-muted-foreground" />
+			<div
+				class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-100/80 text-zinc-600 transition-colors group-hover:bg-zinc-100 group-hover:text-zinc-900"
+			>
+				<BriefcaseBusiness class="size-4.5" />
 			</div>
-			<p class="flex-1 text-[14px] font-medium">Serviços</p>
-			<ChevronRight class="size-4 shrink-0 text-muted-foreground/40" />
+			<p
+				class="flex-1 text-[14.5px] font-medium tracking-tight text-zinc-700 group-hover:text-zinc-900"
+			>
+				Serviços
+			</p>
+			<ChevronRight
+				class="size-4 shrink-0 text-zinc-300 transition-transform group-hover:translate-x-0.5 group-hover:text-zinc-400"
+			/>
 		</a>
 
 		<a
 			href="/rotina"
-			class="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors active:bg-muted/50"
+			class="group flex w-full items-center gap-3.5 px-4 py-3.5 text-left transition-all duration-200 active:bg-zinc-50/70"
 		>
-			<div class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted">
-				<Clock class="size-4 text-muted-foreground" />
+			<div
+				class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-100/80 text-zinc-600 transition-colors group-hover:bg-zinc-100 group-hover:text-zinc-900"
+			>
+				<Clock class="size-4.5" />
 			</div>
-			<p class="flex-1 text-[14px] font-medium">Rotina Semanal</p>
-			<ChevronRight class="size-4 shrink-0 text-muted-foreground/40" />
+			<p
+				class="flex-1 text-[14.5px] font-medium tracking-tight text-zinc-700 group-hover:text-zinc-900"
+			>
+				Rotina Semanal
+			</p>
+			<ChevronRight
+				class="size-4 shrink-0 text-zinc-300 transition-transform group-hover:translate-x-0.5 group-hover:text-zinc-400"
+			/>
 		</a>
 	</div>
 
-	<!-- ── SESSÃO ───────────────────────────────────────────────────── -->
 	<p class="section-label">sessão</p>
-	<div class="mx-3 overflow-hidden rounded-2xl border border-border/40 bg-card">
+	<div
+		class="mx-4 overflow-hidden rounded-[22px] border border-zinc-200/50 bg-white/70 shadow-[0_2px_8px_rgba(0,0,0,0.01)] backdrop-blur-md"
+	>
 		<form method="POST" action="/logout" onsubmit={() => (isLoggingOut = true)}>
 			<button
 				type={confirmLogout ? 'submit' : 'button'}
@@ -123,35 +156,34 @@
 						confirmLogout = true;
 					}
 				}}
-				/* No Svelte 5, usamos ternários ou funções auxiliares dentro de template strings */
-				class={`flex w-full items-center gap-3 px-4 py-3 text-left transition-all duration-200 active:bg-muted/50 ${
-					confirmLogout ? 'bg-destructive/5' : ''
-				}`}
+				class="group flex w-full cursor-pointer items-center gap-3.5 px-4 py-3.5 text-left transition-all duration-300 active:bg-zinc-50/70 {confirmLogout
+					? 'bg-red-50/40'
+					: ''}"
 			>
 				<div
-					class={`flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted transition-colors ${
-						confirmLogout ? 'bg-destructive/10' : ''
-					}`}
+					class="flex size-9 shrink-0 items-center justify-center rounded-xl bg-zinc-100/80 text-zinc-500 transition-all duration-300 {confirmLogout
+						? 'bg-red-100/70 text-red-600'
+						: 'group-hover:bg-zinc-100 group-hover:text-zinc-800'}"
 				>
 					{#if isLoggingOut}
-						<LoaderCircle class="size-4 animate-spin text-destructive" />
+						<LoaderCircle class="size-4.5 animate-spin text-red-600" />
 					{:else}
-						<LogOut
-							class={`size-4 ${confirmLogout ? 'text-destructive' : 'text-muted-foreground'}`}
-						/>
+						<LogOut class="size-4.5" />
 					{/if}
 				</div>
 
 				<div class="flex flex-1 flex-col">
 					<p
-						class={`text-[14px] font-medium transition-colors ${confirmLogout ? 'text-destructive' : ''}`}
+						class="text-[14.5px] font-medium tracking-tight text-zinc-700 transition-colors duration-300 {confirmLogout
+							? 'font-semibold text-red-600'
+							: 'group-hover:text-zinc-900'}"
 					>
 						{#if isLoggingOut}
 							Saindo...
 						{:else if confirmLogout}
-							Tem certeza?
+							Confirmar saída?
 						{:else}
-							Sair
+							Sair da conta
 						{/if}
 					</p>
 				</div>
@@ -165,11 +197,12 @@
 		-webkit-tap-highlight-color: transparent;
 	}
 	.section-label {
-		font-size: 10px;
-		font-weight: 500;
-		letter-spacing: 0.07em;
+		font-size: 10.5px;
+		font-weight: 600;
+		letting-spacing: 0.1em;
+		letter-spacing: 0.08em;
 		text-transform: uppercase;
-		padding: 10px 16px 6px;
-		color: hsl(var(--muted-foreground));
+		padding: 16px 24px 7px;
+		color: #a1a1aa; /* zinc-400 sutil */
 	}
 </style>

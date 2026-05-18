@@ -252,7 +252,7 @@
 	<div class="flex-1 space-y-2 overflow-y-auto px-4 pt-4 pb-20">
 		{#if pendingCount > 0}
 			<div
-				class="mb-3 flex items-center gap-1.5 px-1 text-[10px] font-bold tracking-wider text-zinc-400 uppercase select-none"
+				class="mb-3 flex items-center gap-1.5 px-1 text-[10px] font-semibold tracking-wider text-amber-500 uppercase select-none"
 			>
 				<span>{pendingCount} {pendingCount === 1 ? 'pendente' : 'pendentes'}</span>
 			</div>

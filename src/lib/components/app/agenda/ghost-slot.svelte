@@ -10,19 +10,32 @@
 </script>
 
 {#if totalSlots > 0}
-	<div class="ghost-group">
-		<button class="ghost-card" onclick={() => (isExpanded = !isExpanded)}>
-			<span class="free-label"
-				>+{totalSlots} horário{totalSlots > 1 ? 's' : ''} livre{totalSlots > 1 ? 's' : ''}</span
+	<div class="ghost-group w-full select-none">
+		<!-- Card Gatilho Principal -->
+		<button
+			class="ghost-card flex w-full items-center justify-between rounded-xl border border-dashed border-zinc-200 bg-zinc-50/50 px-4 py-3 text-left transition-colors hover:bg-zinc-50 active:bg-zinc-100"
+			onclick={() => (isExpanded = !isExpanded)}
+		>
+			<span class="free-label text-xs font-medium text-zinc-500">
+				+{totalSlots} horário{totalSlots > 1 ? 's' : ''} livre{totalSlots > 1 ? 's' : ''}
+			</span>
+			<span
+				class="chevron text-lg font-light text-zinc-400 transition-transform duration-200"
+				class:rotate-90={isExpanded}
 			>
-			<span class="chevron" class:open={isExpanded}>›</span>
+				›
+			</span>
 		</button>
 
+		<!-- Sub-cards renderizados em linha (flex-wrap) se expandido -->
 		{#if isExpanded}
-			<div class="expanded">
+			<div class="expanded mt-2 flex flex-wrap gap-1.5 px-0.5">
 				{#each slots as slot}
-					<button class="ghost-card sub" onclick={() => onSlotClick(slot.startAt)}>
-						<span class="time-start">{slot.startAt}</span>
+					<button
+						class="ghost-card sub flex items-center justify-center rounded-lg border border-zinc-200 bg-white px-3 py-2 text-zinc-700 shadow-sm transition-all hover:border-zinc-300 hover:bg-zinc-50 active:scale-95"
+						onclick={() => onSlotClick(slot.startAt)}
+					>
+						<span class="time-start text-xs font-semibold tracking-wide">{slot.startAt}</span>
 					</button>
 				{/each}
 			</div>

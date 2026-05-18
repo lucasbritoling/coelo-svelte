@@ -19,6 +19,7 @@
 	let { data } = $props<{
 		data: {
 			appointments: Appointment[];
+			overrides: any[];
 			username: string;
 			selectedDate: string;
 			customers: any[];
@@ -68,10 +69,7 @@
 	);
 	const hasAppointments = $derived(agendaItems.some((item) => item.type === 'appointment'));
 
-	const freeSlotsCount = $derived.by(() => {
-		const ghostGroup = agendaItems.find((item) => item.type === 'ghost-group');
-		return ghostGroup?.type === 'ghost-group' ? ghostGroup.slots.length : 0;
-	});
+	const freeSlotsCount = $derived(agendaItems.length === 0);
 
 	function updateDate(newDate: string) {
 		if (!newDate || newDate === data.selectedDate) return;
@@ -108,7 +106,6 @@
 		return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
 	};
 
-	// ── NOVA LÓGICA DO SOONLABEL (REGRAS 1, 2 E 3) ────────────────
 	const activeAndNextAppts = $derived.by(() => {
 		const isToday = data.selectedDate === dateUtils.today(data.timezone);
 		if (!isToday) return { currentId: null, nextId: null };
@@ -126,12 +123,9 @@
 		let nextId = null;
 
 		for (const appt of validAppts) {
-			// Regra 2: "Agora" (se o ticker estiver dentro do agendamento)
 			if (ticker >= appt.startMs && ticker < appt.endMs) {
 				currentId = appt.id;
-			}
-			// Regra 3: Se já achou o "agora" ou não, pega o MAIS PRÓXIMO no futuro
-			else if (appt.startMs > ticker && !nextId) {
+			} else if (appt.startMs > ticker && !nextId) {
 				nextId = appt.id;
 			}
 		}
@@ -139,7 +133,6 @@
 		return { currentId, nextId };
 	});
 
-	// Regra 1: Formatação arredondada de tempo
 	function getSoonText(startMs: number, endMs: number, currentMs: number): string | null {
 		if (currentMs >= startMs && currentMs < endMs) return 'agora';
 		if (currentMs < startMs) {
@@ -153,10 +146,10 @@
 		}
 		return null;
 	}
-	// ──────────────────────────────────────────────────────────────
 
 	const agendaItems = $derived.by(() => {
 		const appointments = data.appointments || [];
+		const overrides = data.overrides || [];
 		const rawItems: Array<
 			| { type: 'appointment'; data: any; sortTime: string; isPast: boolean }
 			| { type: 'ghost'; startAt: string; duration: number; sortTime: string }
@@ -165,6 +158,7 @@
 		const todayStr = dateUtils.today(data.timezone);
 		const isSelectedToday = data.selectedDate === todayStr;
 
+		// 1. Mapeia os Agendamentos Existentes
 		appointments.forEach((appt) => {
 			let apptIsPast = false;
 			if (['cancelled', 'concluído', 'faltou'].includes(appt.status)) {
@@ -183,19 +177,59 @@
 			});
 		});
 
-		const dayOfWeek = dateUtils.parseISO(data.selectedDate).getDay();
-		const currentDayConfig = data.workingHours?.find((wh) => wh.day_of_week === dayOfWeek);
+		// 2. Determina a Janela de Trabalho do Dia (Overrides x Horário Comercial)
+		let dayStart: number | null = null;
+		let dayEnd: number | null = null;
+		let shouldGenerateGhosts = false;
 
-		if (currentDayConfig && currentDayConfig.is_active) {
-			const dayStart = timeToMins(currentDayConfig.start_time);
-			const dayEnd = timeToMins(currentDayConfig.end_time);
+		const currentOverride = overrides && overrides.length > 0 ? overrides[0] : null;
+
+		if (currentOverride) {
+			if (currentOverride.is_available && currentOverride.start_time && currentOverride.end_time) {
+				dayStart = timeToMins(currentOverride.start_time);
+				dayEnd = timeToMins(currentOverride.end_time);
+				shouldGenerateGhosts = true;
+			} else {
+				// Se is_available = false (Dia bloqueado por Exceção), não gera ghosts
+				shouldGenerateGhosts = false;
+			}
+		} else {
+			const dayOfWeek = dateUtils.parseISO(data.selectedDate).getDay();
+			const currentDayConfig = data.workingHours?.find((wh) => wh.day_of_week === dayOfWeek);
+
+			if (currentDayConfig && currentDayConfig.is_active) {
+				dayStart = timeToMins(currentDayConfig.start_time);
+				dayEnd = timeToMins(currentDayConfig.end_time);
+				shouldGenerateGhosts = true;
+			}
+		}
+
+		// 3. Preenche as lacunas de horários livres aplicando o filtro de Almoço
+		if (shouldGenerateGhosts && dayStart !== null && dayEnd !== null) {
 			const slotLen = defaultDuration;
+
+			const hasLunch = data.user?.lunch_settings?.has_lunch ?? false;
+			const lunchStartMins = timeToMins(data.user?.lunch_settings?.lunch_start || '12:00');
+			const lunchEndMins = timeToMins(data.user?.lunch_settings?.lunch_end || '13:00');
 
 			const fillGap = (startMin: number, endMin: number) => {
 				let current = startMin;
 				while (current + slotLen <= endMin) {
-					const timeStr = minsToTime(current);
-					rawItems.push({ type: 'ghost', startAt: timeStr, duration: slotLen, sortTime: timeStr });
+					const slotEnd = current + slotLen;
+
+					// Verifica se o Ghost Slot intercepta a janela do almoço
+					const intersectsLunch =
+						hasLunch && !(slotEnd <= lunchStartMins || current >= lunchEndMins);
+
+					if (!intersectsLunch) {
+						const timeStr = minsToTime(current);
+						rawItems.push({
+							type: 'ghost',
+							startAt: timeStr,
+							duration: slotLen,
+							sortTime: timeStr
+						});
+					}
 					current += slotLen;
 				}
 			};
@@ -219,6 +253,7 @@
 			}
 		}
 
+		// 4. Filtragem de Horários Passados e Agrupamento
 		const nowTimeStr = dateUtils.toTime(ticker, data.timezone);
 		const filteredItems = rawItems.filter((item) => {
 			if (item.type === 'appointment') return true;
@@ -247,7 +282,6 @@
 	});
 
 	const isPastDate = $derived(data.selectedDate < dateUtils.today(data.timezone));
-	const isFreeDay = $derived(!isPastDate && agendaItems.length === 0);
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -271,16 +305,25 @@
 	<AgendaStrip selectedDate={data.selectedDate} onSelect={updateDate} />
 
 	<div class="flex-1 space-y-2 overflow-y-auto px-4 pt-4 pb-20">
-		{#if pendingCount > 0}
+		{#if pendingCount > 0 || (agendaItems.length > 0 && agendaItems.some((item) => item.type === 'ghost-group'))}
 			<div
-				class="mb-3 flex items-center gap-2 px-1 text-[10px] font-semibold tracking-wider uppercase select-none"
+				class="mb-3 flex flex-wrap items-center gap-2 px-1 text-[10px] font-semibold tracking-wider uppercase select-none"
 			>
-				<span class="text-amber-500">
-					{pendingCount}
-					{pendingCount === 1 ? 'pendente' : 'pendentes'}
-				</span>
-				{#if hasAppointments && agendaItems.some((item) => item.type === 'ghost-group')}
+				<!-- Badge de Pendentes -->
+				{#if pendingCount > 0}
+					<span class="text-amber-500">
+						{pendingCount}
+						{pendingCount === 1 ? 'pendente' : 'pendentes'}
+					</span>
+				{/if}
+
+				<!-- Ponto Separador Dinâmico (Só aparece se houver pendentes E também houver ghosts) -->
+				{#if pendingCount > 0 && agendaItems.some((item) => item.type === 'ghost-group')}
 					<span class="font-normal text-zinc-300">•</span>
+				{/if}
+
+				<!-- Badge de Horários Livres -->
+				{#if agendaItems.some((item) => item.type === 'ghost-group')}
 					<span class="text-zinc-400">horários livres</span>
 				{/if}
 			</div>
@@ -299,7 +342,6 @@
 						data.selectedDate,
 						data.timezone
 					)}
-					<!-- Verifica se a lógica computada o aponta como o atual ou o próximo -->
 					{@const isCurrentOrNext =
 						activeAndNextAppts.currentId === item.data.id ||
 						activeAndNextAppts.nextId === item.data.id}

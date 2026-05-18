@@ -17,6 +17,7 @@
 
 	let {
 		appt,
+		onReschedule,
 		showServiceColor,
 		soon = null,
 		currentTime,
@@ -120,7 +121,7 @@
 						<MessageCircle size={14} />
 						<span>Enviar Mensagem</span>
 					</Button>
-					<AppointmentItemAction {appt} appointmentStatus={appt.status} />
+					<AppointmentItemAction {appt} onReschedule={() => onReschedule(appt)} />
 				</div>
 			</div>
 		</div>

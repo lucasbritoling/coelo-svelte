@@ -311,6 +311,7 @@
 							soon={isToday && (isNext || isNow)
 								? dateUtils.getSoonLabel(startMs, endMs, ticker)
 								: null}
+							onReschedule={openReschedule}
 						/>
 					</div>
 				{:else if item.type === 'ghost-group'}
@@ -397,6 +398,10 @@
 		selectedTime = '';
 	}}
 />
+
+{#if rescheduleTarget}
+	<RescheduleDialog bind:open={showRescheduleDialog} appt={rescheduleTarget} />
+{/if}
 
 <style>
 	button {

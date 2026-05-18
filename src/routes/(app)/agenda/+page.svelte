@@ -3,6 +3,7 @@
 	import { ui as globalUI } from '$lib/state/ui.svelte';
 	import type { Appointment } from '$lib/types/appointment';
 	import { Check, CalendarDays, Link, CalendarPlus, Coffee, Crown } from '@lucide/svelte';
+	import SubscriptionDialog from '$lib/components/app/subscription/subscription-dialog.svelte';
 
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
@@ -30,6 +31,8 @@
 			favoriteGhostSlotInterval: number;
 		};
 	}>();
+
+	let isPremiumOpen = $state(false);
 
 	let rescheduleTarget = $state<Appointment | null>(null);
 	let showRescheduleDialog = $state(false);
@@ -405,10 +408,7 @@
 			<div class="relative flex w-full max-w-md justify-end px-4">
 				<div class="pointer-events-auto flex flex-col items-end gap-2">
 					<button
-						onclick={() => {
-							// Sua ação para o plano premium / conquistas aqui
-							console.log('Premium clicado');
-						}}
+						onclick={() => (isPremiumOpen = true)}
 						class="flex h-12 w-12 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-lg transition-all hover:bg-zinc-50 active:scale-90"
 						aria-label="Ver benefícios Premium"
 					>
@@ -458,6 +458,8 @@
 		</div>
 	</div>
 </div>
+
+<SubscriptionDialog bind:open={isPremiumOpen} />
 
 <AppointmentForm
 	{data}

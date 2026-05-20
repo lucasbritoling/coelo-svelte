@@ -207,6 +207,12 @@
 					<div class="group h-6.5">
 						<div
 							class="no-scrollbar flex flex-nowrap items-center gap-2 overflow-x-auto scroll-smooth pb-1"
+							onwheel={(e) => {
+								if (e.deltaY !== 0) {
+									e.preventDefault();
+									e.currentTarget.scrollLeft += e.deltaY;
+								}
+							}}
 						>
 							<!-- 1. Cliente Selecionado Localmente -->
 							{#if selectedCustomer}
@@ -235,7 +241,7 @@
 							<!-- 2. Lista vinda do estado local (localCustomers) -->
 							{#each localCustomers
 								.filter((c) => c.id !== formState.customerId)
-								.slice(0, 5) as customer}
+								.slice(0, 10) as customer}
 								<button
 									type="button"
 									onclick={() => {

@@ -103,6 +103,19 @@
 		if (!start_at || !cleanSuggestedSlots.includes(start_at)) return cleanSuggestedSlots;
 		return [start_at, ...cleanSuggestedSlots.filter((s) => s !== start_at)];
 	});
+
+	let slotsContainer = $state(null);
+
+	// Suas outras props/runas existentes...
+	// let { serviceId, orderedSlots, start_at = $bindable(), ... } = $props();
+
+	// 2. Cria o efeito que monitora as vagas. Quando a lista mudar, o scroll reseta.
+	$effect(() => {
+		// Acessamos orderedSlots para o Svelte rastrear essa dependência
+		if (orderedSlots && slotsContainer) {
+			slotsContainer.scrollLeft = 0;
+		}
+	});
 </script>
 
 <div class="flex h-full items-center">
@@ -116,8 +129,9 @@
 			<span class="text-[10px] font-bold tracking-tight uppercase">Sem vagas hoje</span>
 		</div>
 	{:else}
-		<!-- Adicionado scroll-smooth e o evento onwheel diretamente aqui -->
+		<!-- 3. Adicionado o bind:this para conectar a div ao efeito -->
 		<div
+			bind:this={slotsContainer}
 			class="no-scrollbar flex flex-1 items-center gap-2 overflow-x-auto scroll-smooth pb-0.5"
 			onwheel={(e) => {
 				if (e.deltaY !== 0) {

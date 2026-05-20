@@ -171,7 +171,11 @@
 						{service.is_active ? 'Visível para clientes' : 'Oculto na agenda'}
 					</span>
 					{#key switchVersion}
-						<Switch checked={service.is_active} onCheckedChange={(v) => handleToggle(service, v)} />
+						<Switch
+							class="cursor-pointer"
+							checked={service.is_active}
+							onCheckedChange={(v) => handleToggle(service, v)}
+						/>
 					{/key}
 				</div>
 			</div>

@@ -162,7 +162,7 @@
 			{@const colors = getAvatarColors(customer.name)}
 			<button
 				onclick={() => startEdit(customer)}
-				class="group flex w-full items-center gap-4 rounded-[20px] border border-zinc-100/60 bg-white p-3.5 transition-all duration-200 hover:border-zinc-200 active:scale-[0.98] active:bg-zinc-50/50"
+				class="group flex w-full cursor-pointer items-center gap-4 rounded-[20px] border border-zinc-100/60 bg-white p-3.5 transition-all duration-200 hover:border-zinc-200 active:scale-[0.98] active:bg-zinc-50/50"
 			>
 				<div
 					class="flex size-11 shrink-0 items-center justify-center rounded-full text-[13px] font-bold tracking-wide transition-transform group-hover:scale-105"
@@ -208,7 +208,7 @@
 	<div class="relative flex w-full max-w-md justify-end px-6">
 		<button
 			onclick={startCreate}
-			class="pointer-events-auto flex size-[52px] items-center justify-center rounded-full border border-zinc-200/50 bg-white text-zinc-900 shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.12)] active:translate-y-0 active:scale-90"
+			class="pointer-events-auto flex size-[52px] cursor-pointer items-center justify-center rounded-full border border-zinc-200/50 bg-white text-zinc-900 shadow-[0_8px_20px_-6px_rgba(0,0,0,0.1)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.12)] active:translate-y-0 active:scale-90"
 			aria-label="Novo cliente"
 		>
 			<Plus class="size-6" />
@@ -297,7 +297,7 @@
 								isConfirmingDelete = true;
 							}
 						}}
-						class="h-12 flex-1 rounded-[16px] font-semibold transition-all"
+						class="h-12 flex-1 cursor-pointer rounded-[16px] font-semibold transition-all"
 					>
 						{isConfirmingDelete ? 'Confirmar' : 'Excluir'}
 					</Button>
@@ -306,7 +306,7 @@
 				<Button
 					type="submit"
 					disabled={isLoading}
-					class="h-12 flex-[2] rounded-[16px] bg-zinc-900 font-semibold text-white transition-all hover:bg-zinc-800"
+					class="h-12 flex-[2] cursor-pointer rounded-[16px] bg-zinc-900 font-semibold text-white transition-all hover:bg-zinc-800"
 				>
 					{#if isLoading}
 						<LoaderCircle class="mr-2 size-4 animate-spin" />

@@ -116,7 +116,16 @@
 			<span class="text-[10px] font-bold tracking-tight uppercase">Sem vagas hoje</span>
 		</div>
 	{:else}
-		<div class="no-scrollbar flex flex-1 items-center gap-2 overflow-x-auto pb-0.5">
+		<!-- Adicionado scroll-smooth e o evento onwheel diretamente aqui -->
+		<div
+			class="no-scrollbar flex flex-1 items-center gap-2 overflow-x-auto scroll-smooth pb-0.5"
+			onwheel={(e) => {
+				if (e.deltaY !== 0) {
+					e.preventDefault();
+					e.currentTarget.scrollLeft += e.deltaY;
+				}
+			}}
+		>
 			{#each orderedSlots as slot}
 				<button
 					type="button"

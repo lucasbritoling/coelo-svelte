@@ -167,7 +167,7 @@
 		valor = valor.replace(/\s{2,}/g, ' ');
 
 		// 3. Mantém apenas letras, espaços e acentos pt-BR
-		valor = valor.replace(/[^a-zA-ZÀ-ÿ\s]/g, '');
+		valor = valor.replace(/[^a-zA-ZÀ-ÿ\s~^´`]/g, '');
 
 		customerName = valor;
 		target.value = valor;
@@ -175,7 +175,7 @@
 
 	// Limpeza final ao sair do campo (remove espaços que sobraram no fim)
 	function limparNomeNoBlur() {
-		customerName = customerName.trim();
+		customerName = customerName.replace(/[~^´`]/g, '').trim();
 	}
 </script>
 

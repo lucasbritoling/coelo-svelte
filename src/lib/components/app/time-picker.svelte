@@ -121,8 +121,8 @@
 				<button
 					type="button"
 					onclick={() => (start_at = slot)}
-					class="
-                        h-7 shrink-0 rounded-full border px-3 text-[10px] font-bold transition-all
+					class=" h-7
+                        shrink-0 cursor-pointer rounded-full border px-3 text-[10px] font-bold transition-all
                         active:scale-95
                         {start_at === slot
 						? 'border-zinc-900 bg-zinc-900 text-white shadow-sm'

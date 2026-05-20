@@ -17,7 +17,7 @@
 	<div class="w-full select-none">
 		<button
 			type="button"
-			class="flex w-full items-center justify-between rounded-[14px] border border-dashed border-zinc-200/80 bg-zinc-50/40 px-4 py-3 text-left transition-all duration-200 hover:bg-zinc-50/80 active:scale-[0.99]"
+			class="flex w-full cursor-pointer items-center justify-between rounded-[14px] border border-dashed border-zinc-200/80 bg-zinc-50/40 px-4 py-3 text-left transition-all duration-200 hover:bg-zinc-50/80 active:scale-[0.99]"
 			onclick={() => (isExpanded = !isExpanded)}
 		>
 			<span class="text-[12px] font-medium tracking-wide text-zinc-500">
@@ -53,7 +53,7 @@
 			{#each slots as slot (slot.startAt)}
 				<button
 					type="button"
-					class="flex h-9 items-center justify-center rounded-lg border border-zinc-200/60 bg-white/90 text-zinc-600 shadow-[0_1px_2px_rgba(0,0,0,0.02)] transition-colors duration-100 hover:border-zinc-300 hover:bg-white hover:text-zinc-900 active:scale-95"
+					class="flex h-9 cursor-pointer items-center justify-center rounded-lg border border-zinc-200/60 bg-white/90 text-zinc-600 shadow-[0_1px_2px_rgba(0,0,0,0.02)] transition-colors duration-100 hover:border-zinc-300 hover:bg-white hover:text-zinc-900 active:scale-95"
 					onclick={() => onSlotClick(slot.startAt)}
 				>
 					<span class="text-[12.5px] font-semibold tracking-tight">{slot.startAt}</span>

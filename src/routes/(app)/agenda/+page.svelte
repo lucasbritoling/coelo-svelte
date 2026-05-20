@@ -339,7 +339,7 @@
 
 	<AgendaStrip selectedDate={data.selectedDate} onSelect={updateDate} />
 
-	<div class="flex-1 space-y-2 overflow-y-auto px-4 pt-4 pb-20">
+	<div class="flex-1 space-y-2 overflow-y-auto px-4 pt-0 pb-20">
 		{#if pendingCount > 0 || freeSlotsCount > 0}
 			<div
 				class="mb-3 flex flex-wrap items-center gap-2 px-1 text-[10px] font-semibold tracking-wider uppercase select-none"

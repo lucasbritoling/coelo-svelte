@@ -20,6 +20,7 @@
 	import CustomerForm from '../customer-form.svelte';
 	import { ui } from '$lib/state/ui.svelte';
 	import TimeSlotsSuggestions from '$lib/components/app/time-picker.svelte';
+	import { toast } from 'svelte-sonner';
 
 	// Props
 	let {
@@ -176,6 +177,10 @@
 						if (result.type === 'success') {
 							onSuccess();
 							open = false;
+						} else if (result.type === 'failure' && result.data?.message) {
+							// Dispara o toast usando o seu gerenciador de estado global ui
+							// Altere o método (.toast, .error, .notify) de acordo com a assinatura real do seu arquivo ui.svelte
+							toast.error(result.data.message, 'error');
 						}
 					};
 				}}

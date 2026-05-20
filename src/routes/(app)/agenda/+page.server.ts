@@ -114,7 +114,7 @@ export const actions: Actions = {
 			// O Postgres repassa o código de erro de exclusão (23P01) normalmente através da função
 			if (err.code === '23P01') {
 				return fail(400, {
-					message: 'Horário indisponível: coincide com outro agendamento.'
+					message: 'Coincide com outro agendamento.'
 				});
 			}
 			console.error('Erro ao criar agendamento:', err);
@@ -321,7 +321,7 @@ export const actions: Actions = {
 			});
 
 			if (txResult?.error === 'conflict') {
-				return fail(400, { message: 'Horário indisponível: coincide com outro agendamento.' });
+				return fail(400, { message: 'Coincide com outro agendamento.' });
 			}
 
 			if (txResult?.error === 'not_found') {

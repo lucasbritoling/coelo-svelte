@@ -60,7 +60,7 @@
 			<div class="flex rounded-full bg-zinc-100 p-1">
 				<button
 					onclick={() => (billingPeriod = 'monthly')}
-					class="rounded-full px-4 py-1.5 text-xs font-bold transition-all {billingPeriod ===
+					class="cursor-pointer rounded-full px-4 py-1.5 text-xs font-bold transition-all {billingPeriod ===
 					'monthly'
 						? 'bg-white text-zinc-900 shadow-sm'
 						: 'text-zinc-500'}"
@@ -69,7 +69,7 @@
 				</button>
 				<button
 					onclick={() => (billingPeriod = 'yearly')}
-					class="relative rounded-full px-4 py-1.5 text-xs font-bold transition-all {billingPeriod ===
+					class="relative cursor-pointer rounded-full px-4 py-1.5 text-xs font-bold transition-all {billingPeriod ===
 					'yearly'
 						? 'bg-white text-zinc-900 shadow-sm'
 						: 'text-zinc-500'}"
@@ -124,7 +124,7 @@
 			<Button
 				onclick={handleSubscribe}
 				disabled={isLoading}
-				class="h-14 w-full rounded-[20px] bg-zinc-900 text-base font-bold text-white transition-all hover:bg-zinc-800 active:scale-[0.98]"
+				class="h-14 w-full cursor-pointer rounded-[20px] bg-zinc-900 text-base font-bold text-white transition-all hover:bg-zinc-800 active:scale-[0.98]"
 			>
 				{#if isLoading}
 					<LoaderCircle class="mr-2 size-5 animate-spin" />

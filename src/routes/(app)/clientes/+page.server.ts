@@ -31,7 +31,11 @@ export const actions: Actions = {
 			return fail(400, { form });
 		}
 
-		const { id, name, phone } = form.data;
+		const normalizedName = form.data.name
+			.replace(/[~^´`]/g, '')
+			.trim()
+			.toLowerCase();
+		const { id, phone } = form.data;
 
 		try {
 			let result;
@@ -40,7 +44,7 @@ export const actions: Actions = {
 				// UPDATE com proteção de dono (profile_id)
 				[result] = await sql`
                     UPDATE customers 
-                    SET name = ${name}, phone = ${phone}
+                    SET name = ${normalizedName}, phone = ${phone}
                     WHERE id = ${id} AND profile_id = ${user.id}
                     RETURNING id, name
                 `;
@@ -48,7 +52,7 @@ export const actions: Actions = {
 				// INSERT
 				[result] = await sql`
                     INSERT INTO customers (name, phone, profile_id)
-                    VALUES (${name}, ${phone}, ${user.id})
+                    VALUES (${normalizedName}, ${phone}, ${user.id})
                     RETURNING id, name
                 `;
 			}

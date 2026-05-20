@@ -121,6 +121,29 @@
 			text: `hsl(${h}, 55%, 35%)`
 		};
 	}
+
+	function tratarNomeInput(e: Event) {
+		const target = e.target as HTMLInputElement;
+
+		let valor = target.value;
+
+		// 1. Impede espaços no início do texto
+		valor = valor.replace(/^\s+/, '');
+
+		// 2. Impede espaços duplos ou múltiplos no meio do texto
+		valor = valor.replace(/\s{2,}/g, ' ');
+
+		// 3. Mantém apenas letras, espaços, acentos pt-BR e os acentos isolados
+		valor = valor.replace(/[^a-zA-ZÀ-ÿ\s~^´`]/g, '');
+
+		formState.name = valor;
+		target.value = valor;
+	}
+
+	function limparNomeNoBlur() {
+		// Remove acentos isolados, remove espaços extras no final e mantém o valor limpo
+		formState.name = formState.name.replace(/[~^´`]/g, '').trim();
+	}
 </script>
 
 <div class="flex h-full flex-col">
@@ -263,6 +286,8 @@
 					<Input
 						name="name"
 						bind:value={formState.name}
+						oninput={tratarNomeInput}
+						onblur={limparNomeNoBlur}
 						required
 						class="h-12 rounded-[16px] border-zinc-200/80 bg-zinc-50/50 focus-visible:bg-white focus-visible:ring-zinc-300"
 					/>

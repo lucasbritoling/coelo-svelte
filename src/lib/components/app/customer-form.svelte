@@ -90,15 +90,23 @@
 					id="name"
 					name="name"
 					bind:value={$form.name}
-					maxlength={60}
+					maxlength={100}
 					oninput={(e) => {
 						let val = e.currentTarget.value;
-						val = val.replace(/\d/g, '');
+
+						// 1. Impede espaços no início
+						val = val.replace(/^\s+/, '');
+						// 2. Impede espaços duplos
 						val = val.replace(/\s{2,}/g, ' ');
+						// 3. Mantém letras, espaços, acentos pt-BR e acentos isolados (~^´`)
+						val = val.replace(/[^a-zA-ZÀ-ÿ\s~^´`]/g, '');
+
 						$form.name = val;
+						e.currentTarget.value = val;
 					}}
 					onblur={() => {
-						$form.name = $form.name.trim();
+						// Limpa acentos isolados e espaços extras ao sair do campo
+						$form.name = $form.name.replace(/[~^´`]/g, '').trim();
 					}}
 				/>
 				{#if $errors.name}<small class="text-destructive">{$errors.name}</small>{/if}

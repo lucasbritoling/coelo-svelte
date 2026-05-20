@@ -72,7 +72,10 @@
 	);
 	const hasAppointments = $derived(agendaItems.some((item) => item.type === 'appointment'));
 
-	const freeSlotsCount = $derived(agendaItems.length === 0);
+	const freeSlotsCount = $derived.by(() => {
+		const ghostGroup = agendaItems.find((item) => item.type === 'ghost-group');
+		return ghostGroup?.slots?.length ?? 0;
+	});
 
 	function updateDate(newDate: string) {
 		if (!newDate || newDate === data.selectedDate) return;
@@ -323,7 +326,7 @@
 	<AgendaStrip selectedDate={data.selectedDate} onSelect={updateDate} />
 
 	<div class="flex-1 space-y-2 overflow-y-auto px-4 pt-4 pb-20">
-		{#if pendingCount > 0 || (agendaItems.length > 0 && agendaItems.some((item) => item.type === 'ghost-group'))}
+		{#if pendingCount > 0 || freeSlotsCount > 0}
 			<div
 				class="mb-3 flex flex-wrap items-center gap-2 px-1 text-[10px] font-semibold tracking-wider uppercase select-none"
 			>
@@ -335,14 +338,17 @@
 					</span>
 				{/if}
 
-				<!-- Ponto Separador Dinâmico (Só aparece se houver pendentes E também houver ghosts) -->
-				{#if pendingCount > 0 && agendaItems.some((item) => item.type === 'ghost-group')}
+				<!-- Ponto Separador Dinâmico -->
+				{#if pendingCount > 0 && freeSlotsCount > 0}
 					<span class="font-normal text-zinc-300">•</span>
 				{/if}
 
 				<!-- Badge de Horários Livres -->
-				{#if agendaItems.some((item) => item.type === 'ghost-group')}
-					<span class="text-zinc-400">horários livres</span>
+				{#if freeSlotsCount > 0}
+					<span class="text-zinc-400">
+						{freeSlotsCount}
+						{freeSlotsCount === 1 ? 'horário livre' : 'horários livres'}
+					</span>
 				{/if}
 			</div>
 		{/if}

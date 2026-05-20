@@ -222,7 +222,7 @@
 										selectedCustomer = null;
 										customerQuery = '';
 									}}
-									class="flex shrink-0 items-center gap-2 rounded-full border border-zinc-900 bg-zinc-900 px-3 py-1.5 text-white shadow-md transition-all active:scale-95"
+									class="flex shrink-0 cursor-pointer items-center gap-2 rounded-full border border-zinc-900 bg-zinc-900 py-1 pr-1 pl-2 text-white shadow-md transition-all active:scale-95"
 								>
 									<span class="text-xs font-medium whitespace-nowrap">{selectedCustomer.name}</span>
 									<Check size={12} />
@@ -240,7 +240,7 @@
 										selectedCustomer = customer;
 										customerQuery = '';
 									}}
-									class="flex shrink-0 items-center gap-2 rounded-full border border-zinc-100 bg-zinc-50 px-3 py-1.5 text-zinc-600 transition-all hover:border-zinc-200 active:scale-95"
+									class="flex shrink-0 cursor-pointer items-center gap-2 rounded-full border border-zinc-100 bg-zinc-50 px-3 py-1.5 text-zinc-600 transition-all hover:border-zinc-200 active:scale-95"
 								>
 									<span class="text-xs font-medium whitespace-nowrap">{customer.name}</span>
 								</button>
@@ -317,7 +317,7 @@
 								<button
 									type="button"
 									onclick={() => (formState.serviceId = service.id)}
-									class="flex min-w-0 items-center gap-2 rounded-2xl border px-3 py-3 transition-all
+									class="flex min-w-0 cursor-pointer items-center gap-2 rounded-2xl border px-3 py-3 transition-all
 					{formState.serviceId === service.id
 										? 'border-zinc-900 bg-zinc-900 text-white shadow-md'
 										: 'border-zinc-100 bg-white text-zinc-600 hover:border-zinc-200'}"
@@ -356,7 +356,7 @@
 						<button
 							type="button"
 							onclick={() => (ui.isDatePickerOpen = true)}
-							class="relative flex h-12 flex-1 items-center rounded-2xl border border-zinc-100 bg-zinc-50/50 pr-3 pl-10 transition-all hover:border-zinc-200 active:scale-[0.98]"
+							class="relative flex h-12 flex-1 cursor-pointer items-center rounded-2xl border border-zinc-100 bg-zinc-50/50 pr-3 pl-10 transition-all hover:border-zinc-200 active:scale-[0.98]"
 						>
 							<CalendarIcon size={16} class="absolute left-4 text-zinc-400" />
 							<span class="block truncate text-xs font-bold text-zinc-600 uppercase">

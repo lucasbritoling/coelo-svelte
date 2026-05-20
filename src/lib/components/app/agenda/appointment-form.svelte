@@ -191,7 +191,6 @@
 				<input type="hidden" name="end_at" value={end_at} />
 				<input type="hidden" name="date" value={formState.date} />
 
-				<!-- SEÇÃO CLIENTE COM CHIPS -->
 				<div class="space-y-3">
 					<div class="flex items-center justify-between px-1">
 						<div class="flex items-center gap-2 text-zinc-400">
@@ -230,14 +229,6 @@
 								</button>
 							{/if}
 
-							<button
-								type="button"
-								onclick={() => (showCustomerModal = true)}
-								class="flex shrink-0 items-center gap-2 rounded-full border border-dashed border-emerald-200 bg-emerald-50 px-3 py-1.5 text-emerald-700 transition-all active:scale-95"
-							>
-								<UserRoundPlus size={12} />
-							</button>
-
 							<!-- 2. Lista vinda do estado local (localCustomers) -->
 							{#each localCustomers
 								.filter((c) => c.id !== formState.customerId)
@@ -255,20 +246,49 @@
 								</button>
 							{/each}
 
-							<!-- 3. Botão de Criar Novo se não encontrar -->
+							<!-- 3. Feedback inline quando a busca não retornar nada -->
+							{#if customerQuery && !isSearching && localCustomers.filter((c) => c.id !== formState.customerId).length === 0}
+								<span
+									class="flex shrink-0 items-center pr-1 text-xs font-medium whitespace-nowrap text-zinc-400"
+								>
+									Nenhum resultado
+								</span>
+								<button
+									type="button"
+									onclick={() => (showCustomerModal = true)}
+									class="flex shrink-0 items-center gap-1.5 rounded-full border border-dashed border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 transition-all active:scale-95"
+								>
+									<Plus size={12} />
+									Criar "{customerQuery}"
+								</button>
+							{/if}
 						</div>
 					</div>
 
-					<!-- Input de Busca -->
+					<!-- Input de Busca Inteligente / Botão de Criar -->
 					<div class="relative">
+						<!-- Ícone Dinâmico à Esquerda -->
+						{#if customerQuery}
+							<button
+								type="button"
+								onclick={() => (showCustomerModal = true)}
+								title="Criar novo cliente"
+								class="absolute top-1/2 left-4 -translate-y-1/2 text-emerald-600 transition-transform hover:scale-110 active:scale-95"
+							>
+								<UserRoundPlus size={16} />
+							</button>
+						{:else}
+							<Search size={16} class="absolute top-1/2 left-4 -translate-y-1/2 text-zinc-400" />
+						{/if}
+
 						<Input
 							placeholder="Nome, telefone ou criar"
 							bind:value={customerQuery}
 							oninput={handleSearch}
-							class="h-12 rounded-2xl border-zinc-100 bg-zinc-50/50 pl-10 focus:bg-white"
+							class="h-12 rounded-2xl border-zinc-100 bg-zinc-50/50 pr-10 pl-10 focus:bg-white"
 						/>
-						<Search size={16} class="absolute top-1/2 left-4 -translate-y-1/2 text-zinc-400" />
 
+						<!-- Botão de Limpar à Direita -->
 						{#if customerQuery}
 							<button
 								type="button"
@@ -276,7 +296,7 @@
 									customerQuery = '';
 									localCustomers = [];
 								}}
-								class="absolute top-1/2 right-4 -translate-y-1/2 text-zinc-400"
+								class="absolute top-1/2 right-4 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
 							>
 								<X size={16} />
 							</button>

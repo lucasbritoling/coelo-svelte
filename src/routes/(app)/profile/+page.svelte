@@ -88,7 +88,13 @@
 	in:fly={{ y: 20, duration: 260, easing: cubicOut }}
 >
 	<div class="mb-4 flex items-center justify-between pb-0">
-		<Button variant="ghost" size="icon" onclick={() => history.back()} aria-label="Voltar">
+		<Button
+			variant="ghost"
+			size="icon"
+			class="cursor-pointer"
+			onclick={() => history.back()}
+			aria-label="Voltar"
+		>
 			<ChevronLeft size={18} strokeWidth={2} />
 		</Button>
 		<h1 class="text-lg font-semibold tracking-tight text-foreground">Editar Perfil</h1>
@@ -139,7 +145,7 @@
 					type="button"
 					variant="outline"
 					size="icon"
-					class="absolute -right-1 -bottom-1 h-8 w-8 rounded-full shadow-sm"
+					class="absolute -right-1 -bottom-1 h-8 w-8 cursor-pointer rounded-full shadow-sm"
 					onclick={triggerFileInput}
 					disabled={uploading}
 					aria-label="Alterar foto"
@@ -191,7 +197,7 @@
 						type="submit"
 						disabled={isSaving || saved}
 						size="sm"
-						class="h-7 px-3 text-xs font-medium transition-colors {saved
+						class="h-7 cursor-pointer px-3 text-xs font-medium transition-colors {saved
 							? 'bg-emerald-600 text-white hover:bg-emerald-600'
 							: ''}"
 					>

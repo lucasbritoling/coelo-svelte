@@ -95,7 +95,7 @@
 			<Button
 				type="submit"
 				disabled={isSaving || !currentInterval}
-				class="h-12 w-full rounded-[16px] bg-zinc-900 font-semibold text-white transition-all hover:bg-zinc-800 active:scale-[0.98] disabled:bg-zinc-300"
+				class="h-12 w-full cursor-pointer rounded-[16px] bg-zinc-900 font-semibold text-white transition-all hover:bg-zinc-800 active:scale-[0.98] disabled:bg-zinc-300"
 			>
 				{#if isSaving}
 					<LoaderCircle class="mr-2 size-4 animate-spin" />

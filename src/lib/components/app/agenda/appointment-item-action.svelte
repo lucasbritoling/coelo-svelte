@@ -109,7 +109,7 @@
 				type="button"
 				disabled={isLoading || isCurrent}
 				onclick={() => handleStatusChange(option.value)}
-				class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted disabled:opacity-50"
+				class="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted disabled:opacity-50"
 			>
 				{#if isThisLoading}
 					<LoaderCircle class="h-4 w-4 animate-spin" />
@@ -130,6 +130,7 @@
 				onReschedule();
 				isDropdownOpen = false;
 			}}
+			class="cursor-pointer"
 		>
 			<CalendarClock class="mr-2 ml-0.5 h-4 w-4" />
 			Reagendar
@@ -138,7 +139,7 @@
 		<DropdownMenu.Separator />
 
 		<DropdownMenu.Item
-			class="text-destructive focus:text-destructive"
+			class="cursor-pointer text-destructive focus:text-destructive"
 			onSelect={() => {
 				showConfirmDialog = true;
 				isDropdownOpen = false;

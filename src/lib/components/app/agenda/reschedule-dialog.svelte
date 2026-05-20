@@ -145,7 +145,7 @@
 				variant="outline"
 				size="sm"
 				onclick={goBack}
-				class="h-8 px-3 text-xs {stepIndex === 0 ? 'invisible' : ''}"
+				class="h-8 cursor-pointer px-3 text-xs {stepIndex === 0 ? 'invisible' : ''}"
 			>
 				<ArrowLeft class="mr-1 size-3.5" /> Voltar
 			</Button>
@@ -164,7 +164,12 @@
 			</div>
 
 			{#if currentStep !== 'confirm'}
-				<Button size="sm" onclick={goNext} disabled={!canAdvance} class="h-8 px-3 text-xs">
+				<Button
+					size="sm"
+					onclick={goNext}
+					disabled={!canAdvance}
+					class="h-8 cursor-pointer px-3 text-xs"
+				>
 					Avançar <ArrowRight class="ml-1 size-3.5" />
 				</Button>
 			{:else}
@@ -209,7 +214,7 @@
 					{#each availableSlots as slot}
 						<Button
 							variant={selectedTime === slot ? 'default' : 'outline'}
-							class="h-10 text-xs font-semibold"
+							class="h-10 cursor-pointer text-xs font-semibold"
 							onclick={() => (selectedTime = slot)}
 						>
 							{slot}
@@ -253,7 +258,7 @@
 					<p class="text-base font-bold text-foreground">às {selectedTime} ({apptDuration} min)</p>
 				</div>
 
-				<Button type="submit" class="w-full" disabled={isLoading}>
+				<Button type="submit" class="w-full cursor-pointer" disabled={isLoading}>
 					{#if isLoading}<LoaderCircle class="mr-2 size-4 animate-spin" />{/if}
 					Confirmar Reagendamento
 				</Button>

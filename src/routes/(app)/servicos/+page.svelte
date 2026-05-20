@@ -187,7 +187,7 @@
 	<div class="relative flex w-full max-w-md justify-end px-6">
 		<button
 			onclick={startCreate}
-			class="pointer-events-auto flex size-[52px] items-center justify-center rounded-full border border-white/60 bg-white/70 text-zinc-900 shadow-[0_8px_32px_rgba(0,0,0,0.06)] ring-1 ring-zinc-950/[0.03] backdrop-blur-lg transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/90 hover:shadow-[0_8px_32px_rgba(0,0,0,0.1)] active:translate-y-0 active:scale-95"
+			class="pointer-events-auto flex size-[52px] cursor-pointer items-center justify-center rounded-full border border-white/60 bg-white/70 text-zinc-900 shadow-[0_8px_32px_rgba(0,0,0,0.06)] ring-1 ring-zinc-950/[0.03] backdrop-blur-lg transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/90 hover:shadow-[0_8px_32px_rgba(0,0,0,0.1)] active:translate-y-0 active:scale-95"
 			aria-label="Novo serviço"
 		>
 			<Plus class="size-5.5 text-zinc-800" />

@@ -393,7 +393,7 @@
 							!formState.start_at ||
 							!formState.customerId ||
 							!formState.serviceId}
-						class="h-14 w-full rounded-[20px] bg-zinc-900 text-base font-bold shadow-lg transition-all active:scale-[0.97]"
+						class="h-14 w-full cursor-pointer rounded-[20px] bg-zinc-900 text-base font-bold shadow-lg transition-all active:scale-[0.97]"
 					>
 						{#if isSubmitting}
 							<LoaderCircle class="mr-2 size-5 animate-spin" />

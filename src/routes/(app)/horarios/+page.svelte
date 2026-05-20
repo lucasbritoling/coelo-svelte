@@ -279,7 +279,7 @@
 					<Button
 						type="submit"
 						disabled={isSavingSchedule}
-						class="h-8 rounded-full bg-zinc-900 px-4 text-xs font-bold text-white"
+						class="h-8 cursor-pointer rounded-full bg-zinc-900 px-4 text-xs font-bold text-white"
 					>
 						{#if isSavingSchedule}
 							<LoaderCircle class="mr-1.5 size-3 animate-spin" />
@@ -346,7 +346,7 @@
 					<Button
 						type="submit"
 						disabled={isSavingLunch}
-						class="h-8 rounded-full bg-zinc-900 px-4 text-xs font-bold text-white"
+						class="h-8 cursor-pointer rounded-full bg-zinc-900 px-4 text-xs font-bold text-white"
 					>
 						{#if isSavingLunch}
 							<LoaderCircle class="mr-1.5 size-3 animate-spin" />
@@ -434,7 +434,7 @@
 	<div class="relative flex w-full max-w-md justify-end px-6">
 		<button
 			onclick={() => openDialog()}
-			class="pointer-events-auto flex size-14 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-900 shadow-xl transition-transform active:scale-90"
+			class="pointer-events-auto flex size-14 cursor-pointer items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-900 shadow-xl transition-transform active:scale-90"
 			aria-label="Adicionar"
 		>
 			<Plus size={28} />
@@ -555,7 +555,7 @@
 			<Button
 				type="submit"
 				disabled={isSavingOverride}
-				class="h-12 w-full rounded-2xl bg-zinc-900 font-bold text-white active:scale-95"
+				class="h-12 w-full cursor-pointer rounded-2xl bg-zinc-900 font-bold text-white active:scale-95"
 			>
 				{isSavingOverride ? 'Salvando...' : 'Salvar Exceção'}
 			</Button>

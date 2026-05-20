@@ -209,7 +209,7 @@
 								isConfirmingDelete = true;
 							}
 						}}
-						class="h-11 flex-1 rounded-[14px] text-[13px] font-semibold shadow-sm shadow-red-900/[0.04] transition-all"
+						class="h-11 flex-1 cursor-pointer rounded-[14px] text-[13px] font-semibold shadow-sm shadow-red-900/[0.04] transition-all"
 					>
 						{isConfirmingDelete ? 'Confirmar?' : 'Excluir'}
 					</Button>
@@ -223,7 +223,7 @@
 					}}
 					class="h-11 {formState.id
 						? 'flex-[1.6]'
-						: 'w-full'} rounded-[14px] bg-zinc-900 text-[13px] font-semibold text-white transition-all hover:bg-zinc-800 active:scale-[0.98] disabled:bg-zinc-300"
+						: 'w-full'} cursor-pointer rounded-[14px] bg-zinc-900 text-[13px] font-semibold text-white transition-all hover:bg-zinc-800 active:scale-[0.98] disabled:bg-zinc-300"
 				>
 					{#if isLoading}
 						<LoaderCircle class="mr-1.5 size-4 animate-spin" />

@@ -193,7 +193,7 @@
 		<div class="flex items-center gap-2">
 			<button
 				onclick={() => (isDirty ? (showExitDialog = true) : goto('/mais'))}
-				class="-ml-2 flex items-center p-2 text-zinc-400 transition-transform active:scale-90"
+				class="-ml-2 flex cursor-pointer items-center p-2 text-zinc-400 transition-transform active:scale-90"
 			>
 				<ChevronLeft size={24} strokeWidth={2.5} />
 			</button>
@@ -279,7 +279,7 @@
 					<Button
 						type="submit"
 						disabled={isSavingSchedule}
-						class="h-8 rounded-full bg-zinc-900 px-4 text-xs font-bold text-white"
+						class="h-8 cursor-pointer rounded-full bg-zinc-900 px-4 text-xs font-bold text-white"
 					>
 						{#if isSavingSchedule}
 							<LoaderCircle class="mr-1.5 size-3 animate-spin" />
@@ -300,7 +300,7 @@
 							<Switch
 								checked={day.is_active}
 								onCheckedChange={(v) => (day.is_active = v)}
-								class="scale-90"
+								class="scale-90 cursor-pointer"
 							/>
 							<span class="text-sm font-bold text-zinc-800 capitalize">
 								{new Intl.DateTimeFormat('pt-BR', { weekday: 'long' })
@@ -346,7 +346,7 @@
 					<Button
 						type="submit"
 						disabled={isSavingLunch}
-						class="h-8 rounded-full bg-zinc-900 px-4 text-xs font-bold text-white"
+						class="h-8 cursor-pointer rounded-full bg-zinc-900 px-4 text-xs font-bold text-white"
 					>
 						{#if isSavingLunch}
 							<LoaderCircle class="mr-1.5 size-3 animate-spin" />
@@ -372,6 +372,7 @@
 					<Switch
 						checked={localLunch.has_lunch}
 						onCheckedChange={(v) => (localLunch.has_lunch = v)}
+						class="cursor-pointer"
 					/>
 				</div>
 				{#if localLunch.has_lunch}
@@ -434,7 +435,7 @@
 	<div class="relative flex w-full max-w-md justify-end px-6">
 		<button
 			onclick={() => openDialog()}
-			class="pointer-events-auto flex size-14 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-900 shadow-xl transition-transform active:scale-90"
+			class="pointer-events-auto flex size-14 cursor-pointer items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-900 shadow-xl transition-transform active:scale-90"
 			aria-label="Adicionar"
 		>
 			<Plus size={28} />
@@ -473,7 +474,7 @@
 					onclick={() => {
 						ui.isDatePickerOpen = true;
 					}}
-					class="flex h-11 w-full items-center justify-between rounded-xl border border-zinc-100 bg-zinc-50 px-4 active:scale-[0.98]"
+					class="flex h-11 w-full cursor-pointer items-center justify-between rounded-xl border border-zinc-100 bg-zinc-50 px-4 active:scale-[0.98]"
 				>
 					<span class="text-sm font-bold text-zinc-900">
 						{overrideForm.date
@@ -498,7 +499,7 @@
 				</span>
 
 				<div class="flex items-center">
-					<Switch bind:checked={overrideForm.is_available} />
+					<Switch bind:checked={overrideForm.is_available} class="cursor-pointer" />
 					{#if overrideForm.is_available}
 						<input type="hidden" name="is_available" value="on" />
 					{/if}
@@ -553,7 +554,7 @@
 			<Button
 				type="submit"
 				disabled={isSavingOverride}
-				class="h-12 w-full rounded-2xl bg-zinc-900 font-bold text-white active:scale-95"
+				class="h-12 w-full cursor-pointer rounded-2xl bg-zinc-900 font-bold text-white active:scale-95"
 			>
 				{isSavingOverride ? 'Salvando...' : 'Salvar Exceção'}
 			</Button>

@@ -154,6 +154,29 @@
 		rawConfirmPhone = sanitizePhone(target.value);
 		target.value = formatPhoneMask(rawConfirmPhone);
 	}
+
+	function tratarNomeInput(e: Event) {
+		const target = e.target as HTMLInputElement;
+
+		let valor = target.value;
+
+		// 1. Impede espaços no início do texto
+		valor = valor.replace(/^\s+/, '');
+
+		// 2. Impede espaços duplos ou múltiplos no meio do texto
+		valor = valor.replace(/\s{2,}/g, ' ');
+
+		// 3. Mantém apenas letras, espaços e acentos pt-BR
+		valor = valor.replace(/[^a-zA-ZÀ-ÿ\s]/g, '');
+
+		customerName = valor;
+		target.value = valor;
+	}
+
+	// Limpeza final ao sair do campo (remove espaços que sobraram no fim)
+	function limparNomeNoBlur() {
+		customerName = customerName.trim();
+	}
 </script>
 
 <svelte:head>
@@ -367,6 +390,8 @@
 						name="customer_name"
 						bind:value={customerName}
 						placeholder="Ex: João Silva"
+						oninput={tratarNomeInput}
+						onblur={limparNomeNoBlur}
 						required
 						class="h-10 border-neutral-200/80 placeholder:text-neutral-400 focus-visible:ring-neutral-200"
 					/>

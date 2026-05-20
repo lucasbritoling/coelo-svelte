@@ -195,7 +195,7 @@
 				variant="ghost"
 				size="sm"
 				onclick={goBack}
-				class="h-8 px-2.5 text-xs font-medium text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-neutral-900 {stepIndex ===
+				class="h-8 cursor-pointer px-2.5 text-xs font-medium text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-neutral-900 {stepIndex ===
 				0
 					? 'invisible'
 					: ''}"
@@ -223,7 +223,7 @@
 					size="sm"
 					onclick={goNext}
 					disabled={!canAdvance}
-					class="h-8 px-2.5 text-xs font-medium text-neutral-600 transition-colors hover:bg-neutral-50 hover:text-neutral-900 disabled:opacity-30"
+					class="h-8 cursor-pointer px-2.5 text-xs font-medium text-neutral-600 transition-colors hover:bg-neutral-50 hover:text-neutral-900 disabled:opacity-30"
 				>
 					Avançar <ArrowRight class="ml-1.5 size-3.5 stroke-[2]" />
 				</Button>
@@ -275,7 +275,7 @@
 				{#each services as service}
 					<button
 						onclick={() => selectService(service.id)}
-						class="group flex items-center justify-between rounded-xl border p-4 text-left transition-all duration-200
+						class="group flex cursor-pointer items-center justify-between rounded-xl border p-4 text-left transition-all duration-200
                         {selectedServiceId === service.id
 							? 'border-neutral-900 bg-neutral-900/5 shadow-sm'
 							: 'border-neutral-200/80 bg-white hover:border-neutral-300 hover:bg-neutral-50/50'}"
@@ -319,7 +319,7 @@
 					{#each slots as slot}
 						<Button
 							variant={selectedSlot?.slot_start === slot.slot_start ? 'default' : 'outline'}
-							class="h-11 text-xs font-semibold tracking-tight transition-all duration-150
+							class="h-11 cursor-pointer text-xs font-semibold tracking-tight transition-all duration-150
                             {selectedSlot?.slot_start === slot.slot_start
 								? 'bg-neutral-900 text-white shadow-sm'
 								: 'border-neutral-200 bg-white text-neutral-800 hover:border-neutral-300 hover:bg-neutral-50'}"
@@ -440,7 +440,7 @@
 
 				<Button
 					type="submit"
-					class="mt-4 h-11 w-full bg-neutral-900 font-semibold tracking-tight text-white shadow-sm transition-colors hover:bg-neutral-800 disabled:bg-neutral-200 disabled:text-neutral-400"
+					class="mt-4 h-11 w-full cursor-pointer bg-neutral-900 font-semibold tracking-tight text-white shadow-sm transition-colors hover:bg-neutral-800 disabled:bg-neutral-200 disabled:text-neutral-400"
 					disabled={isLoading || !canAdvance}
 				>
 					{#if isLoading}

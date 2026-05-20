@@ -256,7 +256,7 @@
 								<button
 									type="button"
 									onclick={() => (showCustomerModal = true)}
-									class="flex shrink-0 items-center gap-1.5 rounded-full border border-dashed border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 transition-all active:scale-95"
+									class="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-dashed border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 transition-all active:scale-95"
 								>
 									<Plus size={12} />
 									Criar "{customerQuery}"
@@ -268,24 +268,21 @@
 					<!-- Input de Busca Inteligente / Botão de Criar -->
 					<div class="relative">
 						<!-- Ícone Dinâmico à Esquerda -->
-						{#if customerQuery}
-							<button
-								type="button"
-								onclick={() => (showCustomerModal = true)}
-								title="Criar novo cliente"
-								class="absolute top-1/2 left-4 -translate-y-1/2 text-emerald-600 transition-transform hover:scale-110 active:scale-95"
-							>
-								<UserRoundPlus size={16} />
-							</button>
-						{:else}
-							<Search size={16} class="absolute top-1/2 left-4 -translate-y-1/2 text-zinc-400" />
-						{/if}
+						<!-- Botão de Criação Sempre Visível à Esquerda -->
+						<button
+							type="button"
+							onclick={() => (showCustomerModal = true)}
+							title="Criar novo cliente"
+							class="absolute top-1/2 left-0 -translate-y-1/2 cursor-pointer p-4 pr-2 text-emerald-600 transition-colors hover:text-emerald-700"
+						>
+							<UserRoundPlus size={16} />
+						</button>
 
 						<Input
 							placeholder="Nome, telefone ou criar"
 							bind:value={customerQuery}
 							oninput={handleSearch}
-							class="h-12 rounded-2xl border-zinc-100 bg-zinc-50/50 pr-10 pl-10 focus:bg-white"
+							class="h-12 rounded-2xl border-zinc-100 bg-zinc-50/50 pl-10 focus:bg-white"
 						/>
 
 						<!-- Botão de Limpar à Direita -->

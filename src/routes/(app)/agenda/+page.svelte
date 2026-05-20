@@ -437,7 +437,7 @@
 				<div class="pointer-events-auto flex flex-col items-end gap-2">
 					<button
 						onclick={() => (isPremiumOpen = true)}
-						class="flex h-12 w-12 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-lg transition-all hover:bg-zinc-50 active:scale-90"
+						class="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-lg transition-all hover:bg-zinc-50 active:scale-90"
 						aria-label="Ver benefícios Premium"
 					>
 						<Crown size={20} strokeWidth={2} />
@@ -459,7 +459,7 @@
 								ui.copied = true;
 								setTimeout(() => (ui.copied = false), 2000);
 							}}
-							class="flex h-12 w-12 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-lg transition-all hover:bg-zinc-50 active:scale-90"
+							class="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-lg transition-all hover:bg-zinc-50 active:scale-90"
 							aria-label="Copiar link de agendamento"
 						>
 							{#if ui.copied}
@@ -476,7 +476,7 @@
 							selectedTime = '';
 							ui.modal = true;
 						}}
-						class="flex h-12 w-12 items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-lg transition-all hover:bg-zinc-50 active:scale-90"
+						class="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border border-zinc-200 bg-white text-zinc-600 shadow-lg transition-all hover:bg-zinc-50 active:scale-90"
 						aria-label="Novo agendamento"
 					>
 						<CalendarPlus size={20} />

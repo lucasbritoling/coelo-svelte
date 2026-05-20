@@ -100,7 +100,7 @@
 					/>
 				</svg>
 			</div>
-			<p class="greeting-sub">Tudo pronto, {firstName}!</p>
+			<p class="greeting-sub capitalize">Tudo pronto, {firstName}!</p>
 			<h1 class="greeting-title">Seu horário<br /><em>está confirmado.</em></h1>
 		</header>
 

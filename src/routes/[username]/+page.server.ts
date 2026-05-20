@@ -129,11 +129,13 @@ export const actions: Actions = {
 			return fail(400, { message: 'Dados de identificação do agendamento ausentes.' });
 		}
 
+		const customerName = String(data.customer_name).toLowerCase().trim();
+
 		try {
 			const [result] = await sql<{ appointment_id: string }[]>`
                 SELECT public.finish_self_booking(
                     ${data.profile_id}::uuid, ${data.service_id}::uuid, ${data.selected_date}::date, 
-                    ${data.slot_start}::time, ${data.customer_name}::text, ${data.customer_phone}::text
+                    ${data.slot_start}::time, ${customerName}::text, ${data.customer_phone}::text
                 ) AS appointment_id
             `;
 			return { success: true, appointmentId: result.appointment_id };

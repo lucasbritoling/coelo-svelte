@@ -195,7 +195,7 @@
 				variant="ghost"
 				size="sm"
 				onclick={goBack}
-				class="h-8 cursor-pointer px-2.5 text-xs font-medium text-neutral-500 transition-colors hover:bg-neutral-50 hover:text-neutral-900 {stepIndex ===
+				class="h-8 cursor-pointer px-2.5 text-xs font-medium text-neutral-500 transition-colors hover:bg-white hover:text-neutral-900 {stepIndex ===
 				0
 					? 'invisible'
 					: ''}"
@@ -223,7 +223,7 @@
 					size="sm"
 					onclick={goNext}
 					disabled={!canAdvance}
-					class="h-8 cursor-pointer px-2.5 text-xs font-medium text-neutral-600 transition-colors hover:bg-neutral-50 hover:text-neutral-900 disabled:opacity-30"
+					class="h-8 cursor-pointer px-2.5 text-xs font-medium text-neutral-600 transition-colors hover:bg-white hover:text-neutral-900 disabled:opacity-30"
 				>
 					Avançar <ArrowRight class="ml-1.5 size-3.5 stroke-[2]" />
 				</Button>

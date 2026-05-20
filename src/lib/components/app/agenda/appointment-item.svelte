@@ -13,6 +13,7 @@
 		selectedDate: string;
 		timezone: string;
 		onReschedule: (appt: Appointment) => void;
+		onStatusUpdate: (status: string) => void;
 	}
 
 	let {
@@ -22,7 +23,8 @@
 		soon = null,
 		currentTime,
 		selectedDate,
-		timezone
+		timezone,
+		onStatusUpdate
 	}: Props = $props();
 
 	let isExpanded = $state(false);
@@ -41,7 +43,8 @@
 		faltou: { label: 'Não compareceu', type: 'no-show' }
 	};
 
-	const currentStatus = $derived(STATUS_MAP[optimisticStatus]);
+	// Lendo direto de appt.status (que já é o efetivo enviado pelo pai)
+	const currentStatus = $derived(STATUS_MAP[appt.status]);
 
 	const categoryStyle = $derived.by(() => {
 		const color = appt.service_color || 'zinc';
@@ -51,14 +54,14 @@
 	});
 
 	const isPast = $derived.by(() => {
-		if (['cancelled', 'concluído', 'faltou'].includes(optimisticStatus)) return true;
+		if (['cancelled', 'concluído', 'faltou'].includes(appt.status)) return true;
 		const todayStr = dateUtils.today(timezone);
 		if (selectedDate < todayStr) return true;
 		if (selectedDate > todayStr) return false;
 		return currentTime > dateUtils.parseTimeToMs(appt.end_at, selectedDate, timezone);
 	});
 
-	const isCancelled = $derived(optimisticStatus === 'cancelled');
+	const isCancelled = $derived(appt.status === 'cancelled');
 
 	function handleToggle(e: MouseEvent) {
 		if ((e.target as HTMLElement).closest('.drawer-actions, a, button')) return;
@@ -66,6 +69,8 @@
 	}
 </script>
 
+<!-- svelte-ignore a11y_click_events_have_key_events -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
 	class="appt-wrapper"
 	class:is-past={isPast}
@@ -130,11 +135,7 @@
 						<span>Enviar Mensagem</span>
 					</Button>
 
-					<AppointmentItemAction
-						{appt}
-						onReschedule={() => onReschedule(appt)}
-						onStatusChange={(newStatus) => (optimisticStatus = newStatus)}
-					/>
+					<AppointmentItemAction {appt} onReschedule={() => onReschedule(appt)} {onStatusUpdate} />
 				</div>
 			</div>
 		</div>

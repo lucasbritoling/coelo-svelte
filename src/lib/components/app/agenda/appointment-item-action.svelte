@@ -18,18 +18,16 @@
 	let {
 		appt,
 		onReschedule,
-		onStatusChange
+		onStatusUpdate
 	}: {
 		appt: Appointment;
 		onReschedule: () => void;
-		onStatusChange: (status: string) => void;
+		onStatusUpdate: (status: string) => void;
 	} = $props();
 
 	const appointmentId = appt.id;
 
-	// Estado local otimista para o dropdown saber o status atualizado imediatamente
 	let activeStatus = $state(appt.status);
-
 	let isDropdownOpen = $state(false);
 	let isDeleting = $state(false);
 	let isLoading = $state(false);
@@ -55,10 +53,9 @@
 		isLoading = true;
 		isDropdownOpen = false;
 
-		// ── DISPARO OTIMISTA ─────────────────────────────────────────────
-		activeStatus = targetStatus; // Atualiza o dropdown local
-		onStatusChange(targetStatus); // Notifica o card pai imediatamente
-		// ─────────────────────────────────────────────────────────────────
+		// Dispara a mudança otimista direto na raiz da página
+		activeStatus = targetStatus;
+		onStatusUpdate(targetStatus);
 
 		statusInput.value = targetStatus;
 		statusForm.requestSubmit();
@@ -70,17 +67,22 @@
 	method="POST"
 	action="?/setStatus"
 	class="hidden"
-	use:enhance={() => {
+	use:enhance={({ formData }) => {
+		isLoading = true;
+		const targetStatus = formData.get('status')?.toString();
+
 		return async ({ result, update }) => {
 			isLoading = false;
 			loadingStatus = null;
 
 			if (result.type === 'success') {
 				await update();
+				// Como o banco atualizou e o data.appointments mudou,
+				// removemos o ID do mapa otimista passando o status real dele
+				if (targetStatus) onStatusUpdate(appt.status);
 			} else {
-				// ROLLBACK: Se der erro no banco, reverte para o estado original
-				activeStatus = appt.status;
-				onStatusChange(appt.status);
+				// Rollback em caso de erro
+				onStatusUpdate(appt.status);
 			}
 		};
 	}}

@@ -23,8 +23,9 @@
 				+{totalSlots} horário{totalSlots > 1 ? 's' : ''} livre{totalSlots > 1 ? 's' : ''}
 			</span>
 			<ChevronDown
-				class="size-4 text-zinc-400 transition-transform duration-300 ease-out"
-				style="transform: rotate({isExpanded ? '-180deg' : '0deg'})"
+				class="size-4 text-zinc-400 transition-transform duration-300 ease-out {isExpanded
+					? '-rotate-180'
+					: 'rotate-0'}"
 			/>
 		</button>
 

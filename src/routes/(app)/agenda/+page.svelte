@@ -64,11 +64,20 @@
 		globalUI.isModalOpen = ui.modal;
 	});
 
+	// Mapa central de status otimistas: ID do agendamento -> Status Otimista
+	let optimisticStatuses = $state(new Map<string, string>());
+
+	// Função utilitária para pegar o status (seja o otimista ou o real do banco)
+	function getEffectiveStatus(appt: Appointment) {
+		return optimisticStatuses.get(appt.id) || appt.status;
+	}
+
 	const schedulingLink = $derived(`coelo.dev/${data.username}`);
 	const headerLabel = $derived(dateUtils.getHeaderLabel(data.selectedDate, data.timezone));
 	const showServiceColor = $derived((data.services?.length ?? 0) >= 2);
+	// Agora o cabeçalho de resumo rápido reage IMEDIATAMENTE às mudanças otimistas!
 	const pendingCount = $derived(
-		(data.appointments || []).filter((a) => a.status === 'pending').length
+		(data.appointments || []).filter((a) => getEffectiveStatus(a) === 'pending').length
 	);
 	const hasAppointments = $derived(agendaItems.some((item) => item.type === 'appointment'));
 
@@ -182,7 +191,10 @@
 		// 1. Mapeia os Agendamentos Existentes
 		appointments.forEach((appt) => {
 			let apptIsPast = false;
-			if (['cancelled', 'concluído', 'faltou'].includes(appt.status)) {
+			// USANDO O STATUS OTIMISTA AQUI:
+			const currentStatus = getEffectiveStatus(appt);
+
+			if (['cancelled', 'concluído', 'faltou'].includes(currentStatus)) {
 				apptIsPast = true;
 			} else if (data.selectedDate < todayStr) {
 				apptIsPast = true;
@@ -190,9 +202,11 @@
 				const endMs = dateUtils.parseTimeToMs(appt.end_at, data.selectedDate, data.timezone);
 				apptIsPast = ticker > endMs;
 			}
+
 			rawItems.push({
 				type: 'appointment',
-				data: appt,
+				// Passamos o status atualizado para o objeto de renderização do item
+				data: { ...appt, status: currentStatus },
 				sortTime: appt.start_at,
 				isPast: apptIsPast
 			});
@@ -256,7 +270,7 @@
 			};
 
 			const activeAppts = [...appointments]
-				.filter((a) => a.status !== 'cancelled')
+				.filter((a) => getEffectiveStatus(a) !== 'cancelled')
 				.sort((a, b) => a.start_at.localeCompare(b.start_at));
 
 			if (activeAppts.length > 0) {
@@ -379,6 +393,14 @@
 							timezone={data.timezone}
 							soon={isCurrentOrNext ? getSoonText(startMs, endMs, ticker) : null}
 							onReschedule={openReschedule}
+							onStatusUpdate={(newStatus) => {
+								if (newStatus === item.data.status) {
+									optimisticStatuses.delete(item.data.id);
+								} else {
+									optimisticStatuses.set(item.data.id, newStatus);
+								}
+								optimisticStatuses = new Map(optimisticStatuses);
+							}}
 						/>
 					</div>
 				{:else if item.type === 'ghost-group'}

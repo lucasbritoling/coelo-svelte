@@ -33,15 +33,43 @@
 	];
 
 	const { form, errors, enhance, message } = superForm(data, {
-		validators: zod4Client(signupSchema),
-		resetForm: false,
-		onSubmit: () => {
-			isLoading = true;
-		},
-		onUpdated: () => {
-			isLoading = false;
-		}
-	});
+    validators: zod4Client(signupSchema),
+    resetForm: false,
+    
+    // 1. Ao iniciar o envio
+    onSubmit: ({ formData }) => {
+        isLoading = true;
+        console.log('🔵 [FRONTEND] Iniciando submissão do formulário...');
+
+        // Imprime o que está sendo enviado
+        const dataObj = Object.fromEntries(formData.entries());
+        console.log('📦 [FRONTEND] Dados sendo enviados:', dataObj);
+        console.log('🧩 [FRONTEND] Estado do $form atual:', $form);
+    },
+
+    // 2. Quando o resultado chega do servidor
+    onResult: ({ result }) => {
+        console.log('🟢 [FRONTEND] Resultado recebido do servidor:', result.type);
+        if (result.type === 'failure') {
+            console.error('🔴 [FRONTEND] Falha na Action:', result.data);
+        }
+    },
+
+    // 3. Caso ocorra erro de rede ou falha crítica
+    onError: ({ result }) => {
+        console.error('🔴 [FRONTEND] Erro inesperado (Network/Server Crash):', result);
+        isLoading = false;
+    },
+
+    // 4. Após a atualização do estado (finalização do ciclo)
+    onUpdated: ({ form: updatedForm }) => {
+        isLoading = false;
+        console.log('🟡 [FRONTEND] Estado atualizado. Validade do form:', updatedForm.valid);
+        if (!updatedForm.valid) {
+            console.error('🔴 [FRONTEND] Erros de validação detectados:', updatedForm.errors);
+        }
+    }
+});
 
 	// Runa para limpar o preview da URL em tempo real exatamente como o Zod fará no backend
 	const cleanedUsernamePreview = $derived(

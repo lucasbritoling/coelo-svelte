@@ -9,9 +9,6 @@ export default defineConfig({
 		sveltekit(),
 		SvelteKitPWA({
 			registerType: 'autoUpdate',
-			workbox: {
-				globPatterns: []
-			},
 			manifest: {
 				name: 'Coelo',
 				short_name: 'Coelo',

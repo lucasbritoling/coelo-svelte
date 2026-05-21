@@ -15,6 +15,7 @@
 	import AppointmentItem from '$lib/components/app/agenda/appointment-item.svelte';
 	import RescheduleDialog from '$lib/components/app/agenda/reschedule-dialog.svelte';
 	import GhostSlot from '$lib/components/app/agenda/ghost-slot.svelte';
+	import OnboardingDialog from '$lib/components/app/agenda/onboarding-dialog.svelte';
 	import { scale } from 'svelte/transition';
 
 	let { data } = $props<{
@@ -490,6 +491,8 @@
 </div>
 
 <SubscriptionDialog bind:open={isPremiumOpen} />
+
+<OnboardingDialog bind:open={showOnboarding} />
 
 <AppointmentForm
 	{data}

@@ -1,89 +1,70 @@
 <script lang="ts">
-	import {
-		Dialog,
-		DialogContent,
-		DialogHeader,
-		DialogTitle,
-		DialogDescription
-	} from '$lib/components/ui/dialog';
+	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
-	import { ChevronRight, CalendarCheck, Settings, Sparkles } from '@lucide/svelte';
+	import { ChevronRight, Link, Settings } from '@lucide/svelte';
+	import { fly } from 'svelte/transition';
 
-	let { open = $bindable() } = $props();
+	let { open = $bindable() } = $props<{ open: boolean }>();
 	let step = $state(1);
 
 	function next() {
-		if (step < 3) step++;
-	}
-
-	function close() {
-		open = false;
-		// Opcional: chamar API aqui para marcar is_onboarded = true
+		if (step < 2) step++;
+		else open = false;
 	}
 </script>
 
-<Dialog bind:open>
-	<DialogContent class="sm:max-w-[425px]">
-		<DialogHeader>
-			<DialogTitle class="text-xl">
-				{#if step === 1}Bem-vindo ao Coelo{/if}
-				{#if step === 2}Link de Autoagendamento{/if}
-				{#if step === 3}Personalize sua Agenda{/if}
-			</DialogTitle>
-		</DialogHeader>
+<Dialog.Root bind:open>
+	<!-- A classe 'rounded-[32px]' e 'shadow-2xl' combinam com a precisão dos seus botões -->
+	<Dialog.Content
+		class="flex max-h-[90dvh] w-[95vw] flex-col gap-0 overflow-hidden rounded-[32px] border border-zinc-200 bg-white p-0 shadow-2xl sm:max-w-[400px]"
+	>
+		<!-- Header com o mesmo feeling minimalista dos seus botões -->
+		<div class="relative flex flex-col items-center px-8 pt-10 pb-6 text-center">
+			<div
+				class="mb-6 flex size-14 items-center justify-center rounded-2xl border border-zinc-100 bg-white shadow-sm ring-1 ring-zinc-950/[0.03]"
+			>
+				{#if step === 1}<Link class="size-7 text-zinc-600" />{/if}
+				{#if step === 2}<Settings class="size-7 text-zinc-600" />{/if}
+			</div>
 
-		<div class="grid gap-6 py-4">
-			<!-- Passo 1: Intro -->
-			{#if step === 1}
-				<div class="flex flex-col items-center space-y-4 text-center">
-					<div class="rounded-full bg-primary/10 p-4">
-						<Sparkles class="h-8 w-8 text-primary" />
-					</div>
-					<p class="text-muted-foreground">
-						Sua jornada para organizar seus atendimentos começa aqui. Simples, rápido e eficiente.
-					</p>
-				</div>
-			{/if}
+			<Dialog.Title class="text-xl font-bold tracking-tight text-zinc-900">
+				{step === 1 ? 'Compartilhe seu link' : 'Ajustes e Personalização'}
+			</Dialog.Title>
+		</div>
 
-			<!-- Passo 2: Link -->
-			{#if step === 2}
-				<div class="flex flex-col items-center space-y-4 text-center">
-					<div class="rounded-full bg-primary/10 p-4">
-						<CalendarCheck class="h-8 w-8 text-primary" />
-					</div>
-					<p class="leading-relaxed text-muted-foreground">
-						Basta compartilhar o seu link personalizado com seus clientes e você já passa a receber
-						seus primeiros agendamentos.
-					</p>
-				</div>
-			{/if}
+		<!-- Conteúdo centralizado -->
+		<div class="relative px-8 pb-8 text-center">
+			{#key step}
+				<p
+					in:fly={{ y: 5, duration: 200 }}
+					class="text-sm leading-relaxed font-medium text-zinc-500"
+				>
+					{step === 1
+						? 'Basta compartilhar seu link de agendamento com seus clientes e pronto.'
+						: 'Precisa configurar horários ou alterar sua foto? Está tudo nas configurações.'}
+				</p>
+			{/key}
+		</div>
 
-			<!-- Passo 3: Config -->
-			{#if step === 3}
-				<div class="flex flex-col items-center space-y-4 text-center">
-					<div class="rounded-full bg-primary/10 p-4">
-						<Settings class="h-8 w-8 text-primary" />
-					</div>
-					<p class="leading-relaxed text-muted-foreground">
-						Você pode definir seu horário de trabalho, foto de perfil e muito mais na seção de
-						configurações.
-					</p>
-				</div>
-			{/if}
-
-			<!-- Stepper Footer -->
-			<div class="mt-4 flex items-center justify-between">
-				<div class="flex gap-1">
-					{#each [1, 2, 3] as s}
-						<div class="h-2 w-2 rounded-full {step === s ? 'bg-primary' : 'bg-muted'}"></div>
+		<!-- Footer alinhado com o sistema de design dos botões -->
+		<div class="border-t border-zinc-100 bg-zinc-50/50 p-6">
+			<div class="flex items-center justify-between gap-4">
+				<div class="flex gap-2">
+					{#each [1, 2] as s}
+						<div
+							class="h-1.5 w-1.5 rounded-full {step === s ? 'bg-zinc-900' : 'bg-zinc-200'}"
+						></div>
 					{/each}
 				</div>
 
-				<Button onclick={step === 3 ? close : next}>
-					{step === 3 ? 'Começar agora' : 'Próximo'}
-					{#if step < 3}<ChevronRight class="ml-1 h-4 w-4" />{/if}
+				<Button
+					onclick={next}
+					class="h-11 cursor-pointer rounded-full bg-zinc-900 px-6 font-bold text-white transition-all hover:bg-zinc-800 active:scale-95"
+				>
+					{step === 2 ? 'Entendido' : 'Próximo'}
+					{#if step === 1}<ChevronRight class="ml-1 size-4" />{/if}
 				</Button>
 			</div>
 		</div>
-	</DialogContent>
-</Dialog>
+	</Dialog.Content>
+</Dialog.Root>

@@ -113,9 +113,16 @@ export const usernameSchema = z
 
 export const signupSchema = z
 	.object({
-		full_name: z.string().min(3, 'Muito curto'),
+		full_name: z.string().min(3, 'Muito curto').max(150, 'Muito longo'),
+
+		address_custom: z.string().max(400, 'Muito longo').optional(),
+
+		first_service_name: z.string().min(3, 'Muito curto').max(100, 'Muito longo'),
+		first_service_duration: z.coerce.number().min(5, 'Duração mínima de 5 minutos').max(480),
+		first_service_color: z.string().default('#6366f1'),
+
 		email: z.email('E-mail inválido'),
-		password: z.string().min(6, 'Mínimo 6 dígitos'),
+		password: z.string().min(6, 'Mínimo 6 caracteres'),
 		confirmPassword: z.string(),
 		username: usernameSchema
 	})

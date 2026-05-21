@@ -49,8 +49,25 @@
 		}
 	});
 
-	// Sincronização e Validação básica local de cada Step para liberar botões de avançar
-	const isStep1Valid = $derived($form.username && $form.username.trim().length >= 3);
+	// Runa para limpar o preview da URL em tempo real exatamente como o Zod fará no backend
+	const cleanedUsernamePreview = $derived(
+		($form.username || '')
+			.trim()
+			.toLowerCase()
+			.normalize('NFD')
+			.replace(/[\u0300-\u036f]/g, '')
+			.replace(/[æ]/g, 'ae')
+			.replace(/[œ]/g, 'oe')
+			.replace(/\s+/g, '-')
+			.replace(/[^a-z0-9-]/g, '')
+			.replace(/-+/g, '-')
+			.replace(/^-|-$/g, '')
+	);
+
+	// Atualiza a validação do passo 1 usando o comprimento do link já limpo
+	const isStep1Valid = $derived(
+		cleanedUsernamePreview.length >= 3 && cleanedUsernamePreview.length <= 30
+	);
 	const isStep2Valid = $derived(serviceName.trim().length > 2 && serviceDuration);
 
 	function nextStep() {
@@ -354,7 +371,7 @@
 							{$form.full_name || 'Seu Nome Profissional'}
 						</h4>
 						<p class="font-mono text-[11px] text-[#a3a3a3]">
-							coelo.dev/{$form.username || 'seu-link'}
+							coelo.dev/{cleanedUsernamePreview || 'seu-link'}
 						</p>
 					</div>
 				</div>

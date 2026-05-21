@@ -33,43 +33,43 @@
 	];
 
 	const { form, errors, enhance, message } = superForm(data, {
-    validators: zod4Client(signupSchema),
-    resetForm: false,
-    
-    // 1. Ao iniciar o envio
-    onSubmit: ({ formData }) => {
-        isLoading = true;
-        console.log('🔵 [FRONTEND] Iniciando submissão do formulário...');
+		validators: zod4Client(signupSchema),
+		resetForm: false,
 
-        // Imprime o que está sendo enviado
-        const dataObj = Object.fromEntries(formData.entries());
-        console.log('📦 [FRONTEND] Dados sendo enviados:', dataObj);
-        console.log('🧩 [FRONTEND] Estado do $form atual:', $form);
-    },
+		// 1. Ao iniciar o envio
+		onSubmit: ({ formData }) => {
+			isLoading = true;
+			console.log('🔵 [FRONTEND] Iniciando submissão do formulário...');
 
-    // 2. Quando o resultado chega do servidor
-    onResult: ({ result }) => {
-        console.log('🟢 [FRONTEND] Resultado recebido do servidor:', result.type);
-        if (result.type === 'failure') {
-            console.error('🔴 [FRONTEND] Falha na Action:', result.data);
-        }
-    },
+			// Imprime o que está sendo enviado
+			const dataObj = Object.fromEntries(formData.entries());
+			console.log('📦 [FRONTEND] Dados sendo enviados:', dataObj);
+			console.log('🧩 [FRONTEND] Estado do $form atual:', $form);
+		},
 
-    // 3. Caso ocorra erro de rede ou falha crítica
-    onError: ({ result }) => {
-        console.error('🔴 [FRONTEND] Erro inesperado (Network/Server Crash):', result);
-        isLoading = false;
-    },
+		// 2. Quando o resultado chega do servidor
+		onResult: ({ result }) => {
+			console.log('🟢 [FRONTEND] Resultado recebido do servidor:', result.type);
+			if (result.type === 'failure') {
+				console.error('🔴 [FRONTEND] Falha na Action:', result.data);
+			}
+		},
 
-    // 4. Após a atualização do estado (finalização do ciclo)
-    onUpdated: ({ form: updatedForm }) => {
-        isLoading = false;
-        console.log('🟡 [FRONTEND] Estado atualizado. Validade do form:', updatedForm.valid);
-        if (!updatedForm.valid) {
-            console.error('🔴 [FRONTEND] Erros de validação detectados:', updatedForm.errors);
-        }
-    }
-});
+		// 3. Caso ocorra erro de rede ou falha crítica
+		onError: ({ result }) => {
+			console.error('🔴 [FRONTEND] Erro inesperado (Network/Server Crash):', result);
+			isLoading = false;
+		},
+
+		// 4. Após a atualização do estado (finalização do ciclo)
+		onUpdated: ({ form: updatedForm }) => {
+			isLoading = false;
+			console.log('🟡 [FRONTEND] Estado atualizado. Validade do form:', updatedForm.valid);
+			if (!updatedForm.valid) {
+				console.error('🔴 [FRONTEND] Erros de validação detectados:', updatedForm.errors);
+			}
+		}
+	});
 
 	// Runa para limpar o preview da URL em tempo real exatamente como o Zod fará no backend
 	const cleanedUsernamePreview = $derived(
@@ -149,6 +149,11 @@
 
 			<Card.Content>
 				<form method="POST" use:enhance class="space-y-5">
+					<input type="hidden" name="username" value={$form.username} />
+					<input type="hidden" name="address_custom" value={$form.address_custom} />
+					<input type="hidden" name="first_service_name" value={$form.first_service_name} />
+					<input type="hidden" name="first_service_duration" value={$form.first_service_duration} />
+					<input type="hidden" name="first_service_color" value={$form.first_service_color} />
 					{#if $message}
 						<div
 							class="rounded-lg bg-destructive/5 p-3 text-center text-xs font-medium text-destructive"
@@ -189,6 +194,7 @@
 									></Field.Label
 								>
 								<Input
+									name="address_custom"
 									id="address"
 									bind:value={$form.address_custom}
 									class="h-10.5 rounded-xl border-[#e5e5e5] text-sm focus-visible:ring-1 focus-visible:ring-[#0a0a0a]"
@@ -205,6 +211,7 @@
 									>Nome do Serviço</Field.Label
 								>
 								<Input
+									name="first_service_name"
 									bind:value={$form.first_service_name}
 									class="h-10.5 rounded-xl border-[#e5e5e5] text-sm focus-visible:ring-1 focus-visible:ring-[#0a0a0a]"
 									placeholder="Ex: Atendimento Presencial, Mentoria..."
@@ -217,6 +224,7 @@
 										>Duração</Field.Label
 									>
 									<select
+										name="first_service_duration"
 										bind:value={$form.first_service_duration}
 										class="h-10.5 w-full rounded-xl border border-[#e5e5e5] bg-white px-3 text-sm transition-all focus:ring-1 focus:ring-[#0a0a0a] focus:outline-none"
 									>

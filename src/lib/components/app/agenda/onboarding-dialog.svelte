@@ -9,7 +9,15 @@
 
 	function next() {
 		if (step < 2) step++;
-		else open = false;
+		else {
+			// Fecha imediatamente
+			open = false;
+			// Dispara a mutação no background sem aguardar o retorno
+			fetch('?/completeOnboarding', {
+				method: 'POST',
+				body: new FormData()
+			}).catch((err) => console.error('Erro ao finalizar onboarding:', err));
+		}
 	}
 </script>
 

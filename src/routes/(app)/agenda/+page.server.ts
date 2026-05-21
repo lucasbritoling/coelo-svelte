@@ -334,5 +334,22 @@ export const actions: Actions = {
 			console.error(`[Reschedule Action Error] User: ${user.id}, Appt: ${id}:`, err);
 			return fail(500, { message: 'Erro interno ao processar o reagendamento.' });
 		}
+	},
+	completeOnboarding: async ({ locals: { sql, user } }) => {
+		if (!user) return fail(401);
+
+		try {
+			// Atualiza diretamente via SQL
+			await sql`
+            UPDATE public.profiles 
+            SET is_onboarded = true 
+            WHERE id = ${user.id}
+        `;
+
+			return { success: true };
+		} catch (err) {
+			console.error('Erro ao finalizar onboarding:', err);
+			return fail(500, { message: 'Erro interno ao salvar status.' });
+		}
 	}
 };

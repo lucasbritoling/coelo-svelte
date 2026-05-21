@@ -65,7 +65,8 @@ export const load: PageServerLoad = async ({ url, cookies, platform, locals: { s
 					has_lunch: agenda.profile?.has_lunch ?? false,
 					lunch_start: agenda.profile?.lunch_start ?? '12:00',
 					lunch_end: agenda.profile?.lunch_end ?? '13:00'
-				}
+				},
+				is_onboarded: agenda.profile?.is_onboarded ?? true
 			}
 		};
 	} catch (err) {

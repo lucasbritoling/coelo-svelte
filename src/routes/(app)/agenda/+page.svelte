@@ -32,6 +32,8 @@
 		};
 	}>();
 
+	let showOnboarding = $derived(!data.user.is_onboarded);
+
 	let isPremiumOpen = $state(false);
 
 	let rescheduleTarget = $state<Appointment | null>(null);

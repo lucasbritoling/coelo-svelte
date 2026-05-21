@@ -25,11 +25,11 @@
 	const id = $props.id();
 </script>
 
-<div class={cn('flex flex-col gap-6', className)} {...restProps}>
+<div class={cn('flex flex-col gap-4 sm:gap-6', className)} {...restProps}>
 	<Card.Root
 		class="rounded-2xl border-[rgba(0,0,0,0.06)] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.02),0_12px_30px_-10px_rgba(0,0,0,0.04)]"
 	>
-		<Card.Header class="pb-5 text-center">
+		<Card.Header class="pt-4 pb-3 text-center sm:pb-5">
 			<Card.Title class="text-xl font-semibold tracking-tight text-[#0a0a0a]"
 				>Bem-vindo de volta</Card.Title
 			>
@@ -48,7 +48,7 @@
 					};
 				}}
 			>
-				<FieldGroup class="space-y-4">
+				<FieldGroup class="space-y-3 sm:space-y-4">
 					<div class="grid grid-cols-1 gap-2">
 						<Button
 							variant="outline"
@@ -85,7 +85,7 @@
 					</div>
 
 					<FieldSeparator
-						class="py-2 text-[11px] font-medium tracking-wider text-[#a3a3a3] uppercase *:data-[slot=field-separator-content]:bg-white"
+						class="py-1 text-[11px] font-medium tracking-wider text-[#a3a3a3] uppercase *:data-[slot=field-separator-content]:bg-white sm:py-2"
 					>
 						Ou continue com
 					</FieldSeparator>
@@ -142,7 +142,7 @@
 						</div>
 					{/if}
 
-					<Field class="space-y-3 pt-2">
+					<Field class="space-y-3 pt-1 sm:pt-2">
 						<Button
 							type="submit"
 							class="h-10.5 w-full rounded-xl bg-[#0a0a0a] text-sm font-medium text-white transition-all hover:bg-[#262626]"

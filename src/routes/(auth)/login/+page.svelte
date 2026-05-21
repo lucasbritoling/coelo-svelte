@@ -16,8 +16,10 @@
 	});
 </script>
 
-<div class="flex min-h-svh flex-col items-center justify-center bg-[#fafafa] p-4 sm:p-6 md:p-10">
-	<header class="mb-8 flex flex-col items-center gap-2" in:fade={{ duration: 200 }}>
+<div
+	class="flex h-svh flex-col items-center justify-center overflow-y-auto bg-[#fafafa] p-4 sm:overflow-hidden sm:p-6 md:p-10"
+>
+	<header class="mb-4 flex flex-col items-center gap-2 sm:mb-8" in:fade={{ duration: 200 }}>
 		<a
 			href="/"
 			class="flex items-center gap-2.5 font-sans font-semibold tracking-tight text-[#0a0a0a]"

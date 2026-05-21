@@ -112,7 +112,7 @@ const authHandle: Handle = async ({ event, resolve }) => {
 	const isPrivate = PRIVATE_ROUTES.has(event.url.pathname);
 	const isPublic = PUBLIC_ROUTES.has(event.url.pathname);
 
-	if (!session && isPrivate) throw redirect(303, '/login');
+	if (!session && isPrivate) throw redirect(303, '/signup');
 	if (session && isPublic) throw redirect(303, '/agenda');
 
 	return resolve(event, {

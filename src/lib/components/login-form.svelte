@@ -48,7 +48,7 @@
 					};
 				}}
 			>
-				<FieldGroup class="space-y-3 sm:space-y-4">
+				<FieldGroup class="space-y-0.5 sm:space-y-4">
 					<div class="grid grid-cols-1 gap-2">
 						<Button
 							variant="outline"

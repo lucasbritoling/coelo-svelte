@@ -24,12 +24,6 @@
 	let currentStep = $state(1);
 	let isLoading = $state(false);
 
-	// Estados locais extras necessários para o Onboarding Premium (valores padrão iniciais)
-	let address = $state('');
-	let serviceName = $state('Consultoria Estratégica');
-	let serviceDuration = $state('60');
-	let serviceColor = $state('#6366f1'); // Indigo default
-
 	const colorPalettes = [
 		{ hex: '#0a0a0a', name: 'Neutral Dark' },
 		{ hex: '#6366f1', name: 'Indigo Aura' },
@@ -64,11 +58,11 @@
 			.replace(/^-|-$/g, '')
 	);
 
-	// Atualiza a validação do passo 1 usando o comprimento do link já limpo
+	// Atualize suas validações para olhar para $form diretamente
 	const isStep1Valid = $derived(
 		cleanedUsernamePreview.length >= 3 && cleanedUsernamePreview.length <= 30
 	);
-	const isStep2Valid = $derived(serviceName.trim().length > 2 && serviceDuration);
+	const isStep2Valid = $derived($form.first_service_name.trim().length > 2); // Usa o form
 
 	function nextStep() {
 		if (currentStep < 3) currentStep += 1;
@@ -127,11 +121,6 @@
 
 			<Card.Content>
 				<form method="POST" use:enhance class="space-y-5">
-					<input type="hidden" name="address_custom" value={address} />
-					<input type="hidden" name="first_service_name" value={serviceName} />
-					<input type="hidden" name="first_service_duration" value={serviceDuration} />
-					<input type="hidden" name="first_service_color" value={serviceColor} />
-
 					{#if $message}
 						<div
 							class="rounded-lg bg-destructive/5 p-3 text-center text-xs font-medium text-destructive"
@@ -173,7 +162,7 @@
 								>
 								<Input
 									id="address"
-									bind:value={address}
+									bind:value={$form.address_custom}
 									class="h-10.5 rounded-xl border-[#e5e5e5] text-sm focus-visible:ring-1 focus-visible:ring-[#0a0a0a]"
 									placeholder="Ex: São Paulo, SP ou Atendimento Online"
 								/>
@@ -188,7 +177,7 @@
 									>Nome do Serviço</Field.Label
 								>
 								<Input
-									bind:value={serviceName}
+									bind:value={$form.first_service_name}
 									class="h-10.5 rounded-xl border-[#e5e5e5] text-sm focus-visible:ring-1 focus-visible:ring-[#0a0a0a]"
 									placeholder="Ex: Atendimento Presencial, Mentoria..."
 								/>
@@ -200,7 +189,7 @@
 										>Duração</Field.Label
 									>
 									<select
-										bind:value={serviceDuration}
+										bind:value={$form.first_service_duration}
 										class="h-10.5 w-full rounded-xl border border-[#e5e5e5] bg-white px-3 text-sm transition-all focus:ring-1 focus:ring-[#0a0a0a] focus:outline-none"
 									>
 										<option value="30">30 minutos</option>
@@ -220,12 +209,12 @@
 										{#each colorPalettes as palette}
 											<button
 												type="button"
-												onclick={() => (serviceColor = palette.hex)}
+												onclick={() => ($form.first_service_color = palette.hex)}
 												class="relative flex size-6.5 items-center justify-center rounded-full transition-transform duration-150 focus:outline-none"
 												style="background-color: {palette.hex};"
-												class:scale-110={serviceColor === palette.hex}
+												class:scale-110={$form.first_service_color === palette.hex}
 											>
-												{#if serviceColor === palette.hex}
+												{#if $form.first_service_color === palette.hex}
 													<Check size={11} strokeWidth={3} class="text-white" />
 												{/if}
 											</button>
@@ -389,24 +378,24 @@
 					<div class="space-y-3">
 						<div
 							class="inline-flex rounded px-2 py-0.5 text-[10px] font-semibold tracking-wide text-white transition-colors duration-200"
-							style="background-color: {serviceColor};"
+							style="background-color: {$form.first_service_color};"
 						>
 							Disponível
 						</div>
 						<h3 class="text-base leading-snug font-medium break-words text-[#0a0a0a]">
-							{serviceName || 'Escolha o nome do serviço'}
+							{$form.first_service_name || 'Escolha o nome do serviço'}
 						</h3>
 					</div>
 
 					<div class="mt-4 space-y-2 border-t border-[#f5f5f5] pt-6">
 						<div class="flex items-center gap-2 text-xs text-[#525252]">
 							<Clock size={13} class="text-[#a3a3a3]" />
-							<span>{serviceDuration} minutos</span>
+							<span>{$form.first_service_duration} minutos</span>
 						</div>
-						{#if address}
+						{#if $form.address_custom}
 							<div class="flex items-center gap-2 text-xs text-[#525252]" transition:fade>
 								<MapPin size={13} class="text-[#a3a3a3]" />
-								<span class="truncate">{address}</span>
+								<span class="truncate">{$form.address_custom}</span>
 							</div>
 						{/if}
 					</div>
@@ -428,7 +417,7 @@
 								<div
 									class="cursor-pointer rounded-lg border p-2.5 text-center text-xs font-medium transition-all duration-200 select-none"
 									style={i === 1
-										? `background-color: ${serviceColor}10; border-color: ${serviceColor}; color: ${serviceColor}; font-weight: 600;`
+										? `background-color: ${$form.first_service_color}10; border-color: ${$form.first_service_color}; color: ${$form.first_service_color}; font-weight: 600;`
 										: 'border-color: #e5e5e5; color: #525252; background: transparent;'}
 								>
 									{time}

@@ -1,4 +1,3 @@
-<!-- $lib/components/app/CustomerForm.svelte -->
 <script lang="ts">
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
@@ -6,130 +5,123 @@
 	import { Label } from '$lib/components/ui/label';
 	import { LoaderCircle } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
-	import { superForm } from 'sveltekit-superforms';
-	import { zod4Client } from 'sveltekit-superforms/adapters';
-	import { customerSchema } from '$lib/schemas/app';
+	import { enhance } from '$app/forms';
 
 	let {
 		open = $bindable(false),
-		formData,
-		initialName = '',
+		initialData = { id: '', name: '', phone: '' },
 		onSuccess
 	} = $props<{
 		open: boolean;
-		formData: any; // O form vindo do servidor
-		initialName?: string;
-		onSuccess?: (newCustomer: any) => void;
+		initialData?: { id?: string; name: string; phone: string };
+		onSuccess?: (data: any) => void;
 	}>();
 
 	let isLoading = $state(false);
+	let formState = $state({ id: '', name: '', phone: '' });
+	let phoneDisplay = $state('');
 
-	const { form, errors, enhance, message } = superForm(formData, {
-		validators: zod4Client(customerSchema),
-		resetForm: true,
-		invalidateAll: true,
-
-		// Dispara no milissegundo que o form é enviado
-		onSubmit: () => {
-			isLoading = true;
-		},
-
-		// Dispara assim que o servidor responde (sucesso ou erro)
-		onResult: () => {
-			isLoading = false;
-		},
-
-		onUpdated: ({ form }) => {
-			if (form.valid) {
-				// Tenta pegar o ID que veio do banco (via message)
-				// ou usa o data caso seja uma edição (onde o ID já existia)
-				const resultData = form.message?.id ? form.message : form.data;
-
-				toast.success('Ok');
-
-				// Passe o resultData, que tem mais chances de conter o ID novo
-				onSuccess?.(resultData);
-				open = false;
-			} else if (typeof $message === 'string') {
-				toast.error($message);
-			}
-		}
-	});
-
-	// Limpa o formulário sempre que o modal for fechado
+	// Sincroniza o estado local quando o modal abre
 	$effect(() => {
-		if (!open) {
-			$form.name = '';
-			$form.phone = '';
-			$form.id = undefined; // ou '' se preferir
+		if (open) {
+			formState = { ...initialData };
+			phoneDisplay = formatPhone(initialData.phone || '');
+		} else {
+			formState = { id: '', name: '', phone: '' };
+			phoneDisplay = '';
 		}
 	});
 
-	// Auto-preenchimento ao abrir o modal
-	$effect(() => {
-		if (open && initialName && !$form.name && !$form.id) {
-			$form.name = initialName;
-		}
-	});
-
-	// Funções de limpeza mantidas como utilitários ou dentro do escopo
-	function limparNome(valor: string) {
-		return valor
-			.replace(/^\s+/, '') // 1. Sem espaço no início
-			.replace(/\s{2,}/g, ' ') // 2. Sem espaços duplos
-			.replace(/[^a-zA-ZÀ-ÿ\s~^´`]/g, ''); // 3. Caracteres permitidos
+	function handlePhoneInput(e: Event) {
+		const input = e.currentTarget as HTMLInputElement;
+		let val = input.value.replace(/\D/g, '').slice(0, 11);
+		formState.phone = val;
+		input.value = formatPhone(val);
 	}
 
-	function finalizarLimpeza(valor: string) {
-		return valor.replace(/[~^´`]/g, '').trim(); // Remove acentos isolados e trim final
+	function formatPhone(v: string) {
+		if (!v) return '';
+		let val = v.replace(/\D/g, '');
+		if (val.length > 7) return `(${val.slice(0, 2)}) ${val.slice(2, 7)}-${val.slice(7)}`;
+		if (val.length > 2) return `(${val.slice(0, 2)}) ${val.slice(2)}`;
+		return val;
+	}
+
+	function tratarNomeInput(e: Event) {
+		const target = e.target as HTMLInputElement;
+
+		let valor = target.value;
+
+		// 1. Impede espaços no início do texto
+		valor = valor.replace(/^\s+/, '');
+
+		// 2. Impede espaços duplos ou múltiplos no meio do texto
+		valor = valor.replace(/\s{2,}/g, ' ');
+
+		// 3. Mantém apenas letras, espaços, acentos pt-BR e os acentos isolados
+		valor = valor.replace(/[^a-zA-ZÀ-ÿ\s~^´`]/g, '');
+
+		formState.name = valor;
+		target.value = valor;
+	}
+
+	function limparNomeNoBlur() {
+		// Remove acentos isolados, remove espaços extras no final e mantém o valor limpo
+		formState.name = formState.name.replace(/[~^´`]/g, '').trim();
 	}
 </script>
 
 <Dialog.Root bind:open>
 	<Dialog.Content class="sm:max-w-[425px]">
 		<Dialog.Header>
-			<Dialog.Title>{$form.id ? 'Editar Cliente' : 'Novo Cliente'}</Dialog.Title>
+			<Dialog.Title>{formState.id ? 'Editar Cliente' : 'Novo Cliente'}</Dialog.Title>
 		</Dialog.Header>
 
-		<form method="POST" action="/clientes?/upsert" class="grid gap-4 pt-4" use:enhance>
-			{#if $form.id}
-				<input type="hidden" name="id" bind:value={$form.id} />
-			{/if}
+		<form
+			method="POST"
+			action="/clientes?/upsert"
+			class="grid gap-4 pt-4"
+			use:enhance={() => {
+				isLoading = true;
+				return async ({ result }) => {
+					isLoading = false;
+					if (result.type === 'success') {
+						toast.success('Salvo com sucesso!');
+						onSuccess?.(result.data);
+						open = false;
+					} else {
+						toast.error('Ocorreu um erro ao salvar.');
+					}
+				};
+			}}
+		>
+			<input type="hidden" name="id" value={formState.id} />
 
 			<div class="grid gap-2">
 				<Label for="name">Nome</Label>
 				<Input
 					id="name"
 					name="name"
-					bind:value={$form.name}
-					oninput={(e) => {
-						const target = e.currentTarget;
-						$form.name = limparNome(target.value);
-					}}
-					onblur={() => {
-						$form.name = finalizarLimpeza($form.name);
-					}}
+					value={formState.name}
+					oninput={tratarNomeInput}
+					onblur={limparNomeNoBlur}
 					maxlength={100}
+					required
 				/>
-				{#if $errors.name}<small class="text-destructive">{$errors.name}</small>{/if}
 			</div>
 
 			<div class="grid gap-2">
 				<Label for="phone">Telefone (com DDD)</Label>
 				<Input
 					id="phone"
-					name="phone"
-					bind:value={$form.phone}
+					type="text"
 					inputmode="numeric"
-					placeholder="11 99999-9999"
-					pattern="[0-9]+"
-					minlength={11}
-					maxlength={11}
-					oninput={(e) => {
-						$form.phone = e.currentTarget.value.replace(/\D/g, '');
-					}}
+					placeholder="(11) 99999-9999"
+					value={formatPhone(formState.phone)}
+					oninput={handlePhoneInput}
+					required
 				/>
-				{#if $errors.phone}<small class="text-destructive">{$errors.phone}</small>{/if}
+				<input type="hidden" name="phone" value={formState.phone} />
 			</div>
 
 			<Dialog.Footer>

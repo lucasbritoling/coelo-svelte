@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
 	import { LoaderCircle, Trash2, Check } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
 
@@ -44,6 +45,7 @@
 
 		if (response.ok) {
 			toast.success('Item excluído com sucesso.');
+			await invalidateAll();
 			onsuccess();
 		} else {
 			toast.error(result.data?.message || 'Erro ao excluir item.');

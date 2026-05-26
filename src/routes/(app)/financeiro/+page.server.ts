@@ -41,5 +41,18 @@ export const actions: Actions = {
         `;
 
 		return { success: true };
+	},
+	delete: async ({ request, locals: { sql, user } }) => {
+		const formData = await request.formData();
+		const id = formData.get('id') as string;
+
+		if (!id) return fail(400, { message: 'ID ausente' });
+
+		await sql`
+            DELETE FROM transactions 
+            WHERE id = ${id} AND profile_id = ${user.id}
+        `;
+
+		return { success: true };
 	}
 };

@@ -1,15 +1,18 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { LoaderCircle } from '@lucide/svelte';
+	import { LoaderCircle, Trash2 } from '@lucide/svelte';
 
-	let { onsuccess, services = [] } = $props();
-	let desc = $state('');
-	let valor = $state('');
-	let tipo = $state('saida');
-	let serviceId = $state('');
+	let { onsuccess, services = [], transaction = null } = $props();
+
+	// Estado inicial (se for edição, preenche com os dados da transação)
+	let desc = $state(transaction?.description || '');
+	let valor = $state(transaction?.amount || '');
+	let tipo = $state(transaction?.type || 'saida');
+	let serviceId = $state(''); // Em um cenário real de edição, você precisaria buscar o ID do serviço pelo nome
 	let isLoading = $state(false);
+	let isDeleting = $state(false);
 
-	// Monta a descrição final baseada no tipo para enviar ao banco
+	// Monta a descrição final para enviar ao banco
 	let serviceName = $derived(services.find((s: any) => s.id === serviceId)?.name || '');
 	let finalDesc = $derived(tipo === 'entrada' ? 'Agendamento: ' + serviceName : desc);
 
@@ -29,14 +32,15 @@
 		return async ({ result, update }) => {
 			await update();
 			isLoading = false;
-			if (result.type === 'success') {
-				onsuccess();
-			}
+			if (result.type === 'success') onsuccess();
 		};
 	}}
 >
 	<input type="hidden" name="type" value={tipo} />
 	<input type="hidden" name="desc" value={finalDesc} />
+	{#if transaction}
+		<input type="hidden" name="id" value={transaction.id} />
+	{/if}
 
 	<div class="flex gap-2">
 		<button
@@ -87,16 +91,46 @@
 		class="w-full rounded-xl border border-zinc-200 p-3 text-sm focus:border-zinc-400 focus:outline-none"
 	/>
 
-	<button
-		type="submit"
-		disabled={isLoading}
-		class="mt-2 flex w-full items-center justify-center rounded-xl bg-zinc-900 py-3 text-sm font-semibold text-white transition-transform active:scale-95 disabled:opacity-70"
-	>
-		{#if isLoading}
-			<LoaderCircle class="mr-2 size-4 animate-spin" />
-			Salvando...
-		{:else}
-			Salvar Transação
+	<div class="mt-2 flex items-center gap-3">
+		{#if transaction}
+			<form
+				method="POST"
+				action="?/delete"
+				use:enhance={() => {
+					isDeleting = true;
+					return async ({ result, update }) => {
+						await update();
+						isDeleting = false;
+						if (result.type === 'success') onsuccess();
+					};
+				}}
+			>
+				<input type="hidden" name="id" value={transaction.id} />
+				<button
+					type="submit"
+					disabled={isDeleting}
+					class="flex items-center justify-center rounded-xl bg-rose-50 p-3 text-rose-600 transition-colors hover:bg-rose-100 disabled:opacity-50"
+				>
+					{#if isDeleting}
+						<LoaderCircle class="size-5 animate-spin" />
+					{:else}
+						<Trash2 size={20} />
+					{/if}
+				</button>
+			</form>
 		{/if}
-	</button>
+
+		<button
+			type="submit"
+			disabled={isLoading}
+			class="flex flex-1 items-center justify-center rounded-xl bg-zinc-900 py-3 text-sm font-semibold text-white transition-transform active:scale-95 disabled:opacity-70"
+		>
+			{#if isLoading}
+				<LoaderCircle class="mr-2 size-4 animate-spin" />
+				Salvando...
+			{:else}
+				{transaction ? 'Atualizar Transação' : 'Salvar Transação'}
+			{/if}
+		</button>
+	</div>
 </form>

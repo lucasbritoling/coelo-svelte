@@ -6,6 +6,7 @@
 
 	let { data } = $props();
 	let isOpen = $state(false);
+	let selectedTransaction = $state<any>(null); // Estado para a transação clicada
 
 	// Cálculos reativos usando os dados do banco
 	let totalEntradas = $derived(
@@ -29,6 +30,16 @@
 		const date = new Date(dateString);
 		return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(date);
 	};
+
+	function openEdit(t: any) {
+		selectedTransaction = t;
+		isOpen = true;
+	}
+
+	function handleClose() {
+		isOpen = false;
+		selectedTransaction = null;
+	}
 </script>
 
 <div class="mx-auto w-full max-w-md p-6 pb-32">
@@ -55,7 +66,11 @@
 
 	<div class="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
 		{#each data.transactions as t}
-			<div class="flex items-center justify-between border-b border-zinc-100 p-4 last:border-0">
+			<button
+				type="button"
+				class="flex w-full items-center justify-between border-b border-zinc-100 p-4 last:border-0 hover:bg-zinc-50"
+				onclick={() => openEdit(t)}
+			>
 				<div class="flex items-center gap-3">
 					<div class="rounded-full p-2 {t.type === 'entrada' ? 'bg-emerald-100' : 'bg-rose-100'}">
 						{#if t.type === 'entrada'}
@@ -64,7 +79,7 @@
 							<TrendingDown size={16} class="text-rose-600" />
 						{/if}
 					</div>
-					<div>
+					<div class="text-left">
 						<p class="text-sm font-medium text-zinc-900">{t.description}</p>
 						<p class="text-[11px] text-zinc-400">{formatDate(t.transaction_date)}</p>
 					</div>
@@ -72,7 +87,7 @@
 				<p class="text-sm font-bold {t.type === 'entrada' ? 'text-emerald-600' : 'text-zinc-900'}">
 					{t.type === 'entrada' ? '+' : '-'}{formatCurrency(Number(t.amount))}
 				</p>
-			</div>
+			</button>
 		{:else}
 			<div class="p-8 text-center text-sm text-zinc-500">Nenhuma transação registrada.</div>
 		{/each}
@@ -88,7 +103,7 @@
 {#if isOpen}
 	<div
 		class="fixed inset-0 z-50 flex items-end bg-black/20 backdrop-blur-sm sm:items-center sm:justify-center"
-		onclick={() => (isOpen = false)}
+		onclick={handleClose}
 		role="presentation"
 		transition:fade={{ duration: 200 }}
 	>
@@ -98,13 +113,14 @@
 			role="dialog"
 			transition:fly={{ y: 100, duration: 250 }}
 		>
-			<h2 class="mb-5 text-lg font-bold text-zinc-900">Nova Transação</h2>
+			<h2 class="mb-5 text-lg font-bold text-zinc-900">
+				{selectedTransaction ? 'Editar Transação' : 'Nova Transação'}
+			</h2>
 
 			<FinanceForm
 				services={data.services}
-				onsuccess={() => {
-					isOpen = false;
-				}}
+				transaction={selectedTransaction}
+				onsuccess={handleClose}
 			/>
 		</div>
 	</div>

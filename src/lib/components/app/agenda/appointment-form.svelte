@@ -409,15 +409,18 @@
 
 <CustomerForm
 	bind:open={showCustomerModal}
-	formData={data.customerForm}
-	initialName={customerQuery}
+	initialData={{ name: customerQuery, phone: '' }}
 	onSuccess={(newCustomer) => {
-		if (newCustomer) {
+		// Checa se newCustomer existe E se tem um ID válido
+		if (newCustomer && newCustomer.id) {
 			formState.customerId = newCustomer.id;
 			selectedCustomer = {
 				id: newCustomer.id,
 				name: newCustomer.name
 			};
+		} else {
+			// Opcional: Um aviso se o backend falhar em devolver o ID
+			toast.error('Cliente salvo, mas ID não retornado.');
 		}
 		customerQuery = '';
 		showCustomerModal = false;

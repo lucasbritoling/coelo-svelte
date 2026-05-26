@@ -87,7 +87,20 @@
 					isLoading = false;
 					if (result.type === 'success') {
 						toast.success('Salvo com sucesso!');
-						onSuccess?.(result.data);
+
+						// 1. Acessamos o caminho correto criado pelo Superforms
+						const novoCliente = result.data?.form?.message;
+
+						// 2. Verificamos se o objeto chegou direitinho
+						if (novoCliente && novoCliente.id) {
+							onSuccess?.({
+								id: novoCliente.id,
+								name: novoCliente.name // O banco retorna o nome em minúsculo, você pode usar ele ou o formState.name
+							});
+						} else {
+							toast.error('Cliente salvo, mas a resposta não pôde ser lida.');
+						}
+
 						open = false;
 					} else {
 						toast.error('Ocorreu um erro ao salvar.');

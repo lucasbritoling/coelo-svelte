@@ -156,7 +156,7 @@
 
 <Dialog.Root bind:open>
 	<Dialog.Content
-		class="flex max-h-[92dvh] w-[94vw] flex-col overflow-hidden rounded-[32px] p-0 shadow-2xl sm:max-w-[450px]"
+		class="flex max-h-[92dvh] w-[94vw] flex-col overflow-hidden rounded-[32px] bg-white p-0 shadow-2xl sm:max-w-[450px]"
 	>
 		<div class="px-6 py-4 pb-1">
 			<h2 class="text-xl font-bold">Novo Agendamento</h2>

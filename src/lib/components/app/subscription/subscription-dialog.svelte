@@ -15,8 +15,9 @@
 	};
 
 	const features = [
-		'Serviços e clientes ilimitados',
 		'Lembretes automáticos via WhatsApp',
+		'Estoque e Financeiro',
+		'Serviços e clientes ilimitados',
 		'Suporte prioritário via chat'
 	];
 

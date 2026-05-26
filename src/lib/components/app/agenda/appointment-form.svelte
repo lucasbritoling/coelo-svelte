@@ -273,9 +273,9 @@
 							type="button"
 							onclick={() => (showCustomerModal = true)}
 							title="Criar novo cliente"
-							class="absolute top-1/2 left-0 -translate-y-1/2 cursor-pointer p-4 pr-2 text-emerald-600 transition-colors hover:text-emerald-700"
+							class="absolute top-1/2 left-2 inline-flex h-7 w-7 -translate-y-1/2 cursor-pointer items-center justify-center rounded-lg border border-neutral-800 bg-black text-neutral-50 transition-colors before:absolute before:-inset-2 before:cursor-pointer hover:bg-neutral-900 hover:text-neutral-100 focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-2 focus-visible:ring-offset-black focus-visible:outline-none"
 						>
-							<UserRoundPlus size={16} />
+							<UserRoundPlus size={14} class="stroke-[2]" />
 						</button>
 
 						<Input

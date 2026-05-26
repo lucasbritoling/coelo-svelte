@@ -4,19 +4,13 @@
 	import FinanceiroFab from '$lib/components/app/financeiro/financeiro-fab.svelte';
 	import InventoryForm from '$lib/components/app/estoque/InventoryForm.svelte';
 
+	let { data } = $props();
+	let estoque = $derived(data.inventory);
 	let isOpen = $state(false);
 	let selectedItem = $state<any>(null);
 
-	// Mockup de dados
-	const estoque = [
-		{ id: 1, name: 'Shampoo Profissional', current_stock: 2, min_stock_level: 5, unit: 'un' },
-		{ id: 2, name: 'Tintura Acaju', current_stock: 15, min_stock_level: 10, unit: 'tubos' },
-		{ id: 3, name: 'Condicionador', current_stock: 0, min_stock_level: 3, unit: 'un' },
-		{ id: 4, name: 'Água Oxigenada 20vol', current_stock: 8, min_stock_level: 5, unit: 'frascos' }
-	];
-
 	const formatStatus = (atual: number, minimo: number) => {
-		if (atual === 0) return { label: 'Esgotado', color: 'text-rose-600', bg: 'bg-rose-50' };
+		if (atual == 0) return { label: 'Esgotado', color: 'text-rose-600', bg: 'bg-rose-50' };
 		if (atual <= minimo) return { label: 'Baixo', color: 'text-amber-600', bg: 'bg-amber-50' };
 		return { label: 'Ok', color: 'text-emerald-600', bg: 'bg-emerald-50' };
 	};
@@ -50,7 +44,7 @@
 
 	<div class="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
 		{#each estoque as item}
-			{@const status = formatStatus(item.current_stock, item.min_stock_level)}
+			{@const status = formatStatus(Number(item.current_stock), Number(item.min_stock_level))}
 			<button
 				type="button"
 				class="flex w-full items-center justify-between border-b border-zinc-100 p-4 last:border-0 hover:bg-zinc-50"
@@ -79,6 +73,8 @@
 					{/if}
 				</div>
 			</button>
+		{:else}
+			<div class="p-8 text-center text-sm text-zinc-500">Nenhum item cadastrado.</div>
 		{/each}
 	</div>
 </div>

@@ -14,13 +14,20 @@
 
 <form
 	method="POST"
-	action={item ? '?/update' : '?/upsert'}
+	action="?/upsert"
 	class="flex flex-col gap-4"
-	use:enhance={() => {
-		isLoading = true;
+	use:enhance={({ submitter }) => {
+		// Detecta qual botão foi clicado para setar o estado correto
+		if (submitter?.getAttribute('formaction') === '?/delete') {
+			isDeleting = true;
+		} else {
+			isLoading = true;
+		}
+
 		return async ({ result, update }) => {
 			await update();
 			isLoading = false;
+			isDeleting = false;
 			if (result.type === 'success') onsuccess();
 		};
 	}}
@@ -68,36 +75,23 @@
 
 	<div class="mt-2 flex items-center gap-3">
 		{#if item}
-			<form
-				method="POST"
-				action="?/delete"
-				use:enhance={() => {
-					isDeleting = true;
-					return async ({ result, update }) => {
-						await update();
-						isDeleting = false;
-						if (result.type === 'success') onsuccess();
-					};
-				}}
+			<button
+				type="submit"
+				formaction="?/delete"
+				disabled={isDeleting || isLoading}
+				class="flex items-center justify-center rounded-xl bg-rose-50 p-3 text-rose-600 transition-colors hover:bg-rose-100 disabled:opacity-50"
 			>
-				<input type="hidden" name="id" value={item.id} />
-				<button
-					type="submit"
-					disabled={isDeleting}
-					class="flex items-center justify-center rounded-xl bg-rose-50 p-3 text-rose-600 transition-colors hover:bg-rose-100 disabled:opacity-50"
-				>
-					{#if isDeleting}
-						<LoaderCircle class="size-5 animate-spin" />
-					{:else}
-						<Trash2 size={20} />
-					{/if}
-				</button>
-			</form>
+				{#if isDeleting}
+					<LoaderCircle class="size-5 animate-spin" />
+				{:else}
+					<Trash2 size={20} />
+				{/if}
+			</button>
 		{/if}
 
 		<button
 			type="submit"
-			disabled={isLoading}
+			disabled={isLoading || isDeleting}
 			class="flex flex-1 items-center justify-center rounded-xl bg-zinc-900 py-3 text-sm font-semibold text-white transition-transform active:scale-95 disabled:opacity-70"
 		>
 			{#if isLoading}

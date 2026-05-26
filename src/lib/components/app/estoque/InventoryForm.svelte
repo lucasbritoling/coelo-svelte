@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { LoaderCircle, Trash2 } from '@lucide/svelte';
+	import { LoaderCircle, Trash2, Check } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
 
 	let { onsuccess, item = null } = $props();
@@ -13,10 +13,25 @@
 	let isLoading = $state(false);
 	let isDeleting = $state(false);
 
-	async function handleDelete() {
-		if (!confirm('Tem certeza que deseja excluir este item?')) return;
+	// Estado para o "duplo clique" de confirmação
+	let isConfirmingDelete = $state(false);
+	let timer: ReturnType<typeof setTimeout>;
 
+	async function handleDelete() {
+		// Se não está confirmando ainda, inicia o estado de confirmação
+		if (!isConfirmingDelete) {
+			isConfirmingDelete = true;
+			// Reseta o estado após 3 segundos
+			timer = setTimeout(() => {
+				isConfirmingDelete = false;
+			}, 3000);
+			return;
+		}
+
+		// Se chegou aqui, é o segundo clique (confirmação)
+		clearTimeout(timer);
 		isDeleting = true;
+
 		const formData = new FormData();
 		formData.append('id', item.id);
 
@@ -33,7 +48,9 @@
 		} else {
 			toast.error(result.data?.message || 'Erro ao excluir item.');
 		}
+
 		isDeleting = false;
+		isConfirmingDelete = false;
 	}
 </script>
 
@@ -115,10 +132,14 @@
 				type="button"
 				onclick={handleDelete}
 				disabled={isDeleting || isLoading}
-				class="flex items-center justify-center rounded-xl bg-rose-50 p-3 text-rose-600 transition-colors hover:bg-rose-100 disabled:opacity-50"
+				class="flex items-center justify-center rounded-xl p-3 transition-all duration-200 {isConfirmingDelete
+					? 'w-28 bg-rose-600 text-white'
+					: 'bg-rose-50 text-rose-600 hover:bg-rose-100'}"
 			>
 				{#if isDeleting}
 					<LoaderCircle class="size-5 animate-spin" />
+				{:else if isConfirmingDelete}
+					<span class="text-xs font-bold uppercase">Confirmar</span>
 				{:else}
 					<Trash2 size={20} />
 				{/if}

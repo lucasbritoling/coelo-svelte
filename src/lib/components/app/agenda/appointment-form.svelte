@@ -6,7 +6,6 @@
 		Briefcase,
 		Clock,
 		Calendar as CalendarIcon,
-		Search,
 		X,
 		Check,
 		Plus,

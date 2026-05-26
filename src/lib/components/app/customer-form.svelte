@@ -71,6 +71,18 @@
 			$form.name = initialName;
 		}
 	});
+
+	// Funções de limpeza mantidas como utilitários ou dentro do escopo
+	function limparNome(valor: string) {
+		return valor
+			.replace(/^\s+/, '') // 1. Sem espaço no início
+			.replace(/\s{2,}/g, ' ') // 2. Sem espaços duplos
+			.replace(/[^a-zA-ZÀ-ÿ\s~^´`]/g, ''); // 3. Caracteres permitidos
+	}
+
+	function finalizarLimpeza(valor: string) {
+		return valor.replace(/[~^´`]/g, '').trim(); // Remove acentos isolados e trim final
+	}
 </script>
 
 <Dialog.Root bind:open>
@@ -90,24 +102,14 @@
 					id="name"
 					name="name"
 					bind:value={$form.name}
-					maxlength={100}
 					oninput={(e) => {
-						let val = e.currentTarget.value;
-
-						// 1. Impede espaços no início
-						val = val.replace(/^\s+/, '');
-						// 2. Impede espaços duplos
-						val = val.replace(/\s{2,}/g, ' ');
-						// 3. Mantém letras, espaços, acentos pt-BR e acentos isolados (~^´`)
-						val = val.replace(/[^a-zA-ZÀ-ÿ\s~^´`]/g, '');
-
-						$form.name = val;
-						e.currentTarget.value = val;
+						const target = e.currentTarget;
+						$form.name = limparNome(target.value);
 					}}
 					onblur={() => {
-						// Limpa acentos isolados e espaços extras ao sair do campo
-						$form.name = $form.name.replace(/[~^´`]/g, '').trim();
+						$form.name = finalizarLimpeza($form.name);
 					}}
+					maxlength={100}
 				/>
 				{#if $errors.name}<small class="text-destructive">{$errors.name}</small>{/if}
 			</div>
